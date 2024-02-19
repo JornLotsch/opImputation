@@ -66,12 +66,13 @@ makeBadImputations <- function( x ) {
 
 imputeMissings <- function( x, method = "rf2", imputationRepetitions = 10, seed = NULL, x_orig = NULL, nProc = 1 ) {
   x <- data.frame( x )
+
   if ( is.null( seed ) ) {
     seed <- .Random.seed[1]
   }
   list.of.seeds <- seq_len( ncol( xm ) ) + seed - 1
-
   set.seed( seed )
+
   ImputedData <- makeBadImputations( x )
 
   switch(
