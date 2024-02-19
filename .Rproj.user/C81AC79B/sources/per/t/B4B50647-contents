@@ -6,7 +6,7 @@ library( Rfit )
 
 # Function to calculate metrics for imputed data
 
-calculateMetrics <- function(OrigData, Missings_Which, ImputedData, Metric, OrigDataMiss = NULL) {
+calculateMetrics <- function(OrigData, Missings_Which, ImputedData, Metric, OrigDataMiss = NULL, PValueThresholdForMetrics = 0.1) {
 
   ME <- NA
 
@@ -36,7 +36,7 @@ calculateMetrics <- function(OrigData, Missings_Which, ImputedData, Metric, Orig
              St <- try(Rfit::rfit(Diffs ~ Means), TRUE)
              if (!inherits(St, "try-error")) {
                ME <- abs(coef(St)[[2]])
-               if (UseRobustRanking && length(summary(St)$coefficients[2, ] == 4) &&
+               if (length(summary(St)$coefficients[2, ] == 4) &&
                    !is.na(summary(St)$coefficients[2, 4]) &&
                    summary(St)$coefficients[2, "p.value"] >= PValueThresholdForMetrics) {
                  ME <- 0

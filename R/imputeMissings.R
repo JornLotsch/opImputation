@@ -10,8 +10,10 @@ library( mi )
 
 
 #################################### Variables ########################################################################
-all_imputation_methods <- c( "median", "mean", "mode",
-                             "bag", "bag_repeated",
+scalar_imputation_methods <- c( "median", "mean", "mode", "rSample" )
+nonsense_imputation_methods <- c( "plus", "plusminus", "factor" )
+
+all_imputation_methods <- c( "bag", "bag_repeated",
                              "rf", "rf_repeated", "rf2", "rf2_repeated", "miceRanger", "miceRanger_repeated",
                              "cart", "cart_repeated",
                              "linear",
@@ -20,8 +22,9 @@ all_imputation_methods <- c( "median", "mean", "mode",
                              "knn3", "knn5", "knn7", "knn9", "knn10",
                              "ameliaImp", "ameliaImp_repeated",
                              "miImp",
-                             "plus", "plusminus", "factorImp" )
-
+                             scalar_imputation_methods,
+                             nonsense_imputation_methods
+)
 
 #################################### Functions ########################################################################
 # Helper functions
@@ -70,7 +73,7 @@ imputeMissings <- function( x, method = "rf2", imputationRepetitions = 10, seed 
   if ( is.null( seed ) ) {
     seed <- .Random.seed[1]
   }
-  list.of.seeds <- seq_len( ncol( xm ) ) + seed - 1
+  list.of.seeds <- seq_len( ncol( x ) ) + seed - 1
   set.seed( seed )
 
   ImputedData <- makeBadImputations( x )
@@ -80,6 +83,8 @@ imputeMissings <- function( x, method = "rf2", imputationRepetitions = 10, seed 
     median = ImputedData <- apply( x, 2, imputeMedian ),
     mean = ImputedData <- apply( x, 2, imputeMean ),
     mode = ImputedData <- apply( x, 2, imputeMode ),
+    rSample = ImputedData <- apply( x, 2, imputeRandom ),
+
     bag = {
       Impu <- try( caret::preProcess( x, method = "bagImpute" ), TRUE )
       if ( !inherits( Impu, "try-error" ) ) {
@@ -173,9 +178,6 @@ imputeMissings <- function( x, method = "rf2", imputationRepetitions = 10, seed 
         ImputedData <- mice::complete( Impu )
       }
     },
-    rSample = {
-      ImputedData <- apply( x, 2, fRandImputing )
-    },
     pmm = {
       Impu <- try( mice::mice( x, method = "pmm" ), TRUE )
       if ( !inherits( Impu, "try-error" ) ) {
@@ -264,9 +266,11 @@ imputeMissings <- function( x, method = "rf2", imputationRepetitions = 10, seed 
   )
 
   # final error intercepting, if necessary
+  if (!method %in% nonsense_imputation_methods) {
   err <- try( ImputedData - x, TRUE )
   if ( inherits( err, "try-error" ) | sum( is.na( ImputedData ) ) > 0 ) {
     ImputedData <- makeBadImputations( x )
+  }
   }
 
   return( ImputedData )
