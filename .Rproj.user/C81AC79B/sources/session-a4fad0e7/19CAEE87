@@ -1,0 +1,26 @@
+{
+    "id": "19CAEE87",
+    "path": "~/.Datenplatte/Joerns Dateien/Aktuell/opImputation/12RLibrary/opImputation/R/makeAndMeasureRepeatedImputations.R",
+    "project_path": null,
+    "type": "r_source",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1708339119797.0,
+    "source_on_save": false,
+    "relative_order": 5,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "44,21",
+        "scrollLine": "31"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1708339333,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1708339333524,
+    "read_only": false,
+    "read_only_alternatives": []
+}

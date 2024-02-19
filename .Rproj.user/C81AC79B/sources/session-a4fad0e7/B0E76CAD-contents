@@ -1,0 +1,203 @@
+#################################### Libraries ########################################################################
+
+library( Rfit )
+library( quantreg )
+
+#################################### Functions ########################################################################
+
+# Function to scale data to the range [0, 1]
+toRange <- function( data, lower, upper ) {
+  data <- as.matrix( data )
+  if ( lower == upper ) {
+    error( "interval width can not be 0!" )
+  }
+  if ( lower > upper ) {
+    temp <- upper
+    upper <- lower
+    lower <- upper
+  }
+  range <- upper - lower
+  n <- dim( data )[1]
+  d <- dim( data )[2]
+  if ( ( n == 1 ) & ( d > 1 ) ) {
+    data <- t( data )
+    wasRowVector <- 1
+  }
+  else {
+    wasRowVector <- 0
+  }
+  nRow <- dim( data )[1]
+  nCol <- dim( data )[2]
+  min <- apply( data, 2, min, na.rm = TRUE )
+  min <- matrix( min, nRow, nCol, byrow = TRUE )
+  max <- apply( data, 2, max, na.rm = TRUE )
+  max <- matrix( max, nRow, nCol, byrow = TRUE )
+  range <- max - min
+  range[range == 0] <- 1
+  scaleData <- ( data - min ) / range
+  scaleData <- lower + scaleData * ( upper - lower )
+  if ( wasRowVector == 1 ) {
+    scaleData <- t( scaleData )
+  }
+  return( scaleData )
+}
+
+to01 <-
+  function( data )
+  {
+    scaled <- toRange( data, 0, 1 )
+    return( scaled )
+  }
+
+# Function to calculate metrics for imputed data
+calculateMetrics <-
+  function( OrigData, DatawMissings, ImputedData, Metric, OrigDataMiss = NULL ) {
+
+    ME <- NA
+    pval <- NA
+    if ( is.null( dim( OrigData ) ) ) {
+      miss <- DatawMissings
+      orig <- OrigData[miss]
+      imputed <- ImputedData[miss]
+      Diffs <- as.vector( imputed - orig )
+      Means <- rowMeans( cbind( imputed, orig ) )
+
+      if ( sum( !is.na( imputed ) ) > 2 ) {
+        switch( Metric,
+                RMSEImputedUnivar = {
+                  if ( UseNonparaMetric == FALSE ) {
+                    ME <- sqrt( mean( ( Diffs )^2, na.rm = TRUE ) )
+                  } else {
+                    ME <- sqrt( median( ( Diffs )^2, na.rm = TRUE ) )
+                  }
+                  if ( UseNormalizedMetrics == TRUE ) {
+                    ME <- ME / ( max( 1, IQR( Diffs )^2 ) * 1.4816 )
+                  }
+                  if ( UseRobustRanking == TRUE ) {
+                    St <- wilcox.test( ( Diffs )^2 )
+                    if ( St$p.value >= PValueThresholdForMetrics ) {
+                      ME <- 0
+                    }
+                    pval <- St$p.value
+                  }
+                },
+                MEImputedUnivar = {
+                  if ( UseNonparaMetric == FALSE ) {
+                    ME <- abs( mean( Diffs, na.rm = TRUE ) )
+                  } else {
+                    ME <- abs( median( Diffs, na.rm = TRUE ) )
+                  }
+                  if ( UseNormalizedMetrics == TRUE ) {
+                    ME <- ME / ( max( 1, IQR( Diffs ) ) * 1.4816 )
+                  }
+                  if ( UseRobustRanking == TRUE ) {
+                    St <- wilcox.test( ( Diffs ) )
+                    if ( St$p.value >= PValueThresholdForMetrics ) {
+                      ME <- 0
+                    }
+                    pval <- St$p.value
+                  }
+                },
+                CorrImputedUnivar = {
+                  if ( UseNonparaMetric == FALSE ) {
+                    if ( UseBAvariant == FALSE ) {
+                      St <- cor.test( orig, imputed, na.rm = TRUE, method = "pearson" )
+                      ME <- St$estimate
+                      if ( UseRobustRanking == TRUE ) {
+                        if ( St$p.value >= PValueThresholdForMetrics ) {
+                          ME <- 0
+                        }
+                        pval <- St$p.value
+                      }
+                    } else {
+                      St <- try( lm( Diffs ~ Means ), TRUE )
+                      if ( !inherits( St, "try-error" ) ) {
+                        ME <- abs( coef( St )[[2]] )
+                        if ( UseRobustRanking == TRUE ) {
+                          if ( length( summary( St )$coefficients[2,] == 4 ) & !is.na( summary( St )$coefficients[2, 4] ) ) {
+                            if ( summary( St )$coefficients[2, "Pr(>|t|)"] >= PValueThresholdForMetrics ) {
+                              ME <- 0
+                            }
+                            pval <- summary( St )$coefficients[2, "Pr(>|t|)"]
+                          } else {
+                            ME <- 0
+                          }
+                        }
+                      } else {
+                        ME <- 0
+                      }
+                    }
+                  } else {
+                    if ( UseBAvariant == FALSE ) {
+                      St <- cor.test( orig, imputed, na.rm = TRUE, method = "spearman" )
+                      ME <- St$estimate
+                      if ( UseRobustRanking == TRUE ) {
+                        if ( St$p.value >= PValueThresholdForMetrics ) {
+                          ME <- 0
+                        }
+                        pval <- St$p.value
+                      }
+                    } else {
+                      St <- try( rfit( Diffs ~ Means ), TRUE ) # rank regression
+                      # St = try(rq( Diffs ~ Means ), TRUE) # quantile regression
+                      if ( !inherits( St, "try-error" ) ) {
+                        ME <- abs( coef( St )[[2]] )
+                        if ( UseRobustRanking == TRUE ) {
+                          # if (dplyr::between(0,summary(St)$coefficients[2,"lower bd"],summary(St)$coefficients[2,"upper bd"] )) {
+                          if ( length( summary( St )$coefficients[2,] == 4 ) & !is.na( summary( St )$coefficients[2, 4] ) ) {
+                            if ( summary( St )$coefficients[2, "p.value"] >= PValueThresholdForMetrics ) {
+                              ME <- 0
+                            }
+                            pval <- summary( St )$coefficients[2, "p.value"]
+                          } else {
+                            ME <- 0
+                          }
+                        }
+                      } else {
+                        ME <- 0
+                      }
+                    }
+                  }
+                },
+                NMD = {
+                  if ( UseNonparaMetric == FALSE ) {
+                    MD <- abs( mean( Diffs, na.rm = TRUE ) )
+                    ME <- MD / ( max( 1, IQR( Diffs ) ) * 1.4816 )
+                  } else {
+                    MD <- abs( median( Diffs, na.rm = TRUE ) )
+                    ME <- MD / ( max( 1, IQR( Diffs ) ) * 1.4816 )
+                  }
+                },
+                NRMSE = {
+                  if ( UseNonparaMetric == FALSE ) {
+                    MD <- sqrt( mean( ( Diffs )^2, na.rm = TRUE ) )
+                  } else {
+                    MD <- sqrt( median( ( Diffs )^2, na.rm = TRUE ) )
+                  }
+                  ME <- MD / ( max( 1, IQR( ( Diffs )^2 ) ) * 1.4816 )
+                },
+                ZDelta = {
+                  if ( UseNonparaMetric == FALSE ) {
+                    m <- mean( OrigDataMiss, na.rm = TRUE )
+                    # s <- max( 1, sd( OrigDataMiss, na.rm = TRUE ) )
+                    s <- sd( OrigDataMiss, na.rm = TRUE )
+                    Zorig <- ( orig - m ) / s
+                    Zimputed <- ( imputed - m ) / s
+                    ZDiffs <- as.vector( Zimputed - Zorig )
+                    ME <- mean( abs( ZDiffs ), na.rm = TRUE )
+                  } else {
+                    m <- median( OrigDataMiss, na.rm = TRUE )
+                    # s <- max( 1, IQR( OrigDataMiss, na.rm = TRUE ) ) * 1.4816
+                    s <- IQR( OrigDataMiss, na.rm = TRUE ) * 1.4816
+                    Zorig <- ( orig - m ) / s
+                    Zimputed <- ( imputed - m ) / s
+                    ZDiffs <- as.vector( Zimputed - Zorig )
+                    ME <- median( abs( ZDiffs ), na.rm = TRUE )
+                  }
+                }
+        )
+      }
+    }
+    return( list( ME = ME, pval = pval ) )
+  }
+
