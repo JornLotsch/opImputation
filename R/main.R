@@ -14,6 +14,7 @@ source( paste0( pfad_o, pfad_r, "eval_with_timeout.R" ) )
 source( paste0( pfad_o, pfad_r, "makeAndMeasureRepeatedImputations.R" ) )
 # source( paste0( pfad_o, pfad_r, "plotVariablesPDE.R" ) )
 source( paste0( pfad_o, pfad_r, "calculateMetrics.R" ) )
+source( paste0( pfad_o, pfad_r, "findBestImputation.R" ) )
 
 nProc <- max( round( ( detectCores( ) ) / 10 ), 4 )
 # nProc <- 5
@@ -30,18 +31,6 @@ probMissing <- PercentMissing / 100
 
 ################## Functions #######################################
 
-# Groeneveld, Meeden
-skewnessGMG <- function( x ) {
-  x <- na.omit( x )
-  n <- length( x )
-  meanX <- mean( x, na.rm = TRUE )
-  medianX <- median( x, na.rm = TRUE )
-  Erw <- sum( abs( x - medianX ) ) / n
-  GM = abs( meanX - medianX ) / Erw
-  return( GM )
-}
-
-# Used metrics defined from here
 
 
 ################## Create data set #######################################
@@ -76,15 +65,6 @@ Datasets <-
 
 names( Datasets ) <- DatasetNames
 
-# lapply( DatasetNames, function( ActualDataset ) {
-#   dfXmatrix <- DatasetsInitial[[ActualDataset]]
-#   write.csv(x = dfXmatrix, file = paste0(pfad_o, pfad_r, ActualDataset, ".csv"))
-# }
-# )
-
-# plot(DatasetsInitial[[3]][,2] ~ DatasetsInitial[[3]][,1], col ="blue")
-# points(DatasetsInitial[[3]][,3] ~ DatasetsInitial[[3]][,1], col ="green")
-
 ################## Impute data sets #######################################
 
 RepeatedSampleImputations <-
@@ -92,356 +72,22 @@ RepeatedSampleImputations <-
                                      seeds = list.of.seeds,
                                      probMissing = probMissing )
 
-##################  Find best imputation #######################################
-
-source( paste0( pfad_o, pfad_r, "findBestImputation.R" ) )
-
-print( "BestMethodPerDataset" )
-  BestMethodPerDataset <- lapply( BestMethod, "[[", "BestPerDatasetRanksumsN_insertedMissings" )
-print( BestMethodPerDataset )
-
-BestMethodPerDatasetN <- lapply( BestMethod, "[[", "MajorityVoteRanksErrorsInsertedMissings" )
-BestMethodPerDatasetN_eq_BestMethodPerDataset <-
-  lapply( DatasetNames, function( ActualDataset ) {
-    which( BestMethod[[ActualDataset]]$MajorityVoteRanksErrorsInsertedMissings == BestMethodPerDataset[[ActualDataset]] )
-  }
-  )
-names( BestMethodPerDatasetN_eq_BestMethodPerDataset ) <- DatasetNames
-
-
-print( BestMethodPerDataset )
-lapply( BestMethod, function( x ) x$BestRanksumsGrandMean_initialMissings_ABC_A )
-# lapply( BestMethod, function( x ) x$BestRanksumsGrandMean_insertedMissings_ABC_A )
-
-
-print( "BestMethodPerVariable" )
-BestMethodPerVariable <- lapply( BestMethod, "[[", 1 )
-BestMethodPerVariable
-
-# write.csv(lapply( lapply(RepeatedSampleImputations, "[[", 1), function(x) x$ImputationRMSEInsertedMissings), file = "Iris_RMSEinsertedMissings.csv")
-
-
-# write.csv(lapply( BestMethod, "[[", "RMSEinsertedMissings" )[[1]], file = "RMSEinsertedMissings.csv")
-# write.csv(lapply( BestMethod, "[[", "MEinsertedMissings" )[[1]], file = "MEinsertedMissings.csv")
-# write.csv(lapply( BestMethod, "[[", "CorrinsertedMissings" )[[1]], file = "rBiasinsertedMissings.csv")
-# write.csv(lapply( BestMethod, "[[", "ranksRMSEinsertedMissings" )[[1]], file = "ranksRMSEinsertedMissings.csv")
-# write.csv(lapply( BestMethod, "[[", "ranksMEinsertedMissings" )[[1]], file = "ranksMEinsertedMissings.csv")
-# write.csv(lapply( BestMethod, "[[", "ranksCorrinsertedMissings" )[[1]], file = "ranksrBiasinsertedMissings.csv")
-
 ##################  Look at  bad imputations #######################################
 
-ZDeltas <- lapply( DatasetNames, function( ActualDataset ) {
-  ImputationZDeltaInsertedMissings <- lapply( RepeatedSampleImputations, function( x ) {
-    x[[ActualDataset]][["ImputationZDeltaInsertedMissings"]]
-  } )
-  meanImputationZDeltaInsertedMissings <- Reduce( "+", ImputationZDeltaInsertedMissings ) / length( ImputationZDeltaInsertedMissings )
-  rowmeanImputationZDeltaInsertedMissings <- rowMeans( meanImputationZDeltaInsertedMissings )
-
-  ImputationZDeltaInitialMissings <- lapply( RepeatedSampleImputations, function( x ) {
-    x[[ActualDataset]][["ImputationZDeltaInitialMissings"]]
-  } )
-  meanImputationZDeltaInitialMissings <- Reduce( "+", ImputationZDeltaInitialMissings ) / length( ImputationZDeltaInitialMissings )
-  rowmeanImputationZDeltaInitialMissings <- rowMeans( meanImputationZDeltaInitialMissings )
-
-  return( list(
-    rowmeanImputationZDeltaInsertedMissings = rowmeanImputationZDeltaInsertedMissings,
-    rowmeanImputationZDeltaInitialMissings = rowmeanImputationZDeltaInitialMissings
-  ) )
-} )
-names( ZDeltas ) <- DatasetNames
 
 
-pZDelta <-
-  pbmcapply::pbmclapply( DatasetNames, function( ActualDataset ) {
 
-    dfXmatrixall_forPlot <- ZDeltas[[ActualDataset]]
-    dfXmatrixall_forPlot_long <- rbind.data.frame(
-      cbind.data.frame( Missing = "Inserted", reshape2::melt( dfXmatrixall_forPlot$rowmeanImputationZDeltaInsertedMissings ) ),
-      cbind.data.frame( Missing = "Inintial", ZDelta = reshape2::melt( dfXmatrixall_forPlot$rowmeanImputationZDeltaInitialMissings ) )
-    )
-
-    dfXmatrixall_forPlot_long$Method <- gsub( " imputed| imputed1", "", rownames( dfXmatrixall_forPlot_long ) )
-    dfXmatrixall_forPlot_long$color <- ifelse( dfXmatrixall_forPlot_long$Method %in% gsub( " imputed| imputed1", "", nonsenseImputationmethodsNames ), "red", "dodgerblue" )
-    dfXmatrixall_forPlot_long$color[dfXmatrixall_forPlot_long$Method %in% gsub( " imputed| imputed1", "", scalarImputationmethodsNames )] <- "gold"
-
-    minFake <- min( dfXmatrixall_forPlot_long$value[dfXmatrixall_forPlot_long$color %in%
-                                                      c( "red" ) & dfXmatrixall_forPlot_long$Missing == "Inserted"] )
-    minScalar <- min( dfXmatrixall_forPlot_long$value[dfXmatrixall_forPlot_long$color %in%
-                                                        c( "gold" ) & dfXmatrixall_forPlot_long$Missing == "Inserted"] )
-    dfAnnotate <- data.frame( Methods = c( "Best poisened", "Best univariate" ), y = c( minFake, minScalar ), x = 3, color = c( "salmon", "orange" ) )
-
-    plotZDelta <-
-      ggplot( data = dfXmatrixall_forPlot_long, aes( x = Method, y = value, fill = Missing ) ) +
-        geom_bar( aes( alpha = Missing ), stat = "identity", position = "dodge", fill = dfXmatrixall_forPlot_long$color ) +
-        theme_light( ) +
-        theme( axis.text.x = element_text( angle = 90, vjust = 0.5, hjust = 1 ),
-               legend.position = c( .9, .7 ),
-               legend.background = element_rect( fill = alpha( "white", 0.5 ) ) ) +
-        labs( title = paste0( ActualDataset, ": zDelta" ), y = "zDelta", x = NULL ) +
-        scale_color_colorblind( ) +
-        scale_alpha_manual( values = c( .2, .5 ) ) +
-        scale_y_continuous( breaks = pretty_breaks( ) ) +
-        geom_hline( yintercept = minFake, color = "salmon", linetype = "dashed" ) +
-        geom_hline( yintercept = minScalar, color = "orange", linetype = "dotdash" ) +
-        annotate( geom = "text", x = dfAnnotate$x, y = dfAnnotate$y + 0.005, label = dfAnnotate$Methods, color = dfAnnotate$color )
+##################  Find best imputation #######################################
 
 
-    return( plotZDelta )
-  }, mc.cores = nProc )
-names( pZDelta ) <- DatasetNames
+print( "BestMethodPerDataset" )
+BestMethodPerDataset <- names(BestMethod(RepeatedSampleImputations = RepeatedSampleImputations)$BestPerDatasetRanksums_insertedMissings)
+print( BestMethodPerDataset )
 
-ZDeltaRaw <-
-  pbmcapply::pbmclapply( DatasetNames, function( ActualDataset ) {
-
-    ImputationZDeltaInsertedMissings <- lapply( RepeatedSampleImputations, function( x ) {
-      x[[ActualDataset]][["ImputationZDeltaInsertedMissings"]]
-    } )
-
-    ImputationZDeltaInsertedMissingsMultivar <-
-      lapply( ImputationZDeltaInsertedMissings,
-              function( x ) x[grep( paste( as.character( c( setdiff( all_imputation_methods,
-                                                                     c( scalarImputationmethodsNames, nonsenseImputationmethods ) ) ) ), sep = "' '", collapse = "|" ), row.names( x ) ),] )
-    ImputationZDeltaInsertedMissingsMultivarV <- unlist( ImputationZDeltaInsertedMissingsMultivar )
-    skewnessZDeltaInsertedMissingsMultivarV <- skewness2( ImputationZDeltaInsertedMissingsMultivarV )
-    skewnessGMGZDeltaInsertedMissingsMultivarV <- skewnessGMG( ImputationZDeltaInsertedMissingsMultivarV )
-    SKtestDeltaInsertedMissingsMultivarV <- dagoTest( ImputationZDeltaInsertedMissingsMultivarV, title = NULL, description = NULL )
-    pvalSKMultivarV <- SKtestDeltaInsertedMissingsMultivarV@test$p.value[["Skewness Test"]]
-    pvalSKMultivarV <- moments::agostino.test( ImputationZDeltaInsertedMissingsMultivarV )$p.value
-
-
-    ImputationZDeltaInsertedMissingsUnivar <-
-      lapply( ImputationZDeltaInsertedMissings,
-              function( x ) x[grep( paste( as.character( scalarImputationmethodsNames ), sep = "' '", collapse = "|" ), row.names( x ) ),] )
-    ImputationZDeltaInsertedMissingsUnivarV <- unlist( ImputationZDeltaInsertedMissingsUnivar )
-    skewnessZDeltaInsertedMissingsUnivarV <- skewness2( ImputationZDeltaInsertedMissingsUnivarV )
-    skewnessGMGZDeltaInsertedMissingsUnivarV <- skewnessGMG( ImputationZDeltaInsertedMissingsUnivarV )
-    SKtestDeltaInsertedMissingsUnivarV <- dagoTest( ImputationZDeltaInsertedMissingsUnivarV, title = NULL, description = NULL )
-    pvalSKUnivarV <- SKtestDeltaInsertedMissingsUnivarV@test$p.value[["Skewness Test"]]
-    pvalSKUnivarV <- moments::agostino.test( ImputationZDeltaInsertedMissingsUnivarV )$p.value
-
-    ImputationZDeltaInsertedMissingsNonsense <-
-      lapply( ImputationZDeltaInsertedMissings,
-              function( x ) x[grep( paste( as.character( nonsenseImputationmethods ), sep = "' '", collapse = "|" ), row.names( x ) ),] )
-    ImputationZDeltaInsertedMissingsNonsenseV <- unlist( ImputationZDeltaInsertedMissingsNonsense )
-    skewnessZDeltaInsertedMissingsNonsenseV <- skewness2( ImputationZDeltaInsertedMissingsNonsenseV )
-    skewnessGMGZDeltaInsertedMissingsNonsenseV <- skewnessGMG( ImputationZDeltaInsertedMissingsNonsenseV )
-    SKtestDeltaInsertedMissingsNonsenseV <- dagoTest( ImputationZDeltaInsertedMissingsNonsenseV, title = NULL, description = NULL )
-    pvalSKNonsenseV <- SKtestDeltaInsertedMissingsNonsenseV@test$p.value[["Skewness Test"]]
-    pvalSKNonsenseV <- moments::agostino.test( ImputationZDeltaInsertedMissingsNonsenseV )$p.value
-
-    return( list(
-      ImputationZDeltaInsertedMissingsMultivarV = ImputationZDeltaInsertedMissingsMultivarV,
-      ImputationZDeltaInsertedMissingsUnivarV = ImputationZDeltaInsertedMissingsUnivarV,
-      ImputationZDeltaInsertedMissingsNonsenseV = ImputationZDeltaInsertedMissingsNonsenseV,
-      skewnessZDeltaInsertedMissingsMultivarV = skewnessZDeltaInsertedMissingsMultivarV,
-      skewnessZDeltaInsertedMissingsUnivarV = skewnessZDeltaInsertedMissingsUnivarV,
-      skewnessZDeltaInsertedMissingsNonsenseV = skewnessZDeltaInsertedMissingsNonsenseV,
-      skewnessGMGZDeltaInsertedMissingsMultivarV = skewnessGMGZDeltaInsertedMissingsMultivarV,
-      skewnessGMGZDeltaInsertedMissingsUnivarV = skewnessGMGZDeltaInsertedMissingsUnivarV,
-      skewnessGMGZDeltaInsertedMissingsNonsenseV = skewnessGMGZDeltaInsertedMissingsNonsenseV,
-      pvalSKMultivarV = pvalSKMultivarV,
-      pvalSKUnivarV = pvalSKUnivarV,
-      pvalSKNonsenseV = pvalSKNonsenseV
-    ) )
-
-  }, mc.cores = nProc )
-names( ZDeltaRaw ) <- DatasetNames
-
-if ( sum( DatasetNames %in% DataSetPairs ) == length( DatasetNames ) ) {
-
-  dfZDeltaRawMultivarimputations <- do.call( cbind.data.frame, lapply( ZDeltaRaw, "[[", "ImputationZDeltaInsertedMissingsMultivarV" ) )
-  pZDeltaRawMultivarimputations <- plotVariablesPDE( data = dfZDeltaRawMultivarimputations )$pParetoAll + labs( title = "ZDelta distributions for multivariate imputations" )
-  dfZDeltaRawUnivarimputations <- do.call( cbind.data.frame, lapply( ZDeltaRaw, "[[", "ImputationZDeltaInsertedMissingsUnivarV" ) )
-  pZDeltaRawUnivarimputations <- plotVariablesPDE( data = dfZDeltaRawUnivarimputations )$pParetoAll + labs( title = "ZDelta distributions for univariate imputations" )
-  dfZDeltaRawNonsenseimputations <- do.call( cbind.data.frame, lapply( ZDeltaRaw, "[[", "ImputationZDeltaInsertedMissingsNonsenseV" ) )
-  pZDeltaRawNonsenseimputations <- plotVariablesPDE( data = dfZDeltaRawNonsenseimputations )$pParetoAll + labs( title = "ZDelta distributions for poisened imputations" )
-
-  maxXax <- max( na.omit( dfZDeltaRawMultivarimputations ), na.omit( dfZDeltaRawUnivarimputations ), na.omit( dfZDeltaRawNonsenseimputations ) )
-
-  Fig1plotZdeltaRaw <- cowplot::plot_grid(
-    pZDeltaRawMultivarimputations + xlim( 0, maxXax ),
-    pZDeltaRawUnivarimputations + xlim( 0, maxXax ),
-    pZDeltaRawNonsenseimputations + xlim( 0, maxXax ),
-    align = "h", axis = "lr",
-    labels = LETTERS[1:22],
-    ncol = 1
-  )
-
-} else {
-  pZDeltaRaw <-
-    pbmcapply::pbmclapply( DatasetNames, function( ActualDataset ) {
-
-      dfZDeltaRawMultivarimputations <- ZDeltaRaw[[ActualDataset]][["ImputationZDeltaInsertedMissingsMultivarV"]]
-      pZDeltaRawMultivarimputations <- plotVariablesPDE( data = dfZDeltaRawMultivarimputations )$pParetoAll + labs( title = "ZDelta distributions for multivariate imputations" )
-      dfZDeltaRawUnivarimputations <- ZDeltaRaw[[ActualDataset]][["ImputationZDeltaInsertedMissingsUnivarV"]]
-      pZDeltaRawUnivarimputations <- plotVariablesPDE( data = dfZDeltaRawUnivarimputations )$pParetoAll + labs( title = "ZDelta distributions for univariate imputations" )
-      dfZDeltaRawNonsenseimputations <- ZDeltaRaw[[ActualDataset]][["ImputationZDeltaInsertedMissingsNonsenseV"]]
-      pZDeltaRawNonsenseimputations <- plotVariablesPDE( data = dfZDeltaRawNonsenseimputations )$pParetoAll + labs( title = "ZDelta distributions for poisened imputations" )
-
-      return( list(
-        pZDeltaRawMultivarimputations = pZDeltaRawMultivarimputations,
-        pZDeltaRawUnivarimputations = pZDeltaRawUnivarimputations,
-        pZDeltaRawNonsenseimputations = pZDeltaRawNonsenseimputations
-      ) )
-    }, mc.cores = nProc )
-  names( pZDeltaRaw ) <- DatasetNames
-}
-
-pPDEorig <-
-  pbmcapply::pbmclapply( DatasetNames, function( ActualDataset ) {
-
-    dfXmatrix <- Datasets[[ActualDataset]]$dfXmatrix
-
-    pOrig <- plotVariablesPDE( data = dfXmatrix )$pParetoAll + labs( title = paste0( ActualDataset, ": Distribution" ) )
-
-    return( pOrig )
-  }, mc.cores = nProc )
-names( pPDEorig ) <- DatasetNames
-
-
-pXYorig <-
-  pbmcapply::pbmclapply( DatasetNames, function( ActualDataset ) {
-
-    dfXmatrix <- Datasets[[ActualDataset]]$dfXmatrix
-
-    pOrig <-
-      ggplot( data = dfXmatrix ) +
-        geom_point( aes( x = Var1, y = Var2 ), color = "darkgreen" ) +
-        geom_point( aes( x = Var1, y = Var3 ), color = "dodgerblue" ) +
-        theme_light( ) +
-        theme(
-          legend.position = "bottom", # c( .2, .03 ),
-          legend.direction = "horizontal",
-          legend.background = element_rect( colour = "transparent", fill = ggplot2::alpha( "white", 0.4 ) )
-        ) +
-        labs( title = paste0( ActualDataset, ": Data set shape: Vars 1/2 vs. Var 1" ), y = "Var2, 3", shape = "Data" )
-
-    return( pOrig )
-  }, mc.cores = nProc )
-names( pXYorig ) <- DatasetNames
-
-
-plotsZDelta_list <-
-  lapply( pZDelta, ggplotGrob )
-
-plotsPDEorig_list <-
-  lapply( pPDEorig, ggplotGrob )
-
-plotsXY_list <- lapply( pXYorig, ggplotGrob )
-
-if ( identical( intersect( DatasetNames, c( "Two linear xy data sets forming an X",
-                                            "Two xy data sets, X and circle shaped" ) ), character( 0 ) ) ) {
-  plotsZDeltaPDEorig_list <- c( plotsZDelta_list, plotsPDEorig_list )
-} else {
-  plotsZDeltaPDEorig_list <- c( plotsZDelta_list, plotsXY_list )
-}
-
-
-Fig1plotZdelta <-
-  cowplot::plot_grid(
-    plotlist = plotsZDeltaPDEorig_list,
-    align = "h", axis = "tb",
-    labels = LETTERS[1:22],
-    nrow = 2, rel_heights = c( 1, 1 )
-  )
 
 ##################  Retrieve imputed data #######################################
 
-# All imputations averaged
-ImputedDataFinal <- lapply( DatasetNames, function( ActualDataset ) {
-  ImputedDataX <- lapply( RepeatedSampleImputations, function( x ) {
-    x[[ActualDataset]][["dfXmatrixInitialMissingsAll"]]
-  } )
 
-  ImputedDataXAverage <-
-    Reduce( "+", lapply( ImputedDataX, function( x ) within( x, rm( Data ) ) ) ) / length( ImputedDataX )
-
-  dfXmatrix <- Datasets[[ActualDataset]]$dfXmatrix
-  dfXmatrixInitialMissings <- Datasets[[ActualDataset]]$dfXmatrixInitialMissings
-  dfXmatrixInitialMissingsRepeated <- do.call( "rbind.data.frame", replicate( ( dim( ImputedDataXAverage )[1] / nrow( dfXmatrix ) ),
-                                                                              dfXmatrixInitialMissings, simplify = FALSE ) )
-  ImputedDataAverageOrigRestored <- mapply( replaceNonmissingsWithOriginal, ImputedDataXAverage, dfXmatrixInitialMissingsRepeated )
-
-  ImputedDataAverage <- cbind.data.frame( Data = ImputedDataX[[1]]$Data, ImputedDataAverageOrigRestored )
-  ImputedDataAverage[ImputedDataAverage$Data == "Missings", 2:ncol( ImputedDataAverage )] <- dfXmatrixInitialMissings
-
-  return( ImputedDataAverage )
-} )
-
-names( ImputedDataFinal ) <- DatasetNames
-
-# Check if original non-missing values were not changed
-ImputedDataFinalMinusOrig <- lapply( DatasetNames, function( ActualDataset ) {
-  dfXmatrixInitialMissings <- Datasets[[ActualDataset]]$dfXmatrixInitialMissings
-  TestIfIdenticalWhenNotMissing <- lapply( unique( ImputedDataFinal[[ActualDataset]][["Data"]] ), function( DataName ) {
-    within( ImputedDataFinal[[ActualDataset]][ImputedDataFinal[[ActualDataset]][["Data"]] == DataName,], rm( Data ) ) - dfXmatrixInitialMissings
-
-  } )
-  names( TestIfIdenticalWhenNotMissing ) <- unique( ImputedDataFinal[[ActualDataset]][["Data"]] )
-  return( TestIfIdenticalWhenNotMissing )
-} )
-names( ImputedDataFinalMinusOrig ) <- DatasetNames
-
-ImputedDataFinalMinusOrig_Averaged <- lapply( DatasetNames, function( ActualDataset ) {
-  ImputedDataFinalMinusOrig_avg <- Reduce( "+", ImputedDataFinalMinusOrig[[ActualDataset]] ) / length( ImputedDataFinalMinusOrig[[ActualDataset]] )
-  dfXmatrixInitialMissings <- Datasets[[ActualDataset]]$dfXmatrixInitialMissings
-  dfXmatrixInitialMissings[!is.na( dfXmatrixInitialMissings )] <- 0
-
-  ImputedDataFinalMinusOrig_avg[is.na( ImputedDataFinalMinusOrig_avg )] <- "Missing"
-  dfXmatrixInitialMissings[is.na( dfXmatrixInitialMissings )] <- "Missing"
-
-  # ImputedDataFinalMinusOrig_avg == dfXmatrixInitialMissings
-} )
-
-names( ImputedDataFinalMinusOrig_Averaged ) <- DatasetNames
-
-
-# Average only imputations averaged when the best method for the actual iteration agreed with the overall best method
-ImputedDataFinalAverageOnlyWhenMajorityVote <- lapply( DatasetNames, function( ActualDataset ) {
-  ImputedDataX <- lapply( RepeatedSampleImputations, function( x ) {
-    x[[ActualDataset]][["dfXmatrixInitialMissingsAll"]]
-  } )
-
-  if ( AverageOnlyWhenMajorityVote == TRUE ) {
-    ImputedDataX <- ImputedDataX[BestMethodPerDatasetN_eq_BestMethodPerDataset[[ActualDataset]]]
-  }
-
-  ImputedDataAverage <-
-    Reduce( "+", lapply( ImputedDataX, function( x ) within( x, rm( Data ) ) ) ) / length( ImputedDataX )
-
-  dfXmatrix <- Datasets[[ActualDataset]]$dfXmatrix
-  dfXmatrixInitialMissings <- Datasets[[ActualDataset]]$dfXmatrixInitialMissings
-  dfXmatrixInitialMissingsRepeated <- do.call( "rbind.data.frame", replicate( ( dim( ImputedDataAverage )[1] / nrow( dfXmatrix ) ), dfXmatrixInitialMissings, simplify = FALSE ) )
-  ImputedDataAverageOrigRestored <- mapply( replaceNonmissingsWithOriginal, ImputedDataAverage, dfXmatrixInitialMissingsRepeated )
-
-  ImputedDataAverage <- cbind.data.frame( Data = ImputedDataX[[1]]$Data, ImputedDataAverageOrigRestored )
-  ImputedDataAverage[ImputedDataAverage$Data == "Missings", 2:ncol( ImputedDataAverage )] <- dfXmatrixInitialMissings
-
-  return( ImputedDataAverage )
-} )
-
-names( ImputedDataFinalAverageOnlyWhenMajorityVote ) <- DatasetNames
-
-ImputedDataFinalBestPerDataset <- lapply( DatasetNames, function( ActualDataset ) {
-  ImputedDataBestPerDataset <-
-    ImputedDataFinalAverageOnlyWhenMajorityVote[[ActualDataset]][ImputedDataFinalAverageOnlyWhenMajorityVote[[ActualDataset]]$Data == BestMethodPerDataset[[ActualDataset]],]
-  ImputedDataBestPerDataset <- within( ImputedDataBestPerDataset, rm( Data ) )
-  return( ImputedDataBestPerDataset )
-} )
-
-names( ImputedDataFinalBestPerDataset ) <- DatasetNames
-
-ImputedDataFinalBestPervariable <- lapply( DatasetNames, function( ActualDataset ) {
-  dfImputedFinalBestPervariable <- Datasets[[ActualDataset]][["dfXmatrixInsertedMissings"]]
-  for ( Var in names( dfImputedFinalBestPervariable ) ) {
-    dfImputedFinalBestPervariable[Var] <-
-      ImputedDataFinal[[ActualDataset]][ImputedDataFinal[[ActualDataset]]$Data == BestMethodPerVariable[[ActualDataset]][[Var]], Var]
-  }
-
-  return( dfImputedFinalBestPervariable )
-} )
-
-names( ImputedDataFinalBestPervariable ) <- DatasetNames
 
 ##################  Calculate ZDelta for imputed data #######################################
 
