@@ -86,7 +86,7 @@ createBarplotMeanZDeltas <- function(rowmeanImputationZDeltaInsertedMissings, no
 }
 
 # Function to create PDE plot of raw Zdelta values from iterations
-createPdeRawZDeltas <- function(multivarZDeltas, univarZDeltas, nonsenseZDeltas) {
+createPDERawZDeltas <- function(multivarZDeltas, univarZDeltas, nonsenseZDeltas, AddSkewnessGM = FALSE) {
 
   df4plot_long <- rbind.data.frame(
     cbind.data.frame(Category = "Multivariate", Zdelta = multivarZDeltas),
@@ -112,6 +112,21 @@ createPdeRawZDeltas <- function(multivarZDeltas, univarZDeltas, nonsenseZDeltas)
       legend.background = element_rect(colour = "transparent", fill = ggplot2::alpha("white", 0.4))
     ) +
     labs(title = "PDE of raw Zdelta values", x = "Data", y = "PDE")
+
+  if (AddSkewnessGM == TRUE) {
+    skewnessGMZDeltaInsertedMissingsMultivarV <- round(skewnessGM(ImputationZDeltaInsertedMissingsMultivarV), 3)
+    skewnessGMZDeltaInsertedMissingsUnivarV <- round(skewnessGM(ImputationZDeltaInsertedMissingsUnivarV), 3)
+    skewnessGMZDeltaInsertedMissingsNonsenseV <- round(skewnessGM(ImputationZDeltaInsertedMissingsNonsenseV), 3)
+
+        PDERawZDeltas <- PDERawZDeltas +
+          annotate("text",x=Inf,y=Inf,hjust=1.1,vjust=1.1,
+                   label=paste0("GMC\n","Multivariate: ", skewnessGMZDeltaInsertedMissingsMultivarV,"\n",
+                                "Univariate: ", skewnessGMZDeltaInsertedMissingsUnivarV,"\n",
+                                "Poisened: ", skewnessGMZDeltaInsertedMissingsNonsenseV,"\n"))
+
+
+  }
+
 
   return(PDERawZDeltas)
 }
