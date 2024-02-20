@@ -26,6 +26,8 @@ all_imputation_methods <- c( "bag", "bag_repeated",
                              nonsense_imputation_methods
 )
 
+nProc <- max( round( ( parallel::detectCores( ) ) / 10 ), 4 )
+
 #################################### Functions ########################################################################
 # Helper functions
 

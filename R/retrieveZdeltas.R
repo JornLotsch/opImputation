@@ -17,8 +17,8 @@ skewnessGM <- function( x ) {
 }
 
 # Helper function to reduce duplication
-getImputationZDeltaSubset <- function( x, methods ) {
-  lapply( x, function( y ) y[grep( paste( as.character( methods ), sep = "' '", collapse = "|" ), row.names( y ) ),] )
+getImputationZDeltaSubset <- function( x, Methods ) {
+  lapply( x, function( y ) y[grep( paste( as.character( Methods ), sep = "' '", collapse = "|" ), row.names( y ) ),] )
 }
 
 # Function to retrieve Zdelta values from iterations
