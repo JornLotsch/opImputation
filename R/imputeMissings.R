@@ -266,11 +266,11 @@ imputeMissings <- function( x, method = "rf2", imputationRepetitions = 10, seed 
   )
 
   # final error intercepting, if necessary
-  if (!method %in% nonsense_imputation_methods) {
-  err <- try( ImputedData - x, TRUE )
-  if ( inherits( err, "try-error" ) | sum( is.na( ImputedData ) ) > 0 ) {
-    ImputedData <- makeBadImputations( x )
-  }
+  if ( !method %in% nonsense_imputation_methods ) {
+    err <- try( ImputedData - x, TRUE )
+    if ( inherits( err, "try-error" ) | sum( is.na( ImputedData ) ) > 0 ) {
+      ImputedData <- makeBadImputations( x )
+    }
   }
 
   return( ImputedData )

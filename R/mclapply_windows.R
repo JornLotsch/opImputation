@@ -20,13 +20,15 @@
 #' Source: https://www.r-bloggers.com/2014/07/implementing-mclapply-on-windows-a-primer-on-embarrassingly-parallel-computation-on-multicore-systems-with-r/
 #' https://rdrr.io/github/mcanigueral/flextools/src/R/parallel-processing.R
 #'
+library(parallel)
+
 mclapply.windows <- function (X, FUN, ..., mc.cores) {
 
   # do not use more cores than items in the list
   cores <- min(length(X), as.integer(mc.cores))
 
   # create cluster for multiprocessing
-  cl <- makeCluster(cores, type="PSOCK") # number of cores
+  cl <- parallel::makeCluster(cores, type="PSOCK") # number of cores
 
   # in case the code crashes the cluster needs to be closed properly
   # so we catch every error allowing us the chance to change things
@@ -38,7 +40,7 @@ mclapply.windows <- function (X, FUN, ..., mc.cores) {
   warning = function(war) {print(war)},
   finally = {
     ## Stop the cluster
-    stopCluster(cl)
+   parallel:: stopCluster(cl)
   })
   return(results)
 }

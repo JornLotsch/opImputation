@@ -85,7 +85,7 @@ makeAndMeasureRepeatedImputations <- function( Data, seeds, probMissing ) {
       cbind.data.frame( Data = "Missings", dfXmatrixInsertedMissings ),
       dfImputedDataAll
     )
-    row.names(dfXmatrixall) <- paste0(make.names(dfXmatrixall$Data),".",1:nrow(dfXmatrix))
+    row.names(dfXmatrixall) <- paste0( make.names(dfXmatrixall$Data), ".", seq_len( nrow( dfXmatrix ) ) )
 
     # Calculate metrics
     ImputationRMSEInsertedMissings <- makeMetricsMatrix(

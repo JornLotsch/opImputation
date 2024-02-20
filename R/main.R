@@ -16,9 +16,10 @@ source( paste0( pfad_o, pfad_r, "calculateMetrics.R" ) )
 source( paste0( pfad_o, pfad_r, "findBestImputation.R" ) )
 source( paste0( pfad_o, pfad_r, "makeABCanaylsis.R" ) )
 source( paste0( pfad_o, pfad_r, "retrieveZdeltas.R" ) )
+source( paste0( pfad_o, pfad_r, "retrieveImputedData.R" ) )
 
 
-nProc <- max( round( ( detectCores( ) ) / 10 ), 4 )
+nProc <- max( round( ( parallel::detectCores( ) ) / 10 ), 4 )
 # nProc <- 5
 
 ################## Switches #######################################
@@ -34,7 +35,6 @@ probMissing <- PercentMissing / 100
 ################## Functions #######################################
 
 
-
 ################## Create data set #######################################
 DatasetNames <- c( "UniformRandom3VarDependent",
                    "UniformRandom3VarIndependent" )
@@ -43,7 +43,7 @@ source( paste0( pfad_o, pfad_r2, "create_prepaire_Datasets.R" ) )
 
 ################## Imputation methods #######################################
 
-ImputationMethods <- c( "plus", "rf2", "median")
+ImputationMethods <- c( "plus", "rf2", "median" )
 # ImputationMethods <- all_imputation_methods
 
 ################## Make missings in each variable #######################################
@@ -70,19 +70,21 @@ names( Datasets ) <- DatasetNames
 ################## Impute data sets #######################################
 
 RepeatedSampleImputations <-
-  makeAndMeasureRepeatedImputations( Data = Datasets$UniformRandom3VarIndependent$dfXmatrixInitialMissings,
+  makeAndMeasureRepeatedImputations( Data = Datasets$
+    UniformRandom3VarIndependent$
+    dfXmatrixInitialMissings,
                                      seeds = list.of.seeds,
                                      probMissing = probMissing )
 
 ##################  Look at  bad imputations #######################################
 
-Zdeltas <- retrieveZdeltas(RepeatedSampleImputations = RepeatedSampleImputations)
-pZdeltasPlotAvgerage <- createBarplotMeanZDeltas(rowmeanImputationZDeltaInsertedMissings = Zdeltas$rowmeanImputationZDeltaInsertedMissings,
-                                               nonsense_imputation_methods = nonsense_imputation_methods,
-                                               scalar_imputation_methods = scalar_imputation_methods)
-pZdeltasPDEraw <-  createPDERawZDeltas(multivarZDeltas = Zdeltas$ImputationZDeltaInsertedMissingsMultivarV,
+Zdeltas <- retrieveZdeltas( RepeatedSampleImputations = RepeatedSampleImputations )
+pZdeltasPlotAvgerage <- createBarplotMeanZDeltas( rowmeanImputationZDeltaInsertedMissings = Zdeltas$rowmeanImputationZDeltaInsertedMissings,
+                                                  nonsense_imputation_methods = nonsense_imputation_methods,
+                                                  scalar_imputation_methods = scalar_imputation_methods )
+pZdeltasPDEraw <- createPDERawZDeltas( multivarZDeltas = Zdeltas$ImputationZDeltaInsertedMissingsMultivarV,
                                        univarZDeltas = Zdeltas$ImputationZDeltaInsertedMissingsUnivarV,
-                                       nonsenseZDeltas = Zdeltas$ImputationZDeltaInsertedMissingsNonsenseV, AddSkewnessGM = TRUE)
+                                       nonsenseZDeltas = Zdeltas$ImputationZDeltaInsertedMissingsNonsenseV, AddSkewnessGM = TRUE )
 
 
 FigZdelta <-
@@ -94,27 +96,29 @@ FigZdelta <-
     nrow = 2, rel_heights = c( 1, 1 )
   )
 
-print(FigZdelta)
+print( FigZdelta )
 
 ##################  Find best imputation #######################################
 
-MethodsResults <- BestMethod(RepeatedSampleImputations = RepeatedSampleImputations)
+MethodsResults <- BestMethod( RepeatedSampleImputations = RepeatedSampleImputations )
 
 print( "BestMethodPerDataset" )
-BestMethodPerDataset <- names(MethodsResults$BestPerDatasetRanksums_insertedMissings)
+BestMethodPerDataset <- names( MethodsResults$BestPerDatasetRanksums_insertedMissings )
 print( BestMethodPerDataset )
 
 
 ##################  Retrieve imputed data #######################################
 
-ImputedData <- retrieveAveragedImputedData(Data = Datasets$UniformRandom3VarIndependent$dfXmatrixInitialMissings,
-                                           RepeatedSampleImputations = RepeatedSampleImputations)
+ImputedData <- retrieveAveragedImputedData( Data = Datasets$
+  UniformRandom3VarIndependent$
+  dfXmatrixInitialMissings,
+                                            RepeatedSampleImputations = RepeatedSampleImputations )
 
 
 ##################  Create ABC plots #######################################
 
 ABCres <- makeABCanaylsis( zABCvalues = MethodsResults$zABCvalues_insertedMissings,
-                     zDelta =  Zdeltas$meanImputationZDeltaInsertedMissings)
+                           zDelta = Zdeltas$meanImputationZDeltaInsertedMissings )
 
 FigABC <-
   cowplot::plot_grid(
@@ -125,6 +129,6 @@ FigABC <-
     nrow = 2, rel_heights = c( 2, 1 )
   )
 
-print(FigABC)
+print( FigABC )
 
 
