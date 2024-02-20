@@ -4,7 +4,7 @@
 library( pbmcapply )
 library( parallel )
 
-nProc <- max( round( ( parallel::detectCores( ) ) / 10 ), 4 )
+# nProc <- max( round( ( parallel::detectCores( ) ) / 10 ), 4 )
 
 #################################### Functions ########################################################################
 

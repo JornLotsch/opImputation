@@ -4,6 +4,7 @@ radius <- 5
 totalNr <- 100
 nVars <- 3
 dfXmatrix <- NULL
+jitterAmount <- 0.3
 
 create_prepaire_Datasets <- function( DatasetNames ) {
 
@@ -57,50 +58,50 @@ create_prepaire_Datasets <- function( DatasetNames ) {
                 y2 <- runif( totalNr, min = 0, max = 10 )
                 dfXmatrix <- cbind.data.frame( Var1 = x, Var2 = y1, Var3 = y2 )
               },
-              "CodeinLogMetabolitesUrine" = {
-                CodeinMetabolitesUrine <-
-                  data.frame( readxl::read_excel( "/home/joern/Dokumente/DataCleaningDataScience/09Originale/Codein Analytik Urin und Plasma_150206.xlsx" ) )
-                rownames( CodeinMetabolitesUrine ) <- CodeinMetabolitesUrine$`Poly-Id.`
-                CodeinMetabolitesUrine <- CodeinMetabolitesUrine[, c( "MOR", "M3G", "M6G", "COD", "C6G" )]
-                dfXmatrix <- data.frame( CodeinMetabolitesUrine, row.names = NULL )
-                names( dfXmatrix ) <- make.names( colnames(dfXmatrix) )
-                dfXmatrix <- data.frame( apply( dfXmatrix, 2, function( x ) x = log( x ) ) )
-              },
-              "LipidsPsychiatricPat" = {
-                BiomarkerPsy <-
-                  data.frame( readxl::read_excel( "/home/joern/Dokumente/BiomarkerPsychiatrie/09Originale/Daten Biomarkeridentifikation Depression-BipolareStörung-ADHS-Demenz.xlsx", sheet = "Zeitpunkt 1 ng mL-1" ) )
-                rownames( BiomarkerPsy ) <- BiomarkerPsy$SecuTrialCode
-                Lipide8 <- c( "S1P", "C16Sphinganin", "C16Cer", "C20Cer", "C24Cer", "C24_1Cer", "C16GluCer", "C16LacCer" )
-                LipidsPsychiatricPat <- subset( BiomarkerPsy, select = Lipide8 )
-                dfXmatrix <- data.frame( LipidsPsychiatricPat, row.names = NULL )
-                names( dfXmatrix ) <- make.names( colnames(dfXmatrix) )
-                dfXmatrix <- data.frame( apply( dfXmatrix, 2, function( x ) x = log( x ) ) )
-              },
-              "QSTpainEJPtransf" = {
-                QSTSchmerzmodelle <-
-                  data.frame( readxl::read_excel( "/home/joern/Dokumente/QSTSchmerzmodelle/09Originale/Daten_Exp_pain_QST.xlsx", sheet = "DatenAnalysiert" ) )
-                QSTSchmerzmodelleOrig <- QSTSchmerzmodelle
-                PainTestsToInvert <- c( "TSACold", "CO2VAS", "LaserVAS", "CDT", "CPT", "MPS", "WUR", "VDT", "DMA" )
-                NewtonTokPa <- c( "PressureThr", "PressureTol" )
-
-                QSTSchmerzmodelle[, names( QSTSchmerzmodelle ) %in% PainTestsToInvert] <-
-                  lapply( QSTSchmerzmodelle[, names( QSTSchmerzmodelle ) %in% PainTestsToInvert], function( x ) { -x } )
-                QSTSchmerzmodelle[, names( QSTSchmerzmodelle ) %in% NewtonTokPa] <-
-                  lapply( QSTSchmerzmodelle[, names( QSTSchmerzmodelle ) %in% NewtonTokPa], function( x ) { 10 * x } )
-
-                PainTestsNames <- c( "PressureThr", "PressureTol", "TSACold", "ElectricThr", "ElectricTol",
-                                     "Co2Thr", "CO2VAS", "LaserThr", "LaserVAS",
-                                     "CDT", "WDT", "TSL", "CPT", "HPT", "PPT", "MPT", "MPS", "WUR", "MDT" )
-                PainTests <- subset( QSTSchmerzmodelleOrig, select = PainTestsNames )
-                PainTeststoLogNames <- PainTestsNames
-                PainTestsLog <- PainTests
-                PainTestsLog[, names( PainTestsLog ) %in% PainTeststoLogNames] <-
-                  lapply( PainTestsLog[, names( PainTestsLog ) %in% PainTeststoLogNames], function( x, mi = min( x, na.rm = T ) ) { log10( x - mi + 1 ) } )
-
-                PainTests_complete <- na.omit( PainTestsLog )
-                dfXmatrix <- data.frame( PainTests_complete , row.names = NULL)
-                names( dfXmatrix ) <- make.names( colnames(dfXmatrix) )
-              },
+              # "CodeinLogMetabolitesUrine" = {
+              #   CodeinMetabolitesUrine <-
+              #     data.frame( readxl::read_excel( "/home/joern/Dokumente/DataCleaningDataScience/09Originale/Codein Analytik Urin und Plasma_150206.xlsx" ) )
+              #   rownames( CodeinMetabolitesUrine ) <- CodeinMetabolitesUrine$`Poly-Id.`
+              #   CodeinMetabolitesUrine <- CodeinMetabolitesUrine[, c( "MOR", "M3G", "M6G", "COD", "C6G" )]
+              #   dfXmatrix <- data.frame( CodeinMetabolitesUrine, row.names = NULL )
+              #   names( dfXmatrix ) <- make.names( colnames(dfXmatrix) )
+              #   dfXmatrix <- data.frame( apply( dfXmatrix, 2, function( x ) x = log( x ) ) )
+              # },
+              # "LipidsPsychiatricPat" = {
+              #   BiomarkerPsy <-
+              #     data.frame( readxl::read_excel( "/home/joern/Dokumente/BiomarkerPsychiatrie/09Originale/Daten Biomarkeridentifikation Depression-BipolareStörung-ADHS-Demenz.xlsx", sheet = "Zeitpunkt 1 ng mL-1" ) )
+              #   rownames( BiomarkerPsy ) <- BiomarkerPsy$SecuTrialCode
+              #   Lipide8 <- c( "S1P", "C16Sphinganin", "C16Cer", "C20Cer", "C24Cer", "C24_1Cer", "C16GluCer", "C16LacCer" )
+              #   LipidsPsychiatricPat <- subset( BiomarkerPsy, select = Lipide8 )
+              #   dfXmatrix <- data.frame( LipidsPsychiatricPat, row.names = NULL )
+              #   names( dfXmatrix ) <- make.names( colnames(dfXmatrix) )
+              #   dfXmatrix <- data.frame( apply( dfXmatrix, 2, function( x ) x = log( x ) ) )
+              # },
+              # "QSTpainEJPtransf" = {
+              #   QSTSchmerzmodelle <-
+              #     data.frame( readxl::read_excel( "/home/joern/Dokumente/QSTSchmerzmodelle/09Originale/Daten_Exp_pain_QST.xlsx", sheet = "DatenAnalysiert" ) )
+              #   QSTSchmerzmodelleOrig <- QSTSchmerzmodelle
+              #   PainTestsToInvert <- c( "TSACold", "CO2VAS", "LaserVAS", "CDT", "CPT", "MPS", "WUR", "VDT", "DMA" )
+              #   NewtonTokPa <- c( "PressureThr", "PressureTol" )
+              #
+              #   QSTSchmerzmodelle[, names( QSTSchmerzmodelle ) %in% PainTestsToInvert] <-
+              #     lapply( QSTSchmerzmodelle[, names( QSTSchmerzmodelle ) %in% PainTestsToInvert], function( x ) { -x } )
+              #   QSTSchmerzmodelle[, names( QSTSchmerzmodelle ) %in% NewtonTokPa] <-
+              #     lapply( QSTSchmerzmodelle[, names( QSTSchmerzmodelle ) %in% NewtonTokPa], function( x ) { 10 * x } )
+              #
+              #   PainTestsNames <- c( "PressureThr", "PressureTol", "TSACold", "ElectricThr", "ElectricTol",
+              #                        "Co2Thr", "CO2VAS", "LaserThr", "LaserVAS",
+              #                        "CDT", "WDT", "TSL", "CPT", "HPT", "PPT", "MPT", "MPS", "WUR", "MDT" )
+              #   PainTests <- subset( QSTSchmerzmodelleOrig, select = PainTestsNames )
+              #   PainTeststoLogNames <- PainTestsNames
+              #   PainTestsLog <- PainTests
+              #   PainTestsLog[, names( PainTestsLog ) %in% PainTeststoLogNames] <-
+              #     lapply( PainTestsLog[, names( PainTestsLog ) %in% PainTeststoLogNames], function( x, mi = min( x, na.rm = T ) ) { log10( x - mi + 1 ) } )
+              #
+              #   PainTests_complete <- na.omit( PainTestsLog )
+              #   dfXmatrix <- data.frame( PainTests_complete , row.names = NULL)
+              #   names( dfXmatrix ) <- make.names( colnames(dfXmatrix) )
+              # },
               "FCPSHepta" = {
                 dfXmatrix <-
                   data.frame( FCPS::Hepta$Data )
