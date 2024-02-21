@@ -69,7 +69,6 @@ opImputation <- function( Data, ImputationMethods = c( "rf_missForest", "median"
   )
 
   FigZdelta <- cowplot::plot_grid(
-    pZdeltasPlotAvgerage,
     pZdeltasPDEraw,
     pGMCPlotAvgerage,
     align = "v", axis = "lr",
@@ -97,18 +96,19 @@ opImputation <- function( Data, ImputationMethods = c( "rf_missForest", "median"
 
   FigABC <- cowplot::plot_grid(
     ABCres$ABCplot,
+    pZdeltasPlotAvgerage,
     ABCres$ZDeltaPerVarPlot,
     align = "v", axis = "lr",
     labels = LETTERS[1:22],
-    nrow = 2, rel_heights = c( 2, 1 )
+    ncol = 1
   )
 
   # Display main results
   if ( PlotIt == TRUE ) {
     print( "BestMethodPerDataset" )
     print( BestMethodPerDataset )
-    print( FigZdelta )
     print( FigABC )
+    print( FigZdelta )
   }
 
   # Return results
