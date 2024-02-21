@@ -14,7 +14,7 @@ scalar_imputation_methods <- c( "median", "mean", "mode", "rSample" )
 nonsense_imputation_methods <- c( "plus", "plusminus", "factor" )
 
 all_imputation_methods <- c( "bag", "bag_repeated",
-                             "rf", "rf_repeated", "rf2", "rf2_repeated", "miceRanger", "miceRanger_repeated",
+                             "rf_mice", "rf_repeated", "rf_missForest", "rf_missForest_repeated", "miceRanger", "miceRanger_repeated",
                              "cart", "cart_repeated",
                              "linear",
                              "rSample",
@@ -67,7 +67,7 @@ makeBadImputations <- function( x ) {
 
 # Main imputation method selection
 
-imputeMissings <- function( x, method = "rf2", imputationRepetitions = 10, seed = NULL, x_orig = NULL, nProc = 1 ) {
+imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions = 10, seed = NULL, x_orig = NULL, nProc = 1 ) {
   x <- data.frame( x )
 
   if ( is.null( seed ) ) {
@@ -102,8 +102,8 @@ imputeMissings <- function( x, method = "rf2", imputationRepetitions = 10, seed 
       }, mc.cores = nProc )
       ImputedData <- Reduce( "+", iImputedData ) / length( iImputedData )
     },
-    rf = {
-      Impu <- try( mice::mice( x, method = "rf", print = FALSE ), TRUE )
+    rf_mice = {
+      Impu <- try( mice::mice( x, method = "rf_mice", print = FALSE ), TRUE )
       if ( !inherits( Impu, "try-error" ) ) {
         ImputedData <- mice::complete( Impu )
       }
@@ -111,7 +111,7 @@ imputeMissings <- function( x, method = "rf2", imputationRepetitions = 10, seed 
     rf_repeated = {
       iImputedData <- parallel::mclapply( list.of.seeds, function( s ) {
         set.seed( s )
-        Impu <- try( mice::mice( x, method = "rf" ), TRUE )
+        Impu <- try( mice::mice( x, method = "rf_mice" ), TRUE )
         if ( !inherits( Impu, "try-error" ) ) {
           ImputedData <- mice::complete( Impu )
         }
@@ -119,13 +119,13 @@ imputeMissings <- function( x, method = "rf2", imputationRepetitions = 10, seed 
       }, mc.cores = nProc )
       ImputedData <- Reduce( "+", iImputedData ) / length( iImputedData )
     },
-    rf2 = {
+    rf_missForest = {
       Impu <- try( missForest::missForest( x ), TRUE )
       if ( !inherits( Impu, "try-error" ) ) {
         ImputedData <- Impu$ximp
       }
     },
-    rf2_repeated = {
+    rf_missForest_repeated = {
       iImputedData <- parallel::mclapply( list.of.seeds, function( s ) {
         set.seed( s )
         Impu <- try( missForest::missForest( x ), TRUE )
@@ -236,7 +236,7 @@ imputeMissings <- function( x, method = "rf2", imputationRepetitions = 10, seed 
     },
     ameliaImp_repeated = {
       set.seed( seed )
-      Impu <- try( eval_with_timeout( Amelia::amelia.default( x, m = imputationRepetitions ), timeout = 30 ), TRUE )
+      Impu <- try( eval_with_timeout( Amelia::amelia.default( x, m = ImputationRepetitions ), timeout = 30 ), TRUE )
       if ( !inherits( Impu, "try-error" ) ) {
         iImputedData <- Impu$imputations
         ImputedData <- Reduce( "+", iImputedData ) / length( iImputedData )

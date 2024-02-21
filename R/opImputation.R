@@ -1,7 +1,37 @@
-# Main package function
+# Selecting imputation methods for missing values
+#' @import(parallel)
+#' @import(ggplot2)
+#' @import(ggforce)
+#' @import(pbmcapply)
+#' @import(stringr)
+#' @import(methods)
+#' @import(cowplot)
+#' @importFrom(stats  na.omit   IQR  coef  sd  median  predict  runif  wilcox.test)
+#' @importFrom(utils  sessionInfo)
+#' @importFrom(doParallel  registerDoParallel  stopImplicitCluster)
+#' @importFrom(caret  preProcess)
+#' @importFrom(mice   mice)
+#' @importFrom(missForest  missForest)
+#' @importFrom(miceRanger  miceRanger  impute)
+#' @importFrom(multiUS  KNNimp)
+#' @importFrom(Amelia  amelia  amelia.default)
+#' @importFrom(mi  mi)
+#' @importFrom(reshape2  melt)
+#' @importFrom(scales  pretty_breaks)
+#' @importFrom(DataVisualizations  ParetoDensityEstimation)
+#' @importFrom(abind  abind)
+#' @importFrom(ABCanalysis  ABCanalysis)
+#' @importFrom(doParallel  registerDoParallel  stopImplicitCluster)
+#' @export
+opImputation <- function( Data, ImputationMethods = c( "rf_missForest", "median", "plus" ),
+                          ImputationRepetitions = 20, seed = 100, nIter = 20, nProc = getOption( "mc.cores", 2L ),
+                          probMissing = 0.1, mnarity = 0, lowOnly = FALSE, mnarshape = 1, PlotIt = TRUE ) {
 
-opImputation <- function( Data, ImputationMethods = c("rf2", "median", "plus" ), ImputationRepetitions = 20, seed = 100, nIter = 20, nProc = 2,
-                          probMissing = 0.1, mnarity = 0, lowOnly = FALSE, mnarshape = 1, AddSkewnessGM = TRUE ) {
+  Data <- data.frame( Data )
+
+  if ( is.numeric( as.matrix( na.omit( Data ) ) ) == FALSE ) {
+    stop( "opImputation: Only numeric data allowed. Execution stopped." )
+  }
 
   list.of.seeds <- 1:nIter + seed - 1
 
@@ -15,31 +45,36 @@ opImputation <- function( Data, ImputationMethods = c("rf2", "median", "plus" ),
     nProc = nProc,
     ImputationMethods = ImputationMethods,
     ImputationRepetitions = ImputationRepetitions
-
   )
 
   # Look at bad imputations
   Zdeltas <- retrieveZdeltas( RepeatedSampleImputations = RepeatedSampleImputations,
                               all_imputation_methods = all_imputation_methods,
                               scalar_imputation_methods = scalar_imputation_methods,
-                              nonsense_imputation_methods = nonsense_imputation_methods)
+                              nonsense_imputation_methods = nonsense_imputation_methods )
   pZdeltasPlotAvgerage <- createBarplotMeanZDeltas(
-    rowmeanImputationZDeltaInsertedMissings = Zdeltas$rowmeanImputationZDeltaInsertedMissings,
+    ImputationZDeltaInsertedMissingsRaw = Zdeltas$ImputationZDeltaInsertedMissings,
+    nonsense_imputation_methods = nonsense_imputation_methods,
+    scalar_imputation_methods = scalar_imputation_methods
+  )
+  pGMCPlotAvgerage <- createBarplotMeanGMCs(
+    ImputationZDeltaInsertedMissingsRaw = Zdeltas$ImputationZDeltaInsertedMissings,
     nonsense_imputation_methods = nonsense_imputation_methods,
     scalar_imputation_methods = scalar_imputation_methods
   )
   pZdeltasPDEraw <- createPDERawZDeltas(
     multivarZDeltas = Zdeltas$ImputationZDeltaInsertedMissingsMultivarV,
     univarZDeltas = Zdeltas$ImputationZDeltaInsertedMissingsUnivarV,
-    nonsenseZDeltas = Zdeltas$ImputationZDeltaInsertedMissingsNonsenseV, AddSkewnessGM = TRUE
+    nonsenseZDeltas = Zdeltas$ImputationZDeltaInsertedMissingsNonsenseV
   )
 
   FigZdelta <- cowplot::plot_grid(
     pZdeltasPlotAvgerage,
     pZdeltasPDEraw,
+    pGMCPlotAvgerage,
     align = "v", axis = "lr",
     labels = LETTERS[1:22],
-    nrow = 2, rel_heights = c( 1, 1 )
+    ncol = 1, rel_heights = c( 1, 1 )
   )
 
   # Find best imputation
@@ -69,10 +104,12 @@ opImputation <- function( Data, ImputationMethods = c("rf2", "median", "plus" ),
   )
 
   # Display main results
-  print( "BestMethodPerDataset" )
-  print( BestMethodPerDataset )
-  print(FigZdelta)
-  print(FigABC)
+  if ( PlotIt == TRUE ) {
+    print( "BestMethodPerDataset" )
+    print( BestMethodPerDataset )
+    print( FigZdelta )
+    print( FigABC )
+  }
 
   # Return results
   return(

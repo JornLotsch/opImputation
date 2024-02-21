@@ -6,9 +6,9 @@ The package provides the necessary functions for how to impute if you must:
 a method for handling missing values in biomedical numerical tabular data.
 }
 \usage{
-opImputation( Data, ImputationMethods = c("rf2", "median", "plus" ), 
-ImputationRepetitions = 20, seed = 100, nIter = 20, nProc = 2,
-probMissing = 0.1, mnarity = 0, lowOnly = FALSE, mnarshape = 1, AddSkewnessGM = TRUE ) 
+opImputation( Data, ImputationMethods = c("rf_missForest", "median", "plus" ), 
+ImputationRepetitions = 20, seed = 100, nIter = 20, nProc = getOption("mc.cores", 2L),
+probMissing = 0.1, mnarity = 0, lowOnly = FALSE, mnarshape = 1, PlotIt = TRUE ) 
 }
 \arguments{
 \item{Data}{the (numerical!) data as a matrix or data frame.}
@@ -21,7 +21,7 @@ probMissing = 0.1, mnarity = 0, lowOnly = FALSE, mnarshape = 1, AddSkewnessGM = 
 \item{mnarity}{degree of not at random sampling, 0...1.}
 \item{lowOnly}{if NAR, whether only low values should be oversampled}
 \item{mnarshape}{the degree of not at randomness}
-\item{AddSkewnessGM}{whether to display the skewness in the diagnostic PDE plot of the zDelta values.}
+\item{PlotIt}{whether to display the main results automatically as two plots.}
 }
 \value{
 Returns a list of results.
@@ -43,7 +43,7 @@ Jorn Lotsch
 \examples{
 ## example 1
 TestImputation <- opImputation(Data = iris[,1:4],
-                         ImputationMethods =  c("rf2", "median", "plus" ))
+                         ImputationMethods =  c("rf_missForest", "median", "plus" ))
 }
 \keyword{opImputation}
 \keyword{data imputation}

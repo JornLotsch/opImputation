@@ -1,11 +1,3 @@
-#################################### Libraries ########################################################################
-
-library( ABCanalysis )
-library( ggplot2 )
-library( ggforce )
-
-#################################### Functions ########################################################################
-
 # Function to plot the ABC analysis results of the ranking of the impuation methods
 makeABCanaylsis <- function( zABCvalues, zDelta = NULL, HighlightPoisenedMethods = TRUE, nonsense_imputation_methods ) {
 

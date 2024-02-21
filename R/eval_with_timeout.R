@@ -1,3 +1,4 @@
+# Function to interrupt impuation when code hangs, taken from
 # https://github.com/HenrikBengtsson/R.utils/issues/74
 
 eval_with_timeout <- function( expr, envir = parent.frame( ), timeout, on_timeout = c( "error", "warning", "silent" ) ) {

@@ -1,9 +1,4 @@
-#################################### Libraries ########################################################################
-
-library( abind )
-
-#################################### Functions ########################################################################
-
+# Function to identity the optimal imputation method from the comparative evaluations
 # Function to rank matrices
 rankMEs <-
   function( rankMx ) {

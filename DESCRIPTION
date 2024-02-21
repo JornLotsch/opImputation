@@ -1,6 +1,6 @@
 Package: opImputation
 Type: Package
-Title: Optimal Selection of Impuation Methods for Bio-Medical
+Title: Optimal Selection of Imputation Methods for Bio-Medical
         Data
 Version: 0.1
 Description: How to impute if you must: A data science approach to selecting imputation methods for missing values in biomedical numerical tabular data. 

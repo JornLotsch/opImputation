@@ -1,57 +1,45 @@
-#################################### Libraries ########################################################################
+# Collection of implemented imputation methods
+# Helper functions
 
-library( caret )
-library( missForest )
-library( mice )
-library( miceRanger )
-library( multiUS )
-library( Amelia )
-library( mi )
+imputeMedian <- function( x ) {
+  x <- as.numeric( as.character( x ) )
+  x[is.na( x )] <- median( x, na.rm = TRUE )
+  return( x )
+}
 
-#################################### Functions ########################################################################
+imputeMean <- function( x ) {
+  x <- as.numeric( as.character( x ) )
+  x[is.na( x )] <- mean( x, na.rm = TRUE )
+  return( x )
+}
 
+getMode <- function( v ) {
+  v <- na.omit( v )
+  uniqv <- unique( v )
+  mode <- uniqv[which.max( tabulate( match( v, uniqv ) ) )]
+  return( mode )
+}
+
+imputeMode <- function( x ) {
+  x <- as.numeric( as.character( x ) )
+  x[is.na( x )] <- getMode( x )
+  return( x )
+}
+
+imputeRandom <- function( x ) {
+  x <- as.numeric( as.character( x ) )
+  x[is.na( x )] <- sample( na.omit( x ), replace = TRUE )
+  return( x )
+}
+
+makeBadImputations <- function( x ) {
+  x[!is.na( x )] <- NA
+  return( data.frame( x ) )
+}
 
 # Main imputation method selection
 
-imputeMissings <- function( x, method = "rf2", ImputationRepetitions = 10,
-                            seed = NULL, x_orig = NULL, nProc = 1,
-                            nonsense_imputation_methods = c( "plus", "plusminus", "factor" )
- ) {
-
-  # Helper functions
-
-  imputeMedian <- function( x ) {
-    x <- as.numeric( as.character( x ) )
-    x[is.na( x )] <- median( x, na.rm = TRUE )
-    return( x )
-  }
-
-  imputeMean <- function( x ) {
-    x <- as.numeric( as.character( x ) )
-    x[is.na( x )] <- mean( x, na.rm = TRUE )
-    return( x )
-  }
-
-  getMode <- function( v ) {
-    v <- na.omit( v )
-    uniqv <- unique( v )
-    mode <- uniqv[which.max( tabulate( match( v, uniqv ) ) )]
-    return( mode )
-  }
-
-  imputeMode <- function( x ) {
-    x <- as.numeric( as.character( x ) )
-    x[is.na( x )] <- getMode( x )
-    return( x )
-  }
-
-  imputeRandom <- function( x ) {
-    x <- as.numeric( as.character( x ) )
-    x[is.na( x )] <- sample( na.omit( x ), replace = TRUE )
-    return( x )
-  }
-
-  # Imputation
+imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions = 10, seed = NULL, x_orig = NULL, nProc = 1 ) {
   x <- data.frame( x )
 
   if ( is.null( seed ) ) {
@@ -70,6 +58,7 @@ imputeMissings <- function( x, method = "rf2", ImputationRepetitions = 10,
     rSample = ImputedData <- apply( x, 2, imputeRandom ),
 
     bag = {
+      set.seed( seed )
       Impu <- try( caret::preProcess( x, method = "bagImpute" ), TRUE )
       if ( !inherits( Impu, "try-error" ) ) {
         ImputedData <- predict( Impu, x )
@@ -77,7 +66,7 @@ imputeMissings <- function( x, method = "rf2", ImputationRepetitions = 10,
     },
     bag_repeated = {
       iImputedData <- parallel::mclapply( list.of.seeds, function( s ) {
-        set.seed( s )
+        set.seed( seed )
         Impu <- try( caret::preProcess( x, method = "bagImpute" ), TRUE )
         if ( !inherits( Impu, "try-error" ) ) {
           ImputedData <- predict( Impu, x )
@@ -86,16 +75,17 @@ imputeMissings <- function( x, method = "rf2", ImputationRepetitions = 10,
       }, mc.cores = nProc )
       ImputedData <- Reduce( "+", iImputedData ) / length( iImputedData )
     },
-    rf = {
-      Impu <- try( mice::mice( x, method = "rf", print = FALSE ), TRUE )
+    rf_mice = {
+      set.seed( seed )
+      Impu <- try( mice::mice( x, method = "rf_mice", print = FALSE ), TRUE )
       if ( !inherits( Impu, "try-error" ) ) {
         ImputedData <- mice::complete( Impu )
       }
     },
-    rf_repeated = {
+    rf_mice_repeated = {
       iImputedData <- parallel::mclapply( list.of.seeds, function( s ) {
         set.seed( s )
-        Impu <- try( mice::mice( x, method = "rf" ), TRUE )
+        Impu <- try( mice::mice( x, method = "rf_mice" ), TRUE )
         if ( !inherits( Impu, "try-error" ) ) {
           ImputedData <- mice::complete( Impu )
         }
@@ -103,13 +93,14 @@ imputeMissings <- function( x, method = "rf2", ImputationRepetitions = 10,
       }, mc.cores = nProc )
       ImputedData <- Reduce( "+", iImputedData ) / length( iImputedData )
     },
-    rf2 = {
+    rf_missForest = {
+      set.seed( seed )
       Impu <- try( missForest::missForest( x ), TRUE )
       if ( !inherits( Impu, "try-error" ) ) {
         ImputedData <- Impu$ximp
       }
     },
-    rf2_repeated = {
+    rf_missForest_repeated = {
       iImputedData <- parallel::mclapply( list.of.seeds, function( s ) {
         set.seed( s )
         Impu <- try( missForest::missForest( x ), TRUE )
@@ -121,6 +112,7 @@ imputeMissings <- function( x, method = "rf2", ImputationRepetitions = 10,
       ImputedData <- Reduce( "+", iImputedData ) / length( iImputedData )
     },
     miceRanger = {
+      set.seed( seed )
       miceObj <- miceRanger::miceRanger( x, 1, 1, returnModels = TRUE, verbose = FALSE )
       Impu <- try( miceRanger::impute( x, miceObj ), TRUE )
       if ( !inherits( Impu, "try-error" ) ) {
@@ -140,6 +132,7 @@ imputeMissings <- function( x, method = "rf2", ImputationRepetitions = 10,
       ImputedData <- Reduce( "+", iImputedData ) / length( iImputedData )
     },
     cart = {
+      set.seed( seed )
       Impu <- try( mice::mice( x, method = "cart", print = FALSE ), TRUE )
       if ( !inherits( Impu, "try-error" ) ) {
         ImputedData <- mice::complete( Impu )
@@ -157,12 +150,14 @@ imputeMissings <- function( x, method = "rf2", ImputationRepetitions = 10,
       ImputedData <- Reduce( "+", iImputedData ) / length( iImputedData )
     },
     linear = {
+      set.seed( seed )
       Impu <- try( mice::mice( x, method = "lasso.norm", print = FALSE ), TRUE )
       if ( !inherits( Impu, "try-error" ) ) {
         ImputedData <- mice::complete( Impu )
       }
     },
     pmm = {
+      set.seed( seed )
       Impu <- try( mice::mice( x, method = "pmm" ), TRUE )
       if ( !inherits( Impu, "try-error" ) ) {
         ImputedData <- mice::complete( Impu )
@@ -227,6 +222,7 @@ imputeMissings <- function( x, method = "rf2", ImputationRepetitions = 10,
       }
     },
     miImp = {
+      set.seed( seed )
       Impu <- try( mi::mi( x, verbose = FALSE, parallel = FALSE ), TRUE )
       if ( !inherits( Impu, "try-error" ) ) {
         iImputedData <- mi::complete( Impu )
@@ -244,7 +240,7 @@ imputeMissings <- function( x, method = "rf2", ImputationRepetitions = 10,
     plus = {
       ImputedData <- apply( x_orig, 2, function( x_orig ) x_orig + 1 * 0.2 * median( x_orig, na.rm = TRUE ) )
     },
-    factorImp = {
+    factor = {
       ImputedData <- apply( x_orig, 2, function( x_orig ) x_orig * ( 1 + 0.03 * median( x_orig, na.rm = TRUE ) ) )
     }
   )

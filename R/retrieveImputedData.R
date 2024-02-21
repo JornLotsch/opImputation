@@ -1,4 +1,4 @@
-##################  Retrieve imputed data #######################################
+# Function to retrieve imputed data
 
 # Function to replace non-missing values in 'miss' with corresponding values from 'complete'
 replaceNonmissingsWithOriginal <- function( complete, miss ) {
