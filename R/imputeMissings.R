@@ -8,68 +8,50 @@ library( multiUS )
 library( Amelia )
 library( mi )
 
-
-#################################### Variables ########################################################################
-scalar_imputation_methods <- c( "median", "mean", "mode", "rSample" )
-nonsense_imputation_methods <- c( "plus", "plusminus", "factor" )
-
-all_imputation_methods <- c( "bag", "bag_repeated",
-                             "rf", "rf_repeated", "rf2", "rf2_repeated", "miceRanger", "miceRanger_repeated",
-                             "cart", "cart_repeated",
-                             "linear",
-                             "rSample",
-                             "pmm", "pmm_repeated",
-                             "knn3", "knn5", "knn7", "knn9", "knn10",
-                             "ameliaImp", "ameliaImp_repeated",
-                             "miImp",
-                             scalar_imputation_methods,
-                             nonsense_imputation_methods
-)
-
-nProc <- max( round( ( parallel::detectCores( ) ) / 10 ), 4 )
-
 #################################### Functions ########################################################################
-# Helper functions
 
-imputeMedian <- function( x ) {
-  x <- as.numeric( as.character( x ) )
-  x[is.na( x )] <- median( x, na.rm = TRUE )
-  return( x )
-}
-
-imputeMean <- function( x ) {
-  x <- as.numeric( as.character( x ) )
-  x[is.na( x )] <- mean( x, na.rm = TRUE )
-  return( x )
-}
-
-getMode <- function( v ) {
-  v <- na.omit( v )
-  uniqv <- unique( v )
-  mode <- uniqv[which.max( tabulate( match( v, uniqv ) ) )]
-  return( mode )
-}
-
-imputeMode <- function( x ) {
-  x <- as.numeric( as.character( x ) )
-  x[is.na( x )] <- getMode( x )
-  return( x )
-}
-
-imputeRandom <- function( x ) {
-  x <- as.numeric( as.character( x ) )
-  x[is.na( x )] <- sample( na.omit( x ), replace = TRUE )
-  return( x )
-}
-
-makeBadImputations <- function( x ) {
-  x[!is.na( x )] <- NA
-  return( data.frame( x ) )
-}
 
 # Main imputation method selection
 
-imputeMissings <- function( x, method = "rf2", imputationRepetitions = 10, seed = NULL, x_orig = NULL, nProc = 1 ) {
+imputeMissings <- function( x, method = "rf2", ImputationRepetitions = 10,
+                            seed = NULL, x_orig = NULL, nProc = 1,
+                            nonsense_imputation_methods = c( "plus", "plusminus", "factor" )
+ ) {
+
+  # Helper functions
+
+  imputeMedian <- function( x ) {
+    x <- as.numeric( as.character( x ) )
+    x[is.na( x )] <- median( x, na.rm = TRUE )
+    return( x )
+  }
+
+  imputeMean <- function( x ) {
+    x <- as.numeric( as.character( x ) )
+    x[is.na( x )] <- mean( x, na.rm = TRUE )
+    return( x )
+  }
+
+  getMode <- function( v ) {
+    v <- na.omit( v )
+    uniqv <- unique( v )
+    mode <- uniqv[which.max( tabulate( match( v, uniqv ) ) )]
+    return( mode )
+  }
+
+  imputeMode <- function( x ) {
+    x <- as.numeric( as.character( x ) )
+    x[is.na( x )] <- getMode( x )
+    return( x )
+  }
+
+  imputeRandom <- function( x ) {
+    x <- as.numeric( as.character( x ) )
+    x[is.na( x )] <- sample( na.omit( x ), replace = TRUE )
+    return( x )
+  }
+
+  # Imputation
   x <- data.frame( x )
 
   if ( is.null( seed ) ) {
@@ -238,7 +220,7 @@ imputeMissings <- function( x, method = "rf2", imputationRepetitions = 10, seed 
     },
     ameliaImp_repeated = {
       set.seed( seed )
-      Impu <- try( eval_with_timeout( Amelia::amelia.default( x, m = imputationRepetitions ), timeout = 30 ), TRUE )
+      Impu <- try( eval_with_timeout( Amelia::amelia.default( x, m = ImputationRepetitions ), timeout = 30 ), TRUE )
       if ( !inherits( Impu, "try-error" ) ) {
         iImputedData <- Impu$imputations
         ImputedData <- Reduce( "+", iImputedData ) / length( iImputedData )

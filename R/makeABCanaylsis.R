@@ -7,7 +7,7 @@ library( ggforce )
 #################################### Functions ########################################################################
 
 # Function to plot the ABC analysis results of the ranking of the impuation methods
-makeABCanaylsis <- function( zABCvalues, zDelta = NULL, HighlightPoisenedMethods = TRUE ) {
+makeABCanaylsis <- function( zABCvalues, zDelta = NULL, HighlightPoisenedMethods = TRUE, nonsense_imputation_methods ) {
 
   ABCsetmembership <- function( x = NULL, ABCres = NULL, num = TRUE ) {
     if ( is.null( ABCres ) ) {

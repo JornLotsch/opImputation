@@ -97,7 +97,7 @@ calculateCombinedMetrics <-
 
 
 # Find best imputation
-BestMethod <- function( RepeatedSampleImputations ) {
+findBestMethod <- function( RepeatedSampleImputations ) {
 
   # Inserted diagnostic missings
 

@@ -7,7 +7,7 @@ Description: How to impute if you must: A data science approach to selecting imp
 Depends: R (>= 3.5.0)
 Imports: parallel, Rfit, methods, stats, abind, caret, ABCanalysis, ggplot2, ggforce, doParallel, pbmcapply,
         missForest, utils, mice, miceRanger, multiUS, Amelia, mi, reshape2, scales, DataVisualizations, 
-        FCPS, readxl, stringr, cowplot
+        stringr, cowplot
 LazyData: true
 Suggests: testthat
 License: GPL-3

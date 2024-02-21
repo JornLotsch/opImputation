@@ -5,24 +5,16 @@ library( scales )
 library( DataVisualizations )
 
 #################################### Functions ########################################################################
-# Calulate Groeneveld - Meeden skewness
-skewnessGM <- function( x ) {
-  x <- na.omit( x )
-  n <- length( x )
-  meanX <- mean( x, na.rm = TRUE )
-  medianX <- median( x, na.rm = TRUE )
-  Erw <- sum( abs( x - medianX ) ) / n
-  GM <- abs( meanX - medianX ) / Erw
-  return( GM )
-}
-
-# Helper function to reduce duplication
-getImputationZDeltaSubset <- function( x, Methods ) {
-  lapply( x, function( y ) y[grep( paste( as.character( Methods ), sep = "' '", collapse = "|" ), row.names( y ) ),] )
-}
 
 # Function to retrieve Zdelta values from iterations
-retrieveZdeltas <- function( RepeatedSampleImputations ) {
+retrieveZdeltas <- function( RepeatedSampleImputations, all_imputation_methods, scalar_imputation_methods, nonsense_imputation_methods ) {
+
+  # Helper function to reduce duplication
+  getImputationZDeltaSubset <- function( x, Methods ) {
+    lapply( x, function( y ) y[grep( paste( as.character( Methods ), sep = "' '", collapse = "|" ), row.names( y ) ),] )
+  }
+
+  # Main
   ImputationZDeltaInsertedMissings <- lapply( RepeatedSampleImputations, function( x ) x[["ImputationZDeltaInsertedMissings"]] )
   meanImputationZDeltaInsertedMissings <- Reduce( "+", ImputationZDeltaInsertedMissings ) / length( ImputationZDeltaInsertedMissings )
   rowmeanImputationZDeltaInsertedMissings <- rowMeans( meanImputationZDeltaInsertedMissings )
@@ -126,7 +118,6 @@ createPDERawZDeltas <- function( multivarZDeltas, univarZDeltas, nonsenseZDeltas
 
 
   }
-
 
   return( PDERawZDeltas )
 }

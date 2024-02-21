@@ -1,34 +1,28 @@
-# Switches
-scalar_imputation_methods <- c( "median", "mean", "mode", "rSample" )
-nonsense_imputation_methods <- c( "plus", "plusminus", "factor" )
-all_imputation_methods <- c( "bag", "bag_repeated",
-                             "rf", "rf_repeated", "rf2", "rf2_repeated", "miceRanger", "miceRanger_repeated",
-                             "cart", "cart_repeated",
-                             "linear",
-                             "rSample",
-                             "pmm", "pmm_repeated",
-                             "knn3", "knn5", "knn7", "knn9", "knn10",
-                             "ameliaImp", "ameliaImp_repeated",
-                             "miImp",
-                             scalar_imputation_methods,
-                             nonsense_imputation_methods
-)
+# Main package function
 
-# Functions
-opImputation <- function( Data, ImputationMethods = all_imputation_methods, seed = 100, nIter = 20, nProc = 2,
+opImputation <- function( Data, ImputationMethods = c("rf2", "median", "plus" ), ImputationRepetitions = 20, seed = 100, nIter = 20, nProc = 2,
                           probMissing = 0.1, mnarity = 0, lowOnly = FALSE, mnarshape = 1, AddSkewnessGM = TRUE ) {
 
   list.of.seeds <- 1:nIter + seed - 1
+
+  # Functions
 
   # Impute data sets
   RepeatedSampleImputations <- makeAndMeasureRepeatedImputations(
     Data = Data,
     seeds = list.of.seeds,
-    probMissing = probMissing
+    probMissing = probMissing,
+    nProc = nProc,
+    ImputationMethods = ImputationMethods,
+    ImputationRepetitions = ImputationRepetitions
+
   )
 
   # Look at bad imputations
-  Zdeltas <- retrieveZdeltas( RepeatedSampleImputations = RepeatedSampleImputations )
+  Zdeltas <- retrieveZdeltas( RepeatedSampleImputations = RepeatedSampleImputations,
+                              all_imputation_methods = all_imputation_methods,
+                              scalar_imputation_methods = scalar_imputation_methods,
+                              nonsense_imputation_methods = nonsense_imputation_methods)
   pZdeltasPlotAvgerage <- createBarplotMeanZDeltas(
     rowmeanImputationZDeltaInsertedMissings = Zdeltas$rowmeanImputationZDeltaInsertedMissings,
     nonsense_imputation_methods = nonsense_imputation_methods,
@@ -49,24 +43,21 @@ opImputation <- function( Data, ImputationMethods = all_imputation_methods, seed
   )
 
   # Find best imputation
-  MethodsResults <- BestMethod( RepeatedSampleImputations = RepeatedSampleImputations )
+  MethodsResults <- findBestMethod( RepeatedSampleImputations = RepeatedSampleImputations )
 
-  print( "BestMethodPerDataset" )
   BestMethodPerDataset <- names( MethodsResults$BestPerDatasetRanksums_insertedMissings )
-  print( BestMethodPerDataset )
 
   # Retrieve imputed data
   ImputedData <- retrieveAveragedImputedData(
-    Data = Datasets$
-      UniformRandom3VarIndependent$
-      dfXmatrixInitialMissings,
+    Data = Data,
     RepeatedSampleImputations = RepeatedSampleImputations
   )
 
   # Create ABC plots
   ABCres <- makeABCanaylsis(
     zABCvalues = MethodsResults$zABCvalues_insertedMissings,
-    zDelta = Zdeltas$meanImputationZDeltaInsertedMissings
+    zDelta = Zdeltas$meanImputationZDeltaInsertedMissings,
+    nonsense_imputation_methods = nonsense_imputation_methods
   )
 
   FigABC <- cowplot::plot_grid(
@@ -76,6 +67,12 @@ opImputation <- function( Data, ImputationMethods = all_imputation_methods, seed
     labels = LETTERS[1:22],
     nrow = 2, rel_heights = c( 2, 1 )
   )
+
+  # Display main results
+  print( "BestMethodPerDataset" )
+  print( BestMethodPerDataset )
+  print(FigZdelta)
+  print(FigABC)
 
   # Return results
   return(

@@ -6,20 +6,22 @@ The package provides the necessary functions for how to impute if you must:
 a method for handling missing values in biomedical numerical tabular data.
 }
 \usage{
-opImputation(Data, ImputationMethods = all_imputation_methods, seed = 100, nIter = 20, nProc = 2,
+opImputation( Data, ImputationMethods = c("rf2", "median", "plus" ), 
+ImputationRepetitions = 20, seed = 100, nIter = 20, nProc = 2,
 probMissing = 0.1, mnarity = 0, lowOnly = FALSE, mnarshape = 1, AddSkewnessGM = TRUE ) 
 }
 \arguments{
 \item{Data}{the (numerical!) data as a matrix or data frame.}
 \item{ImputationMethods}{the imputation methods to test.}
+\item{ImputationRepetitions}{how many iterations in repeated impuations.}
 \item{seed}{a predefined seed to modify the results.}
-\item{nIter}{how many iterations to run.}
+\item{nIter}{how many iterations of missng value insertion to run.}
 \item{nProc}{number of parallel processes.}
 \item{probMissing}{the probability of diagnostic missings to be inserted in each variable.}
-\item{mnarity}{maximum number of cpu cores to use for parallel computing.}
-\item{lowOnly}{X.}
-\item{mnarshape}{X.}
-\item{AddSkewnessGM}{whether to display the skewness in the diagnostic PDE plot.}
+\item{mnarity}{degree of not at random sampling, 0...1.}
+\item{lowOnly}{if NAR, whether only low values should be oversampled}
+\item{mnarshape}{the degree of not at randomness}
+\item{AddSkewnessGM}{whether to display the skewness in the diagnostic PDE plot of the zDelta values.}
 }
 \value{
 Returns a list of results.
@@ -40,19 +42,9 @@ Jorn Lotsch
 }
 \examples{
 ## example 1
-jitterAmount <- 0.3
-seed <- 100
-totalNr <- 100
-set.seed( seed )
-x <- jitter( seq( from = 0, to = 10, length.out = totalNr ), amount = jitterAmount )
-set.seed( seed + 1 )
-y1 <- jitter( 1 * x, amount = jitterAmount )
-set.seed( seed + 2 )
-y2 <- jitter( -1 * x + 10, amount = jitterAmount )
-dfXmatrix <- cbind.data.frame( Var1 = x, Var2 = y1, Var3 = y2 )
-TestImputation2X <- opImputation(Data = dfXmatrix,
-                         ImputationMethods =  c("rf2", "median", "mean", "mode" ))
-                         }
+TestImputation <- opImputation(Data = iris[,1:4],
+                         ImputationMethods =  c("rf2", "median", "plus" ))
+}
 \keyword{opImputation}
 \keyword{data imputation}
 
