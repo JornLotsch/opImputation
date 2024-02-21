@@ -242,7 +242,11 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
     },
     factor = {
       ImputedData <- apply( x_orig, 2, function( x_orig ) x_orig * ( 1 + 0.03 * median( x_orig, na.rm = TRUE ) ) )
+    },
+    noiseTiny= {
+      ImputedData <- apply( x_orig, 2, function( x_orig ) jitter( x_orig, factor = .001 ) )
     }
+
   )
 
   # final error intercepting, if necessary

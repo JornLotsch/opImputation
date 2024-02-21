@@ -25,7 +25,7 @@ nonsense_imputation_methods <- c( "plus", "plusminus", "factor" )
 all_imputation_methods <- c( "bag", "bag_repeated",
                              "rf_mice", "rf_mice_repeated", "rf_missForest", "rf_missForest_repeated", "miceRanger", "miceRanger_repeated",
                              "cart", "cart_repeated",
-                             "linear",
+                             "linear", "noiseTiny",
                              "pmm", "pmm_repeated",
                              "knn3", "knn5", "knn7", "knn9", "knn10",
                              "ameliaImp", "ameliaImp_repeated",
