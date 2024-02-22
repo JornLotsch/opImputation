@@ -50,22 +50,25 @@ opImputation <- function( Data, ImputationMethods = c( "rf_missForest", "median"
   # Look at bad imputations
   Zdeltas <- retrieveZdeltas( RepeatedSampleImputations = RepeatedSampleImputations,
                               all_imputation_methods = all_imputation_methods,
-                              scalar_imputation_methods = scalar_imputation_methods,
-                              nonsense_imputation_methods = nonsense_imputation_methods )
+                              univariate_imputation_methods = univariate_imputation_methods,
+                              poisened_imputation_methods = poisened_imputation_methods )
   pZdeltasPlotAvgerage <- createBarplotMeanZDeltas(
     ImputationZDeltaInsertedMissingsRaw = Zdeltas$ImputationZDeltaInsertedMissings,
-    nonsense_imputation_methods = nonsense_imputation_methods,
-    scalar_imputation_methods = scalar_imputation_methods
+    poisened_imputation_methods = poisened_imputation_methods,
+    univariate_imputation_methods = univariate_imputation_methods,
+    perfect_imputation_methods = perfect_imputation_methods
   )
   pGMCPlotAvgerage <- createBarplotMeanGMCs(
     ImputationZDeltaInsertedMissingsRaw = Zdeltas$ImputationZDeltaInsertedMissings,
-    nonsense_imputation_methods = nonsense_imputation_methods,
-    scalar_imputation_methods = scalar_imputation_methods
+    poisened_imputation_methods = poisened_imputation_methods,
+    univariate_imputation_methods = univariate_imputation_methods,
+    perfect_imputation_methods = perfect_imputation_methods
   )
   pZdeltasPDEraw <- createPDERawZDeltas(
     multivarZDeltas = Zdeltas$ImputationZDeltaInsertedMissingsMultivarV,
     univarZDeltas = Zdeltas$ImputationZDeltaInsertedMissingsUnivarV,
-    nonsenseZDeltas = Zdeltas$ImputationZDeltaInsertedMissingsNonsenseV
+    poisenedZDeltas = Zdeltas$ImputationZDeltaInsertedMissingsPoisenedV,
+    perfectZDeltas = Zdeltas$ImputationZDeltaInsertedMissingsPerfectV
   )
 
   FigZdelta <- cowplot::plot_grid(
@@ -91,7 +94,7 @@ opImputation <- function( Data, ImputationMethods = c( "rf_missForest", "median"
   ABCres <- makeABCanaylsis(
     zABCvalues = MethodsResults$zABCvalues_insertedMissings,
     zDelta = Zdeltas$meanImputationZDeltaInsertedMissings,
-    nonsense_imputation_methods = nonsense_imputation_methods
+    poisened_imputation_methods = poisened_imputation_methods
   )
 
   FigABC <- cowplot::plot_grid(

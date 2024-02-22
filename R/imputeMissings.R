@@ -243,14 +243,15 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
     factor = {
       ImputedData <- apply( x_orig, 2, function( x_orig ) x_orig * ( 1 + 0.03 * median( x_orig, na.rm = TRUE ) ) )
     },
-    noiseTiny= {
-      ImputedData <- apply( x_orig, 2, function( x_orig ) jitter( x_orig, factor = .001 ) )
+    tinyNoise = {
+      set.seed( seed )
+      ImputedData <- apply( x_orig, 2, function( x_orig ) jitter( x_orig, factor = .0001 * median( x_orig, na.rm = TRUE ) ) )
     }
 
   )
 
   # final error intercepting, if necessary
-  if ( !method %in% nonsense_imputation_methods ) {
+  if ( !method %in% poisened_imputation_methods ) {
     err <- try( ImputedData - x, TRUE )
     if ( inherits( err, "try-error" ) | sum( is.na( ImputedData ) ) > 0 ) {
       ImputedData <- makeBadImputations( x )
