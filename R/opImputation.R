@@ -23,7 +23,7 @@
 #' @importFrom(ABCanalysis  ABCanalysis)
 #' @importFrom(doParallel  registerDoParallel  stopImplicitCluster)
 #' @export
-opImputation <- function( Data, ImputationMethods = c( "rf_missForest", "median", "plus" ),
+opImputation <- function( Data, ImputationMethods = all_imputation_methods,
                           ImputationRepetitions = 20, seed = 100, nIter = 20, nProc = getOption( "mc.cores", 2L ),
                           probMissing = 0.1, mnarity = 0, lowOnly = FALSE, mnarshape = 1, PlotIt = TRUE ) {
 

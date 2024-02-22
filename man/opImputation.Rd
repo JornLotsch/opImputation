@@ -6,13 +6,13 @@ The package provides the necessary functions for how to impute if you must:
 a method for handling missing values in biomedical numerical tabular data.
 }
 \usage{
-opImputation( Data, ImputationMethods = c("rf_missForest", "median", "plus" ), 
+opImputation( Data, ImputationMethods = all_imputation_methods, 
 ImputationRepetitions = 20, seed = 100, nIter = 20, nProc = getOption("mc.cores", 2L),
 probMissing = 0.1, mnarity = 0, lowOnly = FALSE, mnarshape = 1, PlotIt = TRUE ) 
 }
 \arguments{
 \item{Data}{the (numerical!) data as a matrix or data frame.}
-\item{ImputationMethods}{the imputation methods to test.}
+\item{ImputationMethods}{the imputation methods to test, listed with the command 'all_imputation_methods'. }
 \item{ImputationRepetitions}{how many iterations in repeated impuations.}
 \item{seed}{a predefined seed to modify the results.}
 \item{nIter}{how many iterations of missng value insertion to run.}
@@ -35,7 +35,10 @@ Returns a list of results.
 \item{FigABC}{a diagnostic plot of ABC analysis.}
 }
 \references{
-tbd
+ Lotsch, J., Ultsch, A. (2024):
+ How to impute if you must: A data science method for handling 
+ missing values in biomedical numerical tabular data.
+ (paper submitted).
 }
 \author{
 Jorn Lotsch
@@ -47,4 +50,5 @@ TestImputation <- opImputation(Data = iris[,1:4],
 }
 \keyword{opImputation}
 \keyword{data imputation}
-
+\keyword{machine learning}
+\keyword{data preprocessing}
