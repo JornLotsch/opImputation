@@ -48,14 +48,14 @@ makeABCanaylsis <- function( zABCvalues, zDelta = NULL, HighlightPoisenedMethods
     dfABCcat$Category2[dfABCcat$Method %in% poisened_imputation_methods] <- "poisenedImputation"
   }
   rep_str <- c(
-    "A" = "darkgreen",
-    "B" = "lemonchiffon4",
-    "C" = "lightgoldenrod2",
-    "poisenedImputation" = "red"
+    "A" = myColorsABC[1],
+    "B" = myColorsABC[2],
+    "C" = myColorsABC[3],
+    "poisenedImputation" = myColorsABC[4]
   )
   dfABCcat$Category1 <- stringr::str_replace_all( dfABCcat$Category1, rep_str )
   dfABCcat$Category2 <- stringr::str_replace_all( dfABCcat$Category2, rep_str )
-  dfABCcat$poisened <- ifelse( dfABCcat$Category2 == "red", "red", NA )
+  dfABCcat$poisened <- ifelse( dfABCcat$Category2 == myColorsABC[4], myColorsABC[4], NA )
 
   createABCxy <- function( ABCres ) {
     ABCx <- ABCres$p
@@ -92,7 +92,7 @@ makeABCanaylsis <- function( zABCvalues, zDelta = NULL, HighlightPoisenedMethods
     geom_segment( data = dfABCsetLimits, aes( x = -.02, y = y1, xend = x1, yend = y1 ), linetype = "dashed", color = "grey33" ) +
     theme_light( ) +
     theme( axis.text.x = element_text( angle = 90, vjust = 0.5, hjust = 0 ),
-           legend.position = c( 0.9, 0.7 ),
+           legend.position = c( 0.9, 0.6 ),
            legend.background = element_rect( fill = alpha( "white", 0.5 ) ) ) +
     scale_y_continuous(
       name = "Fraction of sum of largest rank means",
@@ -107,7 +107,7 @@ makeABCanaylsis <- function( zABCvalues, zDelta = NULL, HighlightPoisenedMethods
     ) +
     scale_fill_identity( name = "Category",
                          labels = c( "A", "B", "C" ),
-                         breaks = c( "darkgreen", "lemonchiffon4", "lightgoldenrod2" ),
+                         breaks = myColorsABC[1:3],
                          guide = "legend" ) +
     labs( title = "ABC analysis of mean methods' ranks", x = "Fraction of rank sums", y = "Type of missing" )
 

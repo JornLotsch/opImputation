@@ -10,8 +10,7 @@ generatePlotDataFrames <- function( rowmeans, poisened, univariate, perfect, min
   df$color[df$Method %in% gsub( " imputed", "", perfect )] <- "Perfect"
   df$color <- factor( df$color, levels = c( "Multivariate", "Perfect", "Poisened", "Univariate" ) )
 
-  myColors <- c( "dodgerblue", "chartreuse3", "red", "gold" )
-  names( myColors ) <- levels( df$color )
+  names( myColorsZDelta ) <- levels( df$color )
 
   if ( minmax == "min" ) {
     minmaxPoisened <- min( df$value[df$color %in% "Poisened"], na.rm = TRUE )
@@ -35,7 +34,7 @@ generatePlotDataFrames <- function( rowmeans, poisened, univariate, perfect, min
   return( list(
     dfBars = df,
     dfAnnotate = dfAnnotate,
-    myColors = myColors
+    myColorsZDelta = myColorsZDelta
   )
   )
 }
@@ -54,7 +53,7 @@ createBarplot <- function( data, poisened_imputation_methods, univariate_imputat
   )
   df4plot_long <- df$dfBars
   dfAnnotate <- df$dfAnnotate
-  myColors <- df$myColors
+  myColorsZDelta <- df$myColorsZDelta
 
   # Plotting
   BarplotMeans <-
@@ -68,7 +67,7 @@ createBarplot <- function( data, poisened_imputation_methods, univariate_imputat
       ) +
       labs( title = title, y = ylab, x = NULL, fill = "Imputation" ) +
       scale_y_continuous( breaks = scales::pretty_breaks( ) ) +
-      scale_fill_manual( values = myColors ) +
+      scale_fill_manual( values = myColorsZDelta ) +
       geom_hline( yintercept = dfAnnotate$y[1], color = "salmon", linetype = "dashed" ) +
       geom_hline( yintercept = dfAnnotate$y[2], color = "orange", linetype = "dotdash" ) +
       annotate( geom = "text", x = dfAnnotate$x, y = dfAnnotate$y + 0.015, label = dfAnnotate$Methods, color = dfAnnotate$color )
@@ -160,8 +159,7 @@ createPDERawZDeltas <- function( multivarZDeltas, univarZDeltas, poisenedZDeltas
 
   dfParetoAll <- do.call( rbind.data.frame, ParetoDistributions )
   dfParetoAll$Category <- factor( dfParetoAll$Category, levels = c( "Multivariate", "Perfect", "Poisened", "Univariate" ) )
-  myColors <- c( "dodgerblue", "chartreuse3", "red", "gold" )
-  names( myColors ) <- levels( dfParetoAll$Category )
+  names( myColorsZDelta ) <- levels( dfParetoAll$Category )
 
 
   PDERawZDeltas <-
@@ -174,7 +172,7 @@ createPDERawZDeltas <- function( multivarZDeltas, univarZDeltas, poisenedZDeltas
         legend.background = element_rect( colour = "transparent", fill = ggplot2::alpha( "white", 0.4 ) )
       ) +
       labs( title = "PDE of raw Zdelta values", x = "Data", y = "PDE" ) +
-      scale_color_manual( values = myColors )
+      scale_color_manual( values = myColorsZDelta )
 
 
   skewnessGMZDeltaInsertedMissingsMultivarV <- round( skewnessGM( multivarZDeltas ), 3 )

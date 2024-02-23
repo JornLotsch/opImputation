@@ -34,10 +34,14 @@ multivariate_imputation_methods <- c( "bag", "bag_repeated",
 )
 all_imputation_methods <- c( univariate_imputation_methods,
                              poisened_imputation_methods,
-                             perfect_imputation_methods,
+                             # perfect_imputation_methods,
                              multivariate_imputation_methods
 )
 
 # Omit unnecessary notes for variables to plot
 utils::globalVariables( c( "ABCx", "ABCy", "Category", "Failed", "Method", "color", "rSum", "value", "variable", "x", "x1", "xloc",
                            "y", "y1" ) )
+
+# Colors
+myColorsZDelta <- c( "#0072B2", "#009E73", "#D55E00", "#F0E442" )
+myColorsABC <- c( "#009E73", "#56B4E9", "#E69F00", "red" )

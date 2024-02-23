@@ -46,7 +46,7 @@ Jorn Lotsch
 \examples{
 ## example 1
 TestImputation <- opImputation(Data = iris[,1:4],
-                         ImputationMethods =  c("rf_missForest", "median", "plus", "tinyNoise" ))
+                         ImputationMethods =  c("rf_missForest", "median", "plus"))
 }
 \keyword{opImputation}
 \keyword{data imputation}
