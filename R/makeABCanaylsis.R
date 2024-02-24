@@ -1,5 +1,5 @@
 # Function to plot the ABC analysis results of the ranking of the impuation methods
-makeABCanaylsis <- function( zABCvalues, zDelta = NULL, HighlightPoisenedMethods = TRUE, poisened_imputation_methods ) {
+makeABCanaylsis <- function( zABCvalues, zDelta = NULL, HighlightPoisenedMethods = TRUE, poisened_imputation_methods, MethodsOrder ) {
 
   ABCsetmembership <- function( x = NULL, ABCres = NULL, num = TRUE ) {
     if ( is.null( ABCres ) ) {
@@ -86,7 +86,7 @@ makeABCanaylsis <- function( zABCvalues, zDelta = NULL, HighlightPoisenedMethods
               position = "dodge",
               alpha = 0.5
     ) +
-    geom_line( data = dfABCxy, aes( x = ABCx, y = ABCy ), linewidth = 2 ) +
+    geom_line( data = dfABCxy, aes( x = ABCx, y = ABCy ), linewidth = 1 ) +
     scale_x_continuous( breaks = unique( dfABCcat$xloc ), labels = levels( dfABCcat$Method ) ) +
     geom_segment( data = dfABCsetLimits, aes( x = x1, y = -.01, xend = x1, yend = y1 ), linetype = "dashed", color = "grey33" ) +
     geom_segment( data = dfABCsetLimits, aes( x = -.02, y = y1, xend = x1, yend = y1 ), linetype = "dashed", color = "grey33" ) +
@@ -111,29 +111,5 @@ makeABCanaylsis <- function( zABCvalues, zDelta = NULL, HighlightPoisenedMethods
                          guide = "legend" ) +
     labs( title = "ABC analysis of mean methods' ranks", x = "Fraction of rank sums", y = "Type of missing" )
 
-  ZDeltaPerVarPlot <- NULL
-  if ( !is.null( zDelta ) ) {
-    zDeltaP <- zDelta
-    zDeltaP$Method <- gsub( ' imputed|Imp', '', rownames( zDeltaP ) )
-    zDelta_long <- reshape2::melt( zDeltaP )
-    zDelta_long$variable <- gsub( "ZDelta_", "", zDelta_long$variable )
-    zDelta_long$Method <- factor( zDelta_long$Method, levels = levels( dfABCcat$Method ) )
-
-    ZDeltaPerVarPlot <- ggplot( data = zDelta_long, aes( x = Method, y = value, color = variable ) ) +
-      ggforce::geom_sina( maxwidth = 0.2 ) +
-      theme_light( ) +
-      theme( axis.text.x = element_text( angle = 90, vjust = 0.5, hjust = 1 ),
-             legend.position = "top", legend.direction = "horizontal",
-             legend.background = element_rect( fill = alpha( "white", 0.5 ) ) ) +
-      labs( title = "Mean ZDelta per variable", x = NULL, y = "Normalized error", color = "Category" ) +
-      stat_summary( aes( y = value, ymax = after_stat( y ), ymin = after_stat( y ) ),
-                    fun = mean, geom = "errorbar", color = "red", width = 0.3 ) +
-      ylim( 0, 1.2 ) +
-      guides( colour = guide_legend( nrow = 1 ) )
-  }
-
-  return( list(
-    ABCplot = ABCplot,
-    ZDeltaPerVarPlot = ZDeltaPerVarPlot
-  ) )
+  return( ABCplot = ABCplot )
 }

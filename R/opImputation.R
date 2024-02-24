@@ -6,7 +6,7 @@
 #' @import(stringr)
 #' @import(methods)
 #' @import(cowplot)
-#' @importFrom(stats  na.omit   IQR  coef  sd  median  predict  runif  wilcox.test)
+#' @importFrom(stats  na.omit   IQR  coef  sd  median  predict  runif  wilcox.test, ks.test, quantile)
 #' @importFrom(utils  sessionInfo)
 #' @importFrom(doParallel  registerDoParallel  stopImplicitCluster)
 #' @importFrom(caret  preProcess)
@@ -47,11 +47,13 @@ opImputation <- function( Data, ImputationMethods = all_imputation_methods,
     ImputationRepetitions = ImputationRepetitions
   )
 
-  # Look at bad imputations
+  # Look at imputation accuracies
   Zdeltas <- retrieveZdeltas( RepeatedSampleImputations = RepeatedSampleImputations,
                               all_imputation_methods = all_imputation_methods,
                               univariate_imputation_methods = univariate_imputation_methods,
                               poisened_imputation_methods = poisened_imputation_methods )
+
+  # Create ZDalta plots
   pZdeltasPlotAvgerage <- createBarplotMeanZDeltas(
     ImputationZDeltaInsertedMissingsRaw = Zdeltas$ImputationZDeltaInsertedMissings,
     poisened_imputation_methods = poisened_imputation_methods,
@@ -70,6 +72,35 @@ opImputation <- function( Data, ImputationMethods = all_imputation_methods,
     poisenedZDeltas = Zdeltas$ImputationZDeltaInsertedMissingsPoisenedV,
     perfectZDeltas = Zdeltas$ImputationZDeltaInsertedMissingsPerfectV
   )
+  pZdeltasPerVar <- createZDeltasPerVarPlot(
+    meanImputationZDeltaInsertedMissings = Zdeltas$meanImputationZDeltaInsertedMissings
+  )
+
+  # Find best imputation
+  MethodsResults <- findBestMethod( RepeatedSampleImputations = RepeatedSampleImputations )
+  BestMethodPerDataset <- gsub( " imputed|Imp", "", names( MethodsResults$BestPerDatasetRanksums_insertedMissings ) )
+
+  # Retrieve imputed data
+  ImputedData <- retrieveAveragedImputedData(
+    Data = Data,
+    RepeatedSampleImputations = RepeatedSampleImputations
+  )
+
+  # Create ABC plots
+  pABC <- makeABCanaylsis(
+    zABCvalues = MethodsResults$zABCvalues_insertedMissings,
+    poisened_imputation_methods = poisened_imputation_methods
+  )
+
+  # Compare ZDelate values between multivariate and univariate methods
+  pZdeltasMultivarUnivar <-
+    create_pde_and_qq_plots( allZDeltas = Zdeltas,
+                             BestMethodPerDataset = BestMethodPerDataset,
+                             univariate_imputation_methods = univariate_imputation_methods,
+                             multivariate_imputation_methods = multivariate_imputation_methods )
+
+
+  # Assemble main results plots
 
   FigZdelta <- cowplot::plot_grid(
     pZdeltasPDEraw,
@@ -79,40 +110,33 @@ opImputation <- function( Data, ImputationMethods = all_imputation_methods,
     ncol = 1, rel_heights = c( 1, 1 )
   )
 
-  # Find best imputation
-  MethodsResults <- findBestMethod( RepeatedSampleImputations = RepeatedSampleImputations )
-
-  BestMethodPerDataset <- names( MethodsResults$BestPerDatasetRanksums_insertedMissings )
-
-  # Retrieve imputed data
-  ImputedData <- retrieveAveragedImputedData(
-    Data = Data,
-    RepeatedSampleImputations = RepeatedSampleImputations
-  )
-
-  # Create ABC plots
-  ABCres <- makeABCanaylsis(
-    zABCvalues = MethodsResults$zABCvalues_insertedMissings,
-    zDelta = Zdeltas$meanImputationZDeltaInsertedMissings,
-    poisened_imputation_methods = poisened_imputation_methods
-  )
-
   FigABC <- cowplot::plot_grid(
-    ABCres$ABCplot,
+    pABC,
     pZdeltasPlotAvgerage,
-    ABCres$ZDeltaPerVarPlot,
+    pZdeltasPerVar,
     align = "v", axis = "lr",
     labels = LETTERS[1:22],
     ncol = 1
   )
 
+  FigPDEQQ <- cowplot::plot_grid(
+    pZdeltasMultivarUnivar$p_pde_z_deltas,
+    pZdeltasMultivarUnivar$p_qq,
+    align = "h", axis = "tb",
+    labels = LETTERS[1:22],
+    nrow = 1
+  )
+
+
   # Display main results
   if ( PlotIt == TRUE ) {
     print( "BestMethodPerDataset" )
-    print( BestMethodPerDataset )
-    print( FigABC )
-    print( FigZdelta )
+    print( suppressWarnings( BestMethodPerDataset ) )
+    print( suppressWarnings( FigABC ) )
+    print( suppressWarnings( FigZdelta ) )
+    print( suppressWarnings( FigPDEQQ ) )
   }
+
 
   # Return results
   return(
@@ -123,8 +147,9 @@ opImputation <- function( Data, ImputationMethods = all_imputation_methods,
       MethodsResults = MethodsResults,
       BestMethodPerDataset = BestMethodPerDataset,
       ImputedData = ImputedData,
-      ABCres = ABCres,
-      FigABC = FigABC
+      ABCres = pABC,
+      FigABC = FigABC,
+      FigPDEQQ = FigPDEQQ
     )
   )
 }

@@ -40,8 +40,11 @@ all_imputation_methods <- c( univariate_imputation_methods,
 
 # Omit unnecessary notes for variables to plot
 utils::globalVariables( c( "ABCx", "ABCy", "Category", "Failed", "Method", "color", "rSum", "value", "variable", "x", "x1", "xloc",
-                           "y", "y1" ) )
+                           "y", "y1", "BestUnivariate", "Imputation", "Multivariate", "PDE" ) )
 
 # Colors
 myColorsZDelta <- c( "#0072B2", "#009E73", "#D55E00", "#F0E442" )
 myColorsABC <- c( "#009E73", "#56B4E9", "#E69F00", "red" )
+
+# Numerical globals
+quantiles <- seq( 0, 1, 0.01 )

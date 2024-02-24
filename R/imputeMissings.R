@@ -65,14 +65,14 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
       }
     },
     bag_repeated = {
-      iImputedData <- parallel::mclapply( list.of.seeds, function( s ) {
+      iImputedData <- lapply( list.of.seeds, function( s ) {
         set.seed( seed )
         Impu <- try( caret::preProcess( x, method = "bagImpute" ), TRUE )
         if ( !inherits( Impu, "try-error" ) ) {
           ImputedData <- predict( Impu, x )
         }
         return( ImputedData = ImputedData )
-      }, mc.cores = nProc )
+      } )
       ImputedData <- Reduce( "+", iImputedData ) / length( iImputedData )
     },
     rf_mice = {
@@ -83,14 +83,14 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
       }
     },
     rf_mice_repeated = {
-      iImputedData <- parallel::mclapply( list.of.seeds, function( s ) {
+      iImputedData <- lapply( list.of.seeds, function( s ) {
         set.seed( s )
         Impu <- try( mice::mice( x, method = "rf_mice" ), TRUE )
         if ( !inherits( Impu, "try-error" ) ) {
           ImputedData <- mice::complete( Impu )
         }
         return( ImputedData = ImputedData )
-      }, mc.cores = nProc )
+      } )
       ImputedData <- Reduce( "+", iImputedData ) / length( iImputedData )
     },
     rf_missForest = {
@@ -101,14 +101,14 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
       }
     },
     rf_missForest_repeated = {
-      iImputedData <- parallel::mclapply( list.of.seeds, function( s ) {
+      iImputedData <- lapply( list.of.seeds, function( s ) {
         set.seed( s )
         Impu <- try( missForest::missForest( x ), TRUE )
         if ( !inherits( Impu, "try-error" ) ) {
           ImputedData <- Impu$ximp
         }
         return( ImputedData = ImputedData )
-      }, mc.cores = nProc )
+      } )
       ImputedData <- Reduce( "+", iImputedData ) / length( iImputedData )
     },
     miceRanger = {
@@ -120,7 +120,7 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
       }
     },
     miceRanger_repeated = {
-      iImputedData <- parallel::mclapply( list.of.seeds, function( s ) {
+      iImputedData <- lapply( list.of.seeds, function( s ) {
         set.seed( s )
         miceObj <- miceRanger::miceRanger( x, 1, 1, returnModels = TRUE, verbose = FALSE )
         Impu <- try( miceRanger::impute( x, miceObj ), TRUE )
@@ -128,7 +128,7 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
           ImputedData <- data.frame( Impu$imputedData[[1]] )
         }
         return( ImputedData = ImputedData )
-      }, mc.cores = nProc )
+      } )
       ImputedData <- Reduce( "+", iImputedData ) / length( iImputedData )
     },
     cart = {
@@ -139,14 +139,14 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
       }
     },
     cart_repeated = {
-      iImputedData <- parallel::mclapply( list.of.seeds, function( s ) {
+      iImputedData <- lapply( list.of.seeds, function( s ) {
         set.seed( s )
         Impu <- try( mice::mice( x, method = "cart" ), TRUE )
         if ( !inherits( Impu, "try-error" ) ) {
           ImputedData <- mice::complete( Impu )
         }
         return( ImputedData = ImputedData )
-      }, mc.cores = nProc )
+      } )
       ImputedData <- Reduce( "+", iImputedData ) / length( iImputedData )
     },
     linear = {
@@ -164,14 +164,14 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
       }
     },
     pmm_repeated = {
-      iImputedData <- parallel::mclapply( list.of.seeds, function( s ) {
+      iImputedData <- lapply( list.of.seeds, function( s ) {
         set.seed( s )
         Impu <- try( mice::mice( x, method = "pmm" ), TRUE )
         if ( !inherits( Impu, "try-error" ) ) {
           ImputedData <- mice::complete( Impu )
         }
         return( ImputedData = ImputedData )
-      }, mc.cores = nProc )
+      } )
       ImputedData <- Reduce( "+", iImputedData ) / length( iImputedData )
     },
     knn3 = {
@@ -245,7 +245,7 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
     },
     tinyNoise = {
       set.seed( seed )
-      ImputedData <- apply( x_orig, 2, function( x_orig ) jitter( x_orig, factor = .0001 * median( x_orig, na.rm = TRUE ) ) )
+      ImputedData <- apply( x_orig, 2, function( x_orig ) jitter( x_orig, factor = .001 * median( x_orig, na.rm = TRUE ) ) )
     }
 
   )
