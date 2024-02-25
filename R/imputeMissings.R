@@ -39,7 +39,7 @@ makeBadImputations <- function( x ) {
 
 # Main imputation method selection
 
-imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions = 10, seed = NULL, x_orig = NULL, nProc = 1 ) {
+imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions = 10, seed = NULL, x_orig = NULL ) {
   x <- data.frame( x )
 
   if ( is.null( seed ) ) {
@@ -66,7 +66,7 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
     },
     bag_repeated = {
       iImputedData <- lapply( list.of.seeds, function( s ) {
-        set.seed( seed )
+        set.seed( s )
         Impu <- try( caret::preProcess( x, method = "bagImpute" ), TRUE )
         if ( !inherits( Impu, "try-error" ) ) {
           ImputedData <- predict( Impu, x )
@@ -235,10 +235,12 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
 
     plusminus = {
       fac <- seq_len( nrow( x_orig ) )
-      ImputedData <- apply( x_orig, 2, function( x_orig ) x_orig + ( -1 )^fac * 0.2 * median( x_orig, na.rm = TRUE ) )
+      ImputedData <- apply( x_orig, 2, function( x_orig ) x_orig + ( -1 )^fac *
+        0.11 *
+        median( x_orig, na.rm = TRUE ) )
     },
     plus = {
-      ImputedData <- apply( x_orig, 2, function( x_orig ) x_orig + 1 * 0.2 * median( x_orig, na.rm = TRUE ) )
+      ImputedData <- apply( x_orig, 2, function( x_orig ) x_orig + 1 * 0.1 * median( x_orig, na.rm = TRUE ) )
     },
     factor = {
       ImputedData <- apply( x_orig, 2, function( x_orig ) x_orig * ( 1 + 0.03 * median( x_orig, na.rm = TRUE ) ) )
@@ -251,7 +253,7 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
   )
 
   # final error intercepting, if necessary
-  if ( !method %in% poisened_imputation_methods ) {
+  if ( !method %in% poisoned_imputation_methods ) {
     err <- try( ImputedData - x, TRUE )
     if ( inherits( err, "try-error" ) | sum( is.na( ImputedData ) ) > 0 ) {
       ImputedData <- makeBadImputations( x )

@@ -1,18 +1,38 @@
+# Function to fill a matrix with Na's when an imputation attempt fails
+makeBadImputations <- function( x ) {
+  x[!is.na( x )] <- NA
+  return( data.frame( x ) )
+}
+
+# Calculate Groeneveld - Meeden skewness
+skewnessGM <- function( x ) {
+  GM <- NA
+  x <- na.omit( x )
+  n <- length( x )
+  if ( n > 0 ) {
+    meanX <- mean( x, na.rm = TRUE )
+    medianX <- median( x, na.rm = TRUE )
+    Erw <- sum( abs( x - medianX ) ) / n
+    GM <- ( meanX - medianX ) / Erw
+  }
+  return( GM )
+}
+
 # Function to insert diagnostic missing values and to perform the imputations
-makeAndMeasureRepeatedImputations <- function( Data, seeds, probMissing, nProc, ImputationMethods, ImputationRepetitions ) {
+makeAndMeasureRepeatedImputations <- function( Data, seeds, probMissing, nProc, ImputationMethods, ImputationRepetitions, mnarity = 0, lowOnly = FALSE, mnarshape = 1 ) {
   # Function to impute data matrices with missing values
-  imputeData <- function( dfMtx, dfMtxorig, ImputationMethods, ImputationRepetitions, seed, nProc ) {
-    parallel::mclapply( ImputationMethods, function( method ) {
+  imputeData <- function( dfMtx, dfMtxorig, ImputationMethods, ImputationRepetitions, seed ) {
+    lapply( ImputationMethods, function( method ) {
       dfXmatriximputed <- cbind.data.frame( Data = paste0( method, " imputed" ), makeBadImputations( dfMtx ) )
       dfXmatriximputed_list <- data.frame( imputeMissings( x = dfMtx, method = method,
-                                                           ImputationRepetitions = ImputationRepetitions, seed = seed, x_orig = dfMtxorig, nProc = nProc ) )
+                                                           ImputationRepetitions = ImputationRepetitions, seed = seed, x_orig = dfMtxorig ) )
 
       if ( identical( dim( dfXmatriximputed_list ), dim( dfMtx ) ) ) {
         dfXmatriximputed <- cbind.data.frame( Data = paste0( method, " imputed" ), dfXmatriximputed_list )
       }
 
       return( dfXmatriximputed )
-    }, mc.cores = nProc )
+    } )
   }
 
   # Function to calculate metrics for the imputations
@@ -36,7 +56,8 @@ makeAndMeasureRepeatedImputations <- function( Data, seeds, probMissing, nProc, 
 
   # Main
   # Define a function to perform imputation
-  performImputation <- function( seed, Data, probMissing, ImputationMethods, ImputationRepetitions, nProc ) {
+  performImputation <- function( seed, Data, probMissing, ImputationMethods, ImputationRepetitions,
+                                 mnarity = 0, lowOnly = FALSE, mnarshape = 1 ) {
     dfXmatrix <- Data
     dfXmatrixInitialMissings_Which <- lapply( seq_along( Data ), function( i ) which( is.na( Data[, i] ) ) )
     dfXmatrixInsertedMissings_WhichAndData <- createMissings( x = dfXmatrix, Prob = probMissing, seed = seed, mnarity = 0, lowOnly = FALSE, mnarshape = 1 )
@@ -45,7 +66,7 @@ makeAndMeasureRepeatedImputations <- function( Data, seeds, probMissing, nProc, 
     repeat {
       MaxNAs <- max( apply( dfXmatrixInsertedMissings_WhichAndData$missData, 1, function( x ) sum( is.na( x ) ) ) )
       if ( MaxNAs < ncol( dfXmatrixInsertedMissings_WhichAndData$missData ) ) break
-      dfXmatrixInsertedMissings_WhichAndData <- createMissings( x = dfXmatrix, Prob = probMissing, seed = seed + 1000000 * iNA, mnarity = 0, lowOnly = FALSE, mnarshape = 1 )
+      dfXmatrixInsertedMissings_WhichAndData <- createMissings( x = dfXmatrix, Prob = probMissing, seed = seed + 1000000 * iNA, mnarity = mnarity, lowOnly = lowOnly, mnarshape = mnarshape )
       iNA <- iNA + 1
     }
 
@@ -58,8 +79,7 @@ makeAndMeasureRepeatedImputations <- function( Data, seeds, probMissing, nProc, 
       dfMtxorig = dfXmatrix,
       ImputationMethods = ImputationMethods,
       ImputationRepetitions = ImputationRepetitions,
-      seed = seed,
-      nProc = nProc
+      seed = seed
     )
     names( ImputedDataAll ) <- ImputationMethods
 

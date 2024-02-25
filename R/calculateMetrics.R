@@ -1,9 +1,3 @@
-#################################### Libraries ########################################################################
-
-library( Rfit )
-
-#################################### Functions ########################################################################
-
 # Function to calculate metrics for imputed data
 
 calculateMetrics <- function( OrigData, Missings_Which, ImputedData, Metric, OrigDataMiss = NULL, PValueThresholdForMetrics = 0.1 ) {

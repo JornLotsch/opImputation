@@ -1,5 +1,5 @@
 # Function to plot the ABC analysis results of the ranking of the impuation methods
-makeABCanaylsis <- function( zABCvalues, zDelta = NULL, HighlightPoisenedMethods = TRUE, poisened_imputation_methods, MethodsOrder ) {
+makeABCanaylsis <- function( zABCvalues, zDelta = NULL, HighlightPoisenedMethods = TRUE, poisoned_imputation_methods ) {
 
   ABCsetmembership <- function( x = NULL, ABCres = NULL, num = TRUE ) {
     if ( is.null( ABCres ) ) {
@@ -45,17 +45,17 @@ makeABCanaylsis <- function( zABCvalues, zDelta = NULL, HighlightPoisenedMethods
   dfABCcat$Category1 <- dfABCcat$Category
   dfABCcat$Category2 <- dfABCcat$Category
   if ( HighlightPoisenedMethods ) {
-    dfABCcat$Category2[dfABCcat$Method %in% poisened_imputation_methods] <- "poisenedImputation"
+    dfABCcat$Category2[dfABCcat$Method %in% poisoned_imputation_methods] <- "poisonedImputation"
   }
   rep_str <- c(
     "A" = myColorsABC[1],
     "B" = myColorsABC[2],
     "C" = myColorsABC[3],
-    "poisenedImputation" = myColorsABC[4]
+    "poisonedImputation" = myColorsABC[4]
   )
   dfABCcat$Category1 <- stringr::str_replace_all( dfABCcat$Category1, rep_str )
   dfABCcat$Category2 <- stringr::str_replace_all( dfABCcat$Category2, rep_str )
-  dfABCcat$poisened <- ifelse( dfABCcat$Category2 == myColorsABC[4], myColorsABC[4], NA )
+  dfABCcat$poisoned <- ifelse( dfABCcat$Category2 == myColorsABC[4], myColorsABC[4], NA )
 
   createABCxy <- function( ABCres ) {
     ABCx <- ABCres$p

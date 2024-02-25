@@ -33,7 +33,6 @@ Returns a list of results.
 \item{ImputedData}{final imputed data.}
 \item{ABCres}{results of ABC analysis.}
 \item{FigABC}{a diagnostic plot of ABC analysis.}
-\item{FigPDEQQ}{a diagnostic plot of multivariate versus univariate imputation errors.}
 }
 \references{
  Lotsch, J., Ultsch, A. (2024):
