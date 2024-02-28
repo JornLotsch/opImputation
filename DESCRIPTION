@@ -1,20 +1,20 @@
 Package: opImputation
 Type: Package
-Title: Optimal Selection of Imputation Methods for Bio-Medical
-        Data
+Title: Optimal Selection of Imputation Methods for Bio-Medical Data
 Version: 0.1
-Description: How to impute if you must: A data science approach to selecting imputation methods for missing values in biomedical numerical tabular data. 
+Description: How to impute if you must: A data science approach to 
+        selecting imputation methods for missing values in biomedical numerical tabular data. 
 Depends: R (>= 3.5.0)
-Imports: parallel, Rfit, methods, stats, abind, caret, ABCanalysis, ggplot2, ggforce, doParallel, pbmcapply,
+Imports: parallel, Rfit, methods, stats, abind, caret, ABCanalysis, ggplot2, doParallel, pbmcapply,
         missForest, utils, mice, miceRanger, multiUS, Amelia, mi, reshape2, scales, DataVisualizations, 
-        stringr, cowplot
+        stringr, cowplot, twosamples
 LazyData: true
 Suggests: testthat
 License: GPL-3
 URL: https://github.com/JornLotsch/opImputation
 Encoding: UTF-8
 Author: Jorn Lotsch [aut,cre] (<https://orcid.org/0000-0002-5818-6958>),
-  Alfred Ultsch [aut] (<https://orcid.org/0000-0002-7845-3283>)
+        Alfred Ultsch [aut] (<https://orcid.org/0000-0002-7845-3283>)
 Maintainer: Jorn Lotsch <j.lotsch@em.uni-frankfurt.de>
 NeedsCompilation: no
 Date: 2024-02-20

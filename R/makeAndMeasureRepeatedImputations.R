@@ -19,7 +19,9 @@ skewnessGM <- function( x ) {
 }
 
 # Function to insert diagnostic missing values and to perform the imputations
-makeAndMeasureRepeatedImputations <- function( Data, seeds, probMissing, nProc, ImputationMethods, ImputationRepetitions, mnarity = 0, lowOnly = FALSE, mnarshape = 1 ) {
+makeAndMeasureRepeatedImputations <- function( Data, seeds, probMissing, nProc, ImputationMethods, ImputationRepetitions,
+                                               PValueThresholdForMetrics = PValueThresholdForMetrics,
+                                               mnarity = mnarity, lowOnly = lowOnly, mnarshape = mnarshape ) {
   # Function to impute data matrices with missing values
   imputeData <- function( dfMtx, dfMtxorig, ImputationMethods, ImputationRepetitions, seed ) {
     lapply( ImputationMethods, function( method ) {
@@ -35,8 +37,9 @@ makeAndMeasureRepeatedImputations <- function( Data, seeds, probMissing, nProc, 
     } )
   }
 
+  # y = ImputedData[ImputedData$Data == "tinyNoise001 imputed",]
   # Function to calculate metrics for the imputations
-  makeMetricsMatrix <- function( OrigData, Missings_Which, ImputedData, Metric, OrigDataMiss = NULL ) {
+  makeMetricsMatrix <- function( OrigData, Missings_Which, ImputedData, Metric, OrigDataMiss = NULL, PValueThresholdForMetrics ) {
     data.frame( do.call(
       cbind,
       lapply( seq_along( Missings_Which ), function( i ) {
@@ -47,7 +50,8 @@ makeAndMeasureRepeatedImputations <- function( Data, seeds, probMissing, nProc, 
             Missings_Which = Missings_Which[[i]],
             ImputedData = within( y, rm( Data ) )[, i],
             Metric = Metric,
-            OrigDataMiss = OrigDataMiss_i
+            OrigDataMiss = OrigDataMiss_i,
+            PValueThresholdForMetrics = PValueThresholdForMetrics
           )
         } )
       } )
@@ -56,22 +60,26 @@ makeAndMeasureRepeatedImputations <- function( Data, seeds, probMissing, nProc, 
 
   # Main
   # Define a function to perform imputation
-  performImputation <- function( seed, Data, probMissing, ImputationMethods, ImputationRepetitions,
-                                 mnarity = 0, lowOnly = FALSE, mnarshape = 1 ) {
+  performImputation <- function( seed, Data, probMissing, ImputationMethods, ImputationRepetitions, PValueThresholdForMetrics,
+                                 mnarity, lowOnly, mnarshape ) {
     dfXmatrix <- Data
     dfXmatrixInitialMissings_Which <- lapply( seq_along( Data ), function( i ) which( is.na( Data[, i] ) ) )
-    dfXmatrixInsertedMissings_WhichAndData <- createMissings( x = dfXmatrix, Prob = probMissing, seed = seed, mnarity = 0, lowOnly = FALSE, mnarshape = 1 )
+    dfXmatrixInsertedMissings_WhichAndData <-
+      createMissings( x = dfXmatrix, Prob = probMissing, seed = seed, mnarity = 0, lowOnly = FALSE, mnarshape = 1 )
     iNA <- 1
 
     repeat {
       MaxNAs <- max( apply( dfXmatrixInsertedMissings_WhichAndData$missData, 1, function( x ) sum( is.na( x ) ) ) )
       if ( MaxNAs < ncol( dfXmatrixInsertedMissings_WhichAndData$missData ) ) break
-      dfXmatrixInsertedMissings_WhichAndData <- createMissings( x = dfXmatrix, Prob = probMissing, seed = seed + 1000000 * iNA, mnarity = mnarity, lowOnly = lowOnly, mnarshape = mnarshape )
+      dfXmatrixInsertedMissings_WhichAndData <-
+        createMissings( x = dfXmatrix, Prob = probMissing, seed = seed + 1000000 * iNA, mnarity = mnarity, lowOnly = lowOnly, mnarshape = mnarshape )
       iNA <- iNA + 1
     }
 
     dfXmatrixInsertedMissings <- dfXmatrixInsertedMissings_WhichAndData$missData
-    dfXmatrixInsertedMissings_Which <- lapply( seq_along( dfXmatrixInsertedMissings_WhichAndData$toDelete ), function( i ) setdiff( dfXmatrixInsertedMissings_WhichAndData$toDelete[[i]], dfXmatrixInitialMissings_Which[[i]] ) )
+    dfXmatrixInsertedMissings_Which <-
+      lapply( seq_along( dfXmatrixInsertedMissings_WhichAndData$toDelete ),
+              function( i ) setdiff( dfXmatrixInsertedMissings_WhichAndData$toDelete[[i]], dfXmatrixInitialMissings_Which[[i]] ) )
 
     # Impute data set
     ImputedDataAll <- imputeData(
@@ -96,7 +104,8 @@ makeAndMeasureRepeatedImputations <- function( Data, seeds, probMissing, nProc, 
       OrigData = dfXmatrix,
       Missings_Which = dfXmatrixInsertedMissings_Which,
       ImputedData = dfImputedDataAll,
-      Metric = "RMSEImputedUnivar"
+      Metric = "RMSEImputedUnivar",
+      PValueThresholdForMetrics = PValueThresholdForMetrics
     )
     names( ImputationRMSEInsertedMissings ) <- paste0( "RMSE_", names( dfXmatrix ) )
 
@@ -104,7 +113,8 @@ makeAndMeasureRepeatedImputations <- function( Data, seeds, probMissing, nProc, 
       OrigData = dfXmatrix,
       Missings_Which = dfXmatrixInsertedMissings_Which,
       ImputedData = dfImputedDataAll,
-      Metric = "MEImputedUnivar"
+      Metric = "MEImputedUnivar",
+      PValueThresholdForMetrics = PValueThresholdForMetrics
     )
     names( ImputationMEInsertedMissings ) <- paste0( "ME_", names( dfXmatrix ) )
 
@@ -112,7 +122,8 @@ makeAndMeasureRepeatedImputations <- function( Data, seeds, probMissing, nProc, 
       OrigData = dfXmatrix,
       Missings_Which = dfXmatrixInsertedMissings_Which,
       ImputedData = dfImputedDataAll,
-      Metric = "rBiasImputedUnivar"
+      Metric = "rBiasImputedUnivar",
+      PValueThresholdForMetrics = PValueThresholdForMetrics
     )
     names( ImputationrBiasInsertedMissings ) <- paste0( "rBias_", names( dfXmatrix ) )
 
@@ -121,7 +132,8 @@ makeAndMeasureRepeatedImputations <- function( Data, seeds, probMissing, nProc, 
       Missings_Which = dfXmatrixInsertedMissings_Which,
       ImputedData = dfImputedDataAll,
       Metric = "ZDelta",
-      OrigDataMiss = dfXmatrixInsertedMissings
+      OrigDataMiss = dfXmatrixInsertedMissings,
+      PValueThresholdForMetrics = PValueThresholdForMetrics
     )
     names( ImputationZDeltaInsertedMissings ) <- paste0( "ZDelta_", names( dfXmatrix ) )
 
@@ -137,7 +149,14 @@ makeAndMeasureRepeatedImputations <- function( Data, seeds, probMissing, nProc, 
 
   # Apply pbmclapply with above function
   rImputations <- pbmcapply::pbmclapply( seeds, function( seed ) {
-    performImputation( seed, Data, probMissing, ImputationMethods, ImputationRepetitions, nProc )
+
+    performImputation( seed = seed,
+                       Data = Data,
+                       probMissing = probMissing,
+                       ImputationMethods = ImputationMethods,
+                       ImputationRepetitions = ImputationRepetitions,
+                       PValueThresholdForMetrics = PValueThresholdForMetrics,
+                       mnarity = mnarity, lowOnly = lowOnly, mnarshape = mnarshape )
   }, mc.cores = nProc )
 
   return( rImputations )

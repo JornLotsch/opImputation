@@ -65,13 +65,14 @@ createpZdeltasMultivarUnivarPDE <- function( allRanks, allZDeltas, BestMethodPer
     cbind.data.frame( y = 2, x = multivarZDeltas )
   )
   stat.deltas.W <- wilcox.test( df.stat.deltas$x ~ df.stat.deltas$y )$p.value
-  stat.deltas.KS <- ks.test( univarZDeltas, multivarZDeltas )$p.value
-  stat.deltas <- fisher_method( p_values = c( stat.deltas.W, stat.deltas.KS ) )
+  # stat.deltas.CDF <- ks.test( univarZDeltas, multivarZDeltas )$p.value
+  stat.deltas.CDF <- twosamples::dts_test( univarZDeltas, multivarZDeltas )["P-Value"]
+  stat.deltas <- fisher_method( p_values = c( stat.deltas.W, stat.deltas.CDF ) )
 
   # Creating a data frame for statistical tests
   dfStats <- data.frame(
-    Test = c( "Wilcoxon test", "KS test", "Combination of tests" ),
-    pValue = c( stat.deltas.W, stat.deltas.KS, stat.deltas ),
+    Test = c( "Wilcoxon test", "DTS test", "Combination of tests" ),
+    pValue = c( stat.deltas.W, stat.deltas.CDF, stat.deltas ),
     x = 0.5 * max( dfParetoAll$x ),
     y = 1
   )

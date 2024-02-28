@@ -29,12 +29,9 @@ renameDfcolumnsInNestedList <- function( df ) {
 }
 
 # Function to z-transform the ABC values
-calculateZABCvalues <- function( data, meanRanks ) {
-  nVar <- ncol( data[[1]] )
-  nMethods <- nrow( data[[1]] )
-  nTests <- length( data )
+calculateZABCvalues <- function( meanRanks, nVar, nMethods, nIter ) {
 
-  d <- nVar * nTests
+  d <- nVar * nIter
   M <- nMethods
   m <- ( M + 1 ) / 2
   s <- ( 1 / sqrt( 12 ) ) * ( M / sqrt( d ) )
@@ -48,7 +45,7 @@ calculateZABCvalues <- function( data, meanRanks ) {
 
 # Function to calculate combined metrics
 calculateCombinedMetrics <-
-  function( RMSEMX, MEMx, rBiasMx ) {
+  function( RMSEMX, MEMx, rBiasMx, pfctMtdsInABC, nIter ) {
 
     RRMSEMX <- rankMEs( RMSEMX )
     RMEMx <- rankMEs( MEMx )
@@ -57,30 +54,32 @@ calculateCombinedMetrics <-
     rankErrorsMissings <- mapply( function( r1, r2, r3 ) { ( r1 + r2 + r3 ) / 3 }, RRMSEMX, RMEMx, RrBiasMx, SIMPLIFY = FALSE )
     rankErrorsMissings <- renameDfcolumnsInNestedList( df = rankErrorsMissings )
 
-    ranksumsErrorsMissings <- lapply( rankErrorsMissings, function( x ) apply( x, 1, mean ) )
+    ranksumsErrorsMissings <- lapply( rankErrorsMissings, function( x ) apply( x, 1, median ) )
 
     a <- do.call( abind::abind, c( rankErrorsMissings, list( along = 3 ) ) )
     grandMeanrankErrorsMissings <- apply( a, 1:2, median )
 
-    MajorityVoteRanksErrorsMissings <- lapply( ranksumsErrorsMissings, function( x ) names( which.min( x ) ) )
-    PerDatasetRanksums_Missings <- Reduce( "+", ranksumsErrorsMissings ) / length( ranksumsErrorsMissings )
+    # grandMeanrankErrorsMissings <- Reduce( "+", rankErrorsMissings ) / length( rankErrorsMissings )
+
+    all.matrix <- abind::abind( ranksumsErrorsMissings, along = 2 )
+    PerDatasetRanksums_Missings <- apply( all.matrix, c( 1 ), function( x ) median( x, na.rm = TRUE ) )
     BestPerDatasetRanksums_Missings <- which.min( PerDatasetRanksums_Missings )
-    BestPerVariableRanksums_Missings <-
-      apply( grandMeanrankErrorsMissings, 2, function( y ) rownames( as.data.frame( grandMeanrankErrorsMissings ) )[which.min( y )] )
-    zABCvalues <- calculateZABCvalues( data = RRMSEMX, meanRanks = PerDatasetRanksums_Missings )
+    zABCvalues <- calculateZABCvalues( meanRanks = PerDatasetRanksums_Missings,
+                                       nVar = ncol( RMSEMX[[1]] ),
+                                       nMethods = length( PerDatasetRanksums_Missings ),
+                                       nIter = nIter )
+
     ABCRanksums <-
-      ABCanalysis( zABCvalues )
+      ABCanalysis( as.vector( zABCvalues ) )
     BestRanksumsGrandMean_Missings_ABC_A <-
       names( PerDatasetRanksums_Missings )[ABCRanksums$Aind]
 
     return( list(
       rankErrorsMissings = rankErrorsMissings,
       ranksumsErrorsMissings = ranksumsErrorsMissings,
-      MajorityVoteRanksErrorsMissings = MajorityVoteRanksErrorsMissings,
       grandMeanrankErrorsMissings = grandMeanrankErrorsMissings,
       PerDatasetRanksums_Missings = PerDatasetRanksums_Missings,
       BestPerDatasetRanksums_Missings = BestPerDatasetRanksums_Missings,
-      BestPerVariableRanksums_Missings = BestPerVariableRanksums_Missings,
       zABCvalues = zABCvalues,
       ABCRanksums = ABCRanksums,
       BestRanksumsGrandMean_Missings_ABC_A = BestRanksumsGrandMean_Missings_ABC_A,
@@ -92,7 +91,7 @@ calculateCombinedMetrics <-
 
 
 # Find best imputation
-findBestMethod <- function( RepeatedSampleImputations ) {
+findBestMethod <- function( RepeatedSampleImputations, pfctMtdsInABC, nIter ) {
 
   # Inserted diagnostic missings
 
@@ -106,18 +105,27 @@ findBestMethod <- function( RepeatedSampleImputations ) {
     x[["ImputationrBiasInsertedMissings"]]
   } )
 
+
+  if ( pfctMtdsInABC == FALSE ) {
+    RMSEinsertedMissings <- lapply(RMSEinsertedMissings, function (x) x[!gsub(" imputed","", rownames(x)) %in% perfect_imputation_methods,])
+    MEinsertedMissings <- lapply(MEinsertedMissings, function (x) x[!gsub(" imputed","", rownames(x)) %in% perfect_imputation_methods,])
+    rBiasinsertedMissings <- lapply(rBiasinsertedMissings, function (x) x[!gsub(" imputed","", rownames(x)) %in% perfect_imputation_methods,])
+    }
+
   CombinedMetricsInsertedMissings <-
-    calculateCombinedMetrics( RMSEMX = RMSEinsertedMissings, MEMx = MEinsertedMissings, rBiasMx = rBiasinsertedMissings )
+    calculateCombinedMetrics( RMSEMX = RMSEinsertedMissings,
+                              MEMx = MEinsertedMissings,
+                              rBiasMx = rBiasinsertedMissings,
+                              pfctMtdsInABC = pfctMtdsInABC,
+                              nIter = nIter )
 
 
   # Return results
 
   return( list(
-    BestPerVariableRanksums_insertedMissings = CombinedMetricsInsertedMissings[["BestPerVariableRanksums_Missings"]],
     BestPerDatasetRanksums_insertedMissings = CombinedMetricsInsertedMissings[["BestPerDatasetRanksums_Missings"]],
     BestRanksumsGrandMean_insertedMissings_ABC_A = CombinedMetricsInsertedMissings[["BestRanksumsGrandMean_Missings_ABC_A"]],
     ranksumsErrorsInsertedMissings = CombinedMetricsInsertedMissings[["ranksumsErrorsMissings"]],
-    MajorityVoteRanksErrorsInsertedMissings = CombinedMetricsInsertedMissings[["MajorityVoteRanksErrorsMissings"]],
     grandMeanrankErrorsInsertedMissings = CombinedMetricsInsertedMissings[["grandMeanrankErrorsMissings"]],
     RMSEinsertedMissings = RMSEinsertedMissings,
     MEinsertedMissings = MEinsertedMissings,

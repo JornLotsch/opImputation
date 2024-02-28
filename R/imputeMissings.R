@@ -235,19 +235,47 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
 
     plusminus = {
       fac <- seq_len( nrow( x_orig ) )
-      ImputedData <- apply( x_orig, 2, function( x_orig ) x_orig + ( -1 )^fac *
+      ImputedData <- apply( x_orig, 2, function( x ) x + ( -1 )^fac *
         0.11 *
-        median( x_orig, na.rm = TRUE ) )
+        median( x, na.rm = TRUE ) )
     },
     plus = {
-      ImputedData <- apply( x_orig, 2, function( x_orig ) x_orig + 1 * 0.1 * median( x_orig, na.rm = TRUE ) )
+      ImputedData <- apply( x_orig, 2, function( x ) x + 1 * 0.1 * median( x, na.rm = TRUE ) )
     },
     factor = {
-      ImputedData <- apply( x_orig, 2, function( x_orig ) x_orig * ( 1 + 0.03 * median( x_orig, na.rm = TRUE ) ) )
+      ImputedData <- apply( x_orig, 2, function( x ) x * ( 1 + 0.03 * median( x, na.rm = TRUE ) ) )
     },
-    tinyNoise = {
+    tinyNoise_0.000001 = {
       set.seed( seed )
-      ImputedData <- apply( x_orig, 2, function( x_orig ) jitter( x_orig, factor = .001 * median( x_orig, na.rm = TRUE ) ) )
+      ImputedData <- apply( x_orig, 2, function( x ) jitter( x, amount = .000001 * abs( median( x, na.rm = TRUE ) ) ) )
+    },
+    tinyNoise_0.00001 = {
+      set.seed( seed )
+      ImputedData <- apply( x_orig, 2, function( x ) jitter( x, amount = .00001 * abs( median( x, na.rm = TRUE ) ) ) )
+    },
+    tinyNoise_0.0001 = {
+      set.seed( seed )
+      ImputedData <- apply( x_orig, 2, function( x ) jitter( x, amount = .0001 * abs( median( x, na.rm = TRUE ) ) ) )
+    },
+    tinyNoise_0.001 = {
+      set.seed( seed )
+      ImputedData <- apply( x_orig, 2, function( x ) jitter( x, amount = .001 * abs( median( x, na.rm = TRUE ) ) ) )
+    },
+    tinyNoise_0.01 = {
+      set.seed( seed )
+      ImputedData <- apply( x_orig, 2, function( x ) jitter( x, amount = .01 * abs( median( x, na.rm = TRUE ) ) ) )
+    },
+    tinyNoise_0.05 = {
+      set.seed( seed )
+      ImputedData <- apply( x_orig, 2, function( x ) jitter( x, amount = .05 * abs( median( x, na.rm = TRUE ) ) ) )
+    },
+    tinyNoise_0.1 = {
+      set.seed( seed )
+      ImputedData <- apply( x_orig, 2, function( x ) jitter( x, amount = .1 * abs( median( x, na.rm = TRUE ) ) ) )
+    },
+    tinyNoise_0.2 = {
+      set.seed( seed )
+      ImputedData <- apply( x_orig, 2, function( x ) jitter( x, amount = .2 * abs( median( x, na.rm = TRUE ) ) ) )
     }
 
   )

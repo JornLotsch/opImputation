@@ -6,20 +6,23 @@ The package provides the necessary functions for how to impute if you must:
 a method for handling missing values in biomedical numerical tabular data.
 }
 \usage{
-opImputation( Data, ImputationMethods = all_imputation_methods, 
-ImputationRepetitions = 20, seed = 100, nIter = 20, nProc = getOption("mc.cores", 2L),
-probMissing = 0.1, mnarity = 0, lowOnly = FALSE, mnarshape = 1, PlotIt = TRUE ) 
+opImputation( Data, ImputationMethods = all_imputation_methods,
+ImputationRepetitions = 20, seed = 100, nIter = 20, nProc = getOption( "mc.cores", 2L ),
+probMissing = 0.1, PValueThresholdForMetrics = 0.1, pfctMtdsInABC = FALSE,
+mnarity = 0, lowOnly = FALSE, mnarshape = 1, PlotIt = TRUE ) 
 }
 \arguments{
 \item{Data}{the (numerical!) data as a matrix or data frame.}
 \item{ImputationMethods}{the imputation methods to test, listed with the command 'all_imputation_methods'. }
-\item{ImputationRepetitions}{how many iterations in repeated impuations.}
+\item{ImputationRepetitions}{how many iterations in repeated imputations.}
 \item{seed}{a predefined seed to modify the results.}
-\item{nIter}{how many iterations of missng value insertion to run.}
+\item{nIter}{how many iterations of missing value insertion to run.}
 \item{nProc}{number of parallel processes.}
-\item{probMissing}{the probability of diagnostic missings to be inserted in each variable.}
+\item{probMissing}{the probability of diagnostic missing values to be inserted in each variable.}
+\item{PValueThresholdForMetrics}{the p-value from which a test for biased imputation is regarded as passed.}
+\item{pfctMtdsInABC}{whether to include so-called perfect imputation methods in comparative selections.}
 \item{mnarity}{degree of not at random sampling, 0...1.}
-\item{lowOnly}{if NAR, whether only low values should be oversampled}
+\item{lowOnly}{if NAR, whether only low values should be over-sampled}
 \item{mnarshape}{the degree of not at randomness}
 \item{PlotIt}{whether to display the main results automatically as two plots.}
 }

@@ -1,7 +1,6 @@
 # Selecting imputation methods for missing values
 #' @import(parallel)
 #' @import(ggplot2)
-#' @import(ggforce)
 #' @import(pbmcapply)
 #' @import(stringr)
 #' @import(methods)
@@ -19,14 +18,16 @@
 #' @importFrom(reshape2  melt)
 #' @importFrom(scales  pretty_breaks)
 #' @importFrom(DataVisualizations  ParetoDensityEstimation)
-#' @importFrom(abind  abind)
+#' @importFrom(abind abind)
 #' @importFrom(ABCanalysis  ABCanalysis)
 #' @importFrom(doParallel  registerDoParallel  stopImplicitCluster)
 #' @importFrom(Rfit rfit)
+#' @importFrom(twosamples dts_test)
 #' @export
 opImputation <- function( Data, ImputationMethods = all_imputation_methods,
                           ImputationRepetitions = 20, seed = 100, nIter = 20, nProc = getOption( "mc.cores", 2L ),
-                          probMissing = 0.1, mnarity = 0, lowOnly = FALSE, mnarshape = 1, PlotIt = TRUE ) {
+                          probMissing = 0.1, PValueThresholdForMetrics = 0.1, pfctMtdsInABC = FALSE,
+                          mnarity = 0, lowOnly = FALSE, mnarshape = 1, PlotIt = TRUE ) {
 
   Data <- data.frame( Data )
 
@@ -46,39 +47,39 @@ opImputation <- function( Data, ImputationMethods = all_imputation_methods,
     probMissing = probMissing,
     ImputationMethods = ImputationMethods,
     ImputationRepetitions = ImputationRepetitions,
-    mnarity = mnarity, lowOnly = lowOnly, mnarshape = mnarshape
+    mnarity = mnarity, lowOnly = lowOnly, mnarshape = mnarshape,
+    PValueThresholdForMetrics = PValueThresholdForMetrics
   )
 
   # Look at imputation accuracies
-  Zdeltas <- retrieveZdeltas( RepeatedSampleImputations = RepeatedSampleImputations,
-                              univariate_imputation_methods = univariate_imputation_methods,
-                              poisoned_imputation_methods = poisoned_imputation_methods )
+  Zdeltas <- retrieveZdeltas( RepeatedSampleImputations = RepeatedSampleImputations )
 
-  # Create ZDalta plots
+  # Create ZDelta plots
   pZdeltasPlotAvgerage <- createBarplotMeanZDeltas(
-    ImputationZDeltaInsertedMissingsRaw = Zdeltas$ImputationZDeltaInsertedMissings,
+    meanImputationZDeltaInsertedMissings = Zdeltas$meanImputationZDeltaInsertedMissings,
     poisoned_imputation_methods = poisoned_imputation_methods,
     univariate_imputation_methods = univariate_imputation_methods,
     perfect_imputation_methods = perfect_imputation_methods
   )
+
   pGMCPlotAvgerage <- createBarplotMeanGMCs(
     ImputationZDeltaInsertedMissingsRaw = Zdeltas$ImputationZDeltaInsertedMissings,
     poisoned_imputation_methods = poisoned_imputation_methods,
     univariate_imputation_methods = univariate_imputation_methods,
     perfect_imputation_methods = perfect_imputation_methods
   )
-  pZdeltasPDEraw <- createPDERawZDeltas(
-    multivarZDeltas = Zdeltas$ImputationZDeltaInsertedMissingsMultivarV,
-    univarZDeltas = Zdeltas$ImputationZDeltaInsertedMissingsUnivarV,
-    poisonedZDeltas = Zdeltas$ImputationZDeltaInsertedMissingsPoisenedV,
-    perfectZDeltas = Zdeltas$ImputationZDeltaInsertedMissingsPerfectV
-  )
+
   pZdeltasPerVar <- createZDeltasPerVarPlot(
     meanImputationZDeltaInsertedMissings = Zdeltas$meanImputationZDeltaInsertedMissings
   )
 
   # Find best imputation
-  MethodsResults <- findBestMethod( RepeatedSampleImputations = RepeatedSampleImputations )
+  MethodsResults <- findBestMethod(
+    RepeatedSampleImputations = RepeatedSampleImputations,
+    pfctMtdsInABC = pfctMtdsInABC,
+    nIter = nIter
+  )
+
   BestMethodPerDataset <- gsub( " imputed|Imp", "", names( MethodsResults$BestPerDatasetRanksums_insertedMissings ) )
 
   # Retrieve imputed data
@@ -95,7 +96,6 @@ opImputation <- function( Data, ImputationMethods = all_imputation_methods,
 
   # Assemble main results plots
   FigZdelta <- cowplot::plot_grid(
-    pZdeltasPDEraw,
     pGMCPlotAvgerage,
     align = "v", axis = "lr",
     labels = LETTERS[1:2],
@@ -118,7 +118,6 @@ opImputation <- function( Data, ImputationMethods = all_imputation_methods,
                                       BestMethodPerDataset = BestMethodPerDataset,
                                       univariate_imputation_methods = univariate_imputation_methods,
                                       multivariate_imputation_methods = multivariate_imputation_methods )
-
 
     FigABC <- cowplot::plot_grid(
       cowplot::plot_grid(
@@ -152,7 +151,7 @@ opImputation <- function( Data, ImputationMethods = all_imputation_methods,
   if ( PlotIt == TRUE ) {
     suppressWarnings( print( "BestMethodPerDataset" ) )
     suppressWarnings( print( suppressWarnings( BestMethodPerDataset ) ) )
-    suppressWarnings( print( suppressWarnings( FigZdelta ) ) )
+    # suppressWarnings( print( suppressWarnings( FigZdelta ) ) )
     suppressWarnings( print( suppressWarnings( FigABC ) ) )
   }
 
@@ -165,8 +164,8 @@ opImputation <- function( Data, ImputationMethods = all_imputation_methods,
       MethodsResults = MethodsResults,
       BestMethodPerDataset = BestMethodPerDataset,
       ImputedData = ImputedData,
-      ABCres = pABC,
-      FigABC = FigABC
+      ABCres = pABC #,
+      # FigABC = FigABC
     )
   )
 }
