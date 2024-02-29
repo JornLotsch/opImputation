@@ -2,7 +2,7 @@
 \alias{QSTpainEJPtransf}
 
 \docType{data}
-\title{Psychophysical datafrom a clinical quantitative sensory testing study.}
+\title{Psychophysical data from a clinical quantitative sensory testing study.}
 
 \description{Data set from a psychophysical investigation in a clinical quantitative sensory testing study in healthy subjects.}
 
