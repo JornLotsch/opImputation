@@ -89,12 +89,10 @@ calculateCombinedMetrics <-
     ) )
   }
 
-
 # Find best imputation
 findBestMethod <- function( RepeatedSampleImputations, pfctMtdsInABC, nIter ) {
 
   # Inserted diagnostic missings
-
   RMSEinsertedMissings <- lapply( RepeatedSampleImputations, function( x ) {
     x[["ImputationRMSEInsertedMissings"]]
   } )
@@ -104,7 +102,6 @@ findBestMethod <- function( RepeatedSampleImputations, pfctMtdsInABC, nIter ) {
   rBiasinsertedMissings <- lapply( RepeatedSampleImputations, function( x ) {
     x[["ImputationrBiasInsertedMissings"]]
   } )
-
 
   if ( pfctMtdsInABC == FALSE ) {
     RMSEinsertedMissings <- lapply(RMSEinsertedMissings, function (x) x[!gsub(" imputed","", rownames(x)) %in% perfect_imputation_methods,])
@@ -119,9 +116,7 @@ findBestMethod <- function( RepeatedSampleImputations, pfctMtdsInABC, nIter ) {
                               pfctMtdsInABC = pfctMtdsInABC,
                               nIter = nIter )
 
-
   # Return results
-
   return( list(
     BestPerDatasetRanksums_insertedMissings = CombinedMetricsInsertedMissings[["BestPerDatasetRanksums_Missings"]],
     BestRanksumsGrandMean_insertedMissings_ABC_A = CombinedMetricsInsertedMissings[["BestRanksumsGrandMean_Missings_ABC_A"]],

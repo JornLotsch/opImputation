@@ -1,4 +1,4 @@
-# Function to find the best univariate mean ZDelta
+# Function to find the best mean ZDelta
 retrieve_best_mean_z_delta <- function( allRanks, allZDeltas, imputation_methods ) {
   which_best_rowmean_ranks_inserted_missings <-
     names( which.min( allRanks[gsub( " imputed|Imp", "", names( allRanks ) ) %in% imputation_methods] ) )
@@ -18,24 +18,23 @@ fisher_method <- function( p_values ) {
   return( combined_p_value )
 }
 
-# Function to create a PDE plot of Zdelta values for best methods
-createpZdeltasMultivarUnivarPDE <- function( allRanks, allZDeltas, BestMethodPerDataset,
-                                             univariate_imputation_methods, multivariate_imputation_methods, poisoned_imputation_methods ) {
+# Function to find best method per category
+findBestMethodPerCategory <- function( BestMethodPerDataset, allRanks, allZDeltas,
+                                       multivariate_imputation_methods,
+                                       univariate_imputation_methods,
+                                       poisoned_imputation_methods ) {
 
-  # Find best method per category
   if ( BestMethodPerDataset %in% multivariate_imputation_methods ) {
-    multivarZDeltas <-
-      unlist( lapply( allZDeltas$ImputationZDeltaInsertedMissings, function( x )
-        x[gsub( " imputed|Imp", "", rownames( x ) ) %in% BestMethodPerDataset,] ) )
+    multivarZDeltas <- unlist( lapply( allZDeltas$ImputationZDeltaInsertedMissings, function( x )
+      x[gsub( " imputed|Imp", "", rownames( x ) ) %in% BestMethodPerDataset,] ) )
   } else {
     multivarZDeltas <- retrieve_best_mean_z_delta( allRanks, allZDeltas,
                                                    imputation_methods = multivariate_imputation_methods )
   }
 
   if ( BestMethodPerDataset %in% univariate_imputation_methods ) {
-    univarZDeltas <-
-      unlist( lapply( allZDeltas$ImputationZDeltaInsertedMissings, function( x )
-        x[gsub( " imputed|Imp", "", rownames( x ) ) %in% BestMethodPerDataset,] ) )
+    univarZDeltas <- unlist( lapply( allZDeltas$ImputationZDeltaInsertedMissings, function( x )
+      x[gsub( " imputed|Imp", "", rownames( x ) ) %in% BestMethodPerDataset,] ) )
   } else {
     univarZDeltas <- retrieve_best_mean_z_delta( allRanks, allZDeltas,
                                                  imputation_methods = univariate_imputation_methods )
@@ -48,6 +47,25 @@ createpZdeltasMultivarUnivarPDE <- function( allRanks, allZDeltas, BestMethodPer
     poisonedZDeltas <- NULL
   }
 
+  return( list( multivarZDeltas = multivarZDeltas,
+                univarZDeltas = univarZDeltas,
+                poisonedZDeltas = poisonedZDeltas ) )
+}
+
+# Function to create a PDE plot of Zdelta values for best methods
+createpZdeltasMultivarUnivarPDE <- function( allRanks, allZDeltas, BestMethodPerDataset,
+                                             univariate_imputation_methods, multivariate_imputation_methods, poisoned_imputation_methods ) {
+
+  # Find best method per category
+  BestZDeltas <- findBestMethodPerCategory( BestMethodPerDataset, allRanks, allZDeltas,
+                                            multivariate_imputation_methods,
+                                            univariate_imputation_methods,
+                                            poisoned_imputation_methods )
+
+  multivarZDeltas <- BestZDeltas$multivarZDeltas
+  univarZDeltas <- BestZDeltas$univarZDeltas
+  poisonedZDeltas <- BestZDeltas$poisonedZDeltas
+
   # Create PDE plot
   dfParetoAll <- generatePDEPlotDataFrames( multivarZDeltas = multivarZDeltas,
                                             univarZDeltas = univarZDeltas,
@@ -57,7 +75,7 @@ createpZdeltasMultivarUnivarPDE <- function( allRanks, allZDeltas, BestMethodPer
   PDERawZDeltasBest <- createZDeltaPDEplots( dfParetoAll = dfParetoAll )
 
   PDERawZDeltasBest <- PDERawZDeltasBest +
-    labs( title = "PDE of raw Zdelta (best methods)" )
+    labs( title = "PDE of raw Zdelta (best uni/multivariate)" )
 
   # Do stats multivariate versus univariate imputation errors
   df.stat.deltas <- rbind.data.frame(

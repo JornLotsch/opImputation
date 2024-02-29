@@ -101,39 +101,23 @@ makeAndMeasureRepeatedImputations <- function( Data, seeds, probMissing, nProc, 
 
     # Calculate metrics
     ImputationRMSEInsertedMissings <- makeMetricsMatrix(
-      OrigData = dfXmatrix,
-      Missings_Which = dfXmatrixInsertedMissings_Which,
-      ImputedData = dfImputedDataAll,
-      Metric = "RMSEImputedUnivar",
-      PValueThresholdForMetrics = PValueThresholdForMetrics
+      OrigData = dfXmatrix, Missings_Which = dfXmatrixInsertedMissings_Which, ImputedData = dfImputedDataAll, Metric = "RMSEImputedUnivar", PValueThresholdForMetrics = PValueThresholdForMetrics
     )
     names( ImputationRMSEInsertedMissings ) <- paste0( "RMSE_", names( dfXmatrix ) )
 
     ImputationMEInsertedMissings <- makeMetricsMatrix(
-      OrigData = dfXmatrix,
-      Missings_Which = dfXmatrixInsertedMissings_Which,
-      ImputedData = dfImputedDataAll,
-      Metric = "MEImputedUnivar",
-      PValueThresholdForMetrics = PValueThresholdForMetrics
+      OrigData = dfXmatrix, Missings_Which = dfXmatrixInsertedMissings_Which, ImputedData = dfImputedDataAll, Metric = "MEImputedUnivar", PValueThresholdForMetrics = PValueThresholdForMetrics
     )
     names( ImputationMEInsertedMissings ) <- paste0( "ME_", names( dfXmatrix ) )
 
     ImputationrBiasInsertedMissings <- makeMetricsMatrix(
-      OrigData = dfXmatrix,
-      Missings_Which = dfXmatrixInsertedMissings_Which,
-      ImputedData = dfImputedDataAll,
-      Metric = "rBiasImputedUnivar",
-      PValueThresholdForMetrics = PValueThresholdForMetrics
+      OrigData = dfXmatrix, Missings_Which = dfXmatrixInsertedMissings_Which, ImputedData = dfImputedDataAll, Metric = "rBiasImputedUnivar", PValueThresholdForMetrics = PValueThresholdForMetrics
     )
     names( ImputationrBiasInsertedMissings ) <- paste0( "rBias_", names( dfXmatrix ) )
 
     ImputationZDeltaInsertedMissings <- makeMetricsMatrix(
-      OrigData = dfXmatrix,
-      Missings_Which = dfXmatrixInsertedMissings_Which,
-      ImputedData = dfImputedDataAll,
-      Metric = "ZDelta",
-      OrigDataMiss = dfXmatrixInsertedMissings,
-      PValueThresholdForMetrics = PValueThresholdForMetrics
+      OrigData = dfXmatrix, Missings_Which = dfXmatrixInsertedMissings_Which, ImputedData = dfImputedDataAll, Metric = "ZDelta", PValueThresholdForMetrics = PValueThresholdForMetrics,
+      OrigDataMiss = dfXmatrixInsertedMissings
     )
     names( ImputationZDeltaInsertedMissings ) <- paste0( "ZDelta_", names( dfXmatrix ) )
 

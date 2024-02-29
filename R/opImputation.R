@@ -23,6 +23,7 @@
 #' @importFrom(doParallel  registerDoParallel  stopImplicitCluster)
 #' @importFrom(Rfit rfit)
 #' @importFrom(twosamples dts_test)
+#' @importFrom(ggh4x facet_grid2)
 #' @export
 opImputation <- function( Data, ImputationMethods = all_imputation_methods,
                           ImputationRepetitions = 20, seed = 100, nIter = 20, nProc = getOption( "mc.cores", 2L ),
@@ -51,28 +52,6 @@ opImputation <- function( Data, ImputationMethods = all_imputation_methods,
     PValueThresholdForMetrics = PValueThresholdForMetrics
   )
 
-  # Look at imputation accuracies
-  Zdeltas <- retrieveZdeltas( RepeatedSampleImputations = RepeatedSampleImputations )
-
-  # Create ZDelta plots
-  pZdeltasPlotAvgerage <- createBarplotMeanZDeltas(
-    meanImputationZDeltaInsertedMissings = Zdeltas$meanImputationZDeltaInsertedMissings,
-    poisoned_imputation_methods = poisoned_imputation_methods,
-    univariate_imputation_methods = univariate_imputation_methods,
-    perfect_imputation_methods = perfect_imputation_methods
-  )
-
-  pGMCPlotAvgerage <- createBarplotMeanGMCs(
-    ImputationZDeltaInsertedMissingsRaw = Zdeltas$ImputationZDeltaInsertedMissings,
-    poisoned_imputation_methods = poisoned_imputation_methods,
-    univariate_imputation_methods = univariate_imputation_methods,
-    perfect_imputation_methods = perfect_imputation_methods
-  )
-
-  pZdeltasPerVar <- createZDeltasPerVarPlot(
-    meanImputationZDeltaInsertedMissings = Zdeltas$meanImputationZDeltaInsertedMissings
-  )
-
   # Find best imputation
   MethodsResults <- findBestMethod(
     RepeatedSampleImputations = RepeatedSampleImputations,
@@ -88,19 +67,45 @@ opImputation <- function( Data, ImputationMethods = all_imputation_methods,
     RepeatedSampleImputations = RepeatedSampleImputations
   )
 
+  # Look at imputation accuracies
+  Zdeltas <- retrieveZdeltas( RepeatedSampleImputations = RepeatedSampleImputations )
+
+  # Create ZDelta plots
+  pZdeltasPlotAvgerage <- createBarplotMeanZDeltas(
+    meanImputationZDeltaInsertedMissings = Zdeltas$meanImputationZDeltaInsertedMissings,
+    poisoned_imputation_methods = poisoned_imputation_methods,
+    univariate_imputation_methods = univariate_imputation_methods,
+    multivariate_imputation_methods = multivariate_imputation_methods,
+    perfect_imputation_methods = perfect_imputation_methods,
+    BestMethodPerDataset = BestMethodPerDataset,
+    allRanks = MethodsResults$PerDatasetRanksums_insertedMissings
+  )
+
+  # pGMCPlotAvgerage <- createBarplotMeanGMCs(
+  #   ImputationZDeltaInsertedMissingsRaw = Zdeltas$ImputationZDeltaInsertedMissings,
+  #   poisoned_imputation_methods = poisoned_imputation_methods,
+  #   univariate_imputation_methods = univariate_imputation_methods,
+  #   perfect_imputation_methods = perfect_imputation_methods
+  # )
+
+  pZdeltasPerVar <- createZDeltasPerVarPlot(
+    meanImputationZDeltaInsertedMissings = Zdeltas$meanImputationZDeltaInsertedMissings,
+    perfect_imputation_methods = perfect_imputation_methods
+  )
+
   # Create ABC plots
   pABC <- makeABCanaylsis(
     zABCvalues = MethodsResults$zABCvalues_insertedMissings,
     poisoned_imputation_methods = poisoned_imputation_methods
   )
 
-  # Assemble main results plots
-  FigZdelta <- cowplot::plot_grid(
-    pGMCPlotAvgerage,
-    align = "v", axis = "lr",
-    labels = LETTERS[1:2],
-    ncol = 1, rel_heights = c( 1, 1 )
-  )
+  # # Assemble main results plots
+  # FigZdelta <- cowplot::plot_grid(
+  #   pGMCPlotAvgerage,
+  #   align = "v", axis = "lr",
+  #   labels = LETTERS[1:2],
+  #   ncol = 1, rel_heights = c( 1, 1 )
+  # )
 
   # Compare ZDelta values between multivariate and univariate methods
   if ( sum( ImputationMethods %in% univariate_imputation_methods ) > 0 & sum( ImputationMethods %in% multivariate_imputation_methods ) > 0 ) {
@@ -160,12 +165,12 @@ opImputation <- function( Data, ImputationMethods = all_imputation_methods,
     list(
       RepeatedSampleImputations = RepeatedSampleImputations,
       Zdeltas = Zdeltas,
-      FigZdelta = FigZdelta,
+      # FigZdelta = FigZdelta,
       MethodsResults = MethodsResults,
       BestMethodPerDataset = BestMethodPerDataset,
       ImputedData = ImputedData,
-      ABCres = pABC #,
-      # FigABC = FigABC
+      ABCres = pABC,
+      FigABC = FigABC
     )
   )
 }
