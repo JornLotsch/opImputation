@@ -1,13 +1,3 @@
-# Function to find the best mean ZDelta
-retrieve_best_mean_z_delta <- function( allRanks, allZDeltas, imputation_methods ) {
-  which_best_rowmean_ranks_inserted_missings <-
-    names( which.min( allRanks[gsub( " imputed|Imp", "", names( allRanks ) ) %in% imputation_methods] ) )
-
-  best_z_deltas <- unlist( lapply( allZDeltas$ImputationZDeltaInsertedMissings, function( x )
-    x[row.names( x ) == which_best_rowmean_ranks_inserted_missings,] ) )
-  return( best_z_deltas = best_z_deltas )
-}
-
 # Function to combine p-values
 fisher_method <- function( p_values ) {
   p_values <- pmax( pmin( p_values, 1 ), 0 )
@@ -19,30 +9,19 @@ fisher_method <- function( p_values ) {
 }
 
 # Function to find best method per category
-findBestMethodPerCategory <- function( BestMethodPerDataset, allRanks, allZDeltas,
-                                       multivariate_imputation_methods,
-                                       univariate_imputation_methods,
-                                       poisoned_imputation_methods ) {
+retrieveZDeltasForBestMethodPerCategory <- function( Zdeltas,
+                                       BestMethodPerDataset, BestUnivariateMethodPerDataset,
+                                       BestMultivariateMethodPerDataset, BestUniMultivariateMethodPerDataset, BestPoisonedMethodPerDataset ) {
 
-  if ( BestMethodPerDataset %in% multivariate_imputation_methods ) {
-    multivarZDeltas <- unlist( lapply( allZDeltas$ImputationZDeltaInsertedMissings, function( x )
-      x[gsub( " imputed|Imp", "", rownames( x ) ) %in% BestMethodPerDataset,] ) )
-  } else {
-    multivarZDeltas <- retrieve_best_mean_z_delta( allRanks, allZDeltas,
-                                                   imputation_methods = multivariate_imputation_methods )
-  }
+    multivarZDeltas <- unlist( lapply( Zdeltas$ImputationZDeltaInsertedMissings, function( x )
+      x[gsub( " imputed|Imp", "", rownames( x ) ) %in% BestMultivariateMethodPerDataset,] ) )
 
-  if ( BestMethodPerDataset %in% univariate_imputation_methods ) {
-    univarZDeltas <- unlist( lapply( allZDeltas$ImputationZDeltaInsertedMissings, function( x )
-      x[gsub( " imputed|Imp", "", rownames( x ) ) %in% BestMethodPerDataset,] ) )
-  } else {
-    univarZDeltas <- retrieve_best_mean_z_delta( allRanks, allZDeltas,
-                                                 imputation_methods = univariate_imputation_methods )
-  }
+    univarZDeltas <- unlist( lapply( Zdeltas$ImputationZDeltaInsertedMissings, function( x )
+      x[gsub( " imputed|Imp", "", rownames( x ) ) %in% BestUnivariateMethodPerDataset,] ) )
 
   if ( BestMethodPerDataset %in% poisoned_imputation_methods ) {
-    poisonedZDeltas <- retrieve_best_mean_z_delta( allRanks, allZDeltas,
-                                                   imputation_methods = poisoned_imputation_methods )
+    poisonedZDeltas <- unlist( lapply( Zdeltas$ImputationZDeltaInsertedMissings, function( x )
+      x[gsub( " imputed|Imp", "", rownames( x ) ) %in% BestPoisonedMethodPerDataset,] ) )
   } else {
     poisonedZDeltas <- NULL
   }
@@ -53,14 +32,14 @@ findBestMethodPerCategory <- function( BestMethodPerDataset, allRanks, allZDelta
 }
 
 # Function to create a PDE plot of Zdelta values for best methods
-createpZdeltasMultivarUnivarPDE <- function( allRanks, allZDeltas, BestMethodPerDataset,
-                                             univariate_imputation_methods, multivariate_imputation_methods, poisoned_imputation_methods ) {
+createpZdeltasMultivarUnivarPDE <- function( Zdeltas,
+                                             BestMethodPerDataset, BestUnivariateMethodPerDataset,
+                                             BestMultivariateMethodPerDataset, BestUniMultivariateMethodPerDataset, BestPoisonedMethodPerDataset ) {
 
-  # Find best method per category
-  BestZDeltas <- findBestMethodPerCategory( BestMethodPerDataset, allRanks, allZDeltas,
-                                            multivariate_imputation_methods,
-                                            univariate_imputation_methods,
-                                            poisoned_imputation_methods )
+  # Retrieve ZDeltas for best method per per category
+  BestZDeltas <- retrieveZDeltasForBestMethodPerCategory( Zdeltas,
+                                            BestMethodPerDataset, BestUnivariateMethodPerDataset,
+                                            BestMultivariateMethodPerDataset, BestUniMultivariateMethodPerDataset, BestPoisonedMethodPerDataset )
 
   multivarZDeltas <- BestZDeltas$multivarZDeltas
   univarZDeltas <- BestZDeltas$univarZDeltas
@@ -82,10 +61,10 @@ createpZdeltasMultivarUnivarPDE <- function( allRanks, allZDeltas, BestMethodPer
     cbind.data.frame( y = 1, x = univarZDeltas ),
     cbind.data.frame( y = 2, x = multivarZDeltas )
   )
-  stat.deltas.W <- wilcox.test( df.stat.deltas$x ~ df.stat.deltas$y )$p.value
+  stat.deltas.W <- suppressWarnings( wilcox.test( df.stat.deltas$x ~ df.stat.deltas$y )$p.value )
   # stat.deltas.CDF <- ks.test( univarZDeltas, multivarZDeltas )$p.value
-  stat.deltas.CDF <- twosamples::dts_test( univarZDeltas, multivarZDeltas )["P-Value"]
-  stat.deltas <- fisher_method( p_values = c( stat.deltas.W, stat.deltas.CDF ) )
+  stat.deltas.CDF <- suppressWarnings( twosamples::dts_test( univarZDeltas, multivarZDeltas )["P-Value"] )
+  stat.deltas <- suppressWarnings( fisher_method( p_values = c( stat.deltas.W, stat.deltas.CDF ) ) )
 
   # Creating a data frame for statistical tests
   dfStats <- data.frame(
@@ -125,27 +104,18 @@ createpZdeltasMultivarUnivarPDE <- function( allRanks, allZDeltas, BestMethodPer
 
 
 # Function to create a QQ plot of Zdelta values for best methods
-createpZdeltasMultivarUnivarQQ <- function( allRanks, allZDeltas, BestMethodPerDataset,
-                                            univariate_imputation_methods, multivariate_imputation_methods ) {
+createpZdeltasMultivarUnivarQQ <- function( Zdeltas,
+                                            BestMethodPerDataset, BestUnivariateMethodPerDataset,
+                                            BestMultivariateMethodPerDataset, BestUniMultivariateMethodPerDataset, BestPoisonedMethodPerDataset ) {
 
-  # Find best method per category
-  if ( BestMethodPerDataset %in% multivariate_imputation_methods ) {
-    multivarZDeltas <-
-      unlist( lapply( allZDeltas$ImputationZDeltaInsertedMissings, function( x )
-        x[gsub( " imputed|Imp", "", rownames( x ) ) %in% BestMethodPerDataset,] ) )
-  } else {
-    multivarZDeltas <- retrieve_best_mean_z_delta( allRanks, allZDeltas,
-                                                   imputation_methods = multivariate_imputation_methods )
-  }
+  # Retrieve ZDeltas for best method per per category
+  BestZDeltas <- retrieveZDeltasForBestMethodPerCategory( Zdeltas,
+                                                          BestMethodPerDataset, BestUnivariateMethodPerDataset,
+                                                          BestMultivariateMethodPerDataset, BestUniMultivariateMethodPerDataset, BestPoisonedMethodPerDataset )
 
-  if ( BestMethodPerDataset %in% univariate_imputation_methods ) {
-    univarZDeltas <-
-      unlist( lapply( allZDeltas$ImputationZDeltaInsertedMissings, function( x )
-        x[gsub( " imputed|Imp", "", rownames( x ) ) %in% BestMethodPerDataset,] ) )
-  } else {
-    univarZDeltas <- retrieve_best_mean_z_delta( allRanks, allZDeltas,
-                                                 imputation_methods = univariate_imputation_methods )
-  }
+  multivarZDeltas <- BestZDeltas$multivarZDeltas
+  univarZDeltas <- BestZDeltas$univarZDeltas
+  poisonedZDeltas <- BestZDeltas$poisonedZDeltas
 
   # QQ plots
   quantiles <- seq( 0, 1, 0.01 )

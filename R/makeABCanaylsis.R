@@ -1,5 +1,5 @@
-# Function to plot the ABC analysis results of the ranking of the impuation methods
-makeABCanaylsis <- function( zABCvalues, zDelta = NULL, HighlightPoisenedMethods = TRUE, poisoned_imputation_methods ) {
+# Function to plot the ABC analysis results of the ranking of the imputation methods
+makeABCanaylsis <- function( zABCvalues, zDelta = NULL, HighlightPoisenedMethods = TRUE ) {
 
   ABCsetmembership <- function( x = NULL, ABCres = NULL, num = TRUE ) {
     if ( is.null( ABCres ) ) {

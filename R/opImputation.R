@@ -59,7 +59,11 @@ opImputation <- function( Data, ImputationMethods = all_imputation_methods,
     nIter = nIter
   )
 
-  BestMethodPerDataset <- gsub( " imputed|Imp", "", names( MethodsResults$BestPerDatasetRanksums_insertedMissings ) )
+  BestMethodPerDataset <- gsub( " imputed|Imp", "", MethodsResults$BestPerDatasetRanksums_insertedMissings )
+  BestUnivariateMethodPerDataset <- gsub( " imputed|Imp", "", MethodsResults$BestUnivariatePerDatasetRanksums_insertedMissings )
+  BestMultivariateMethodPerDataset <- gsub( " imputed|Imp", "", MethodsResults$BestMultivariatePerDatasetRanksums_insertedMissings )
+  BestUniMultivariateMethodPerDataset <- gsub( " imputed|Imp", "", MethodsResults$BestUniMultivariatePerDatasetRanksums_insertedMissings )
+  BestPoisonedMethodPerDataset <- gsub( " imputed|Imp", "", MethodsResults$BestPoisonedPerDatasetRanksums_insertedMissings )
 
   # Retrieve imputed data
   ImputedData <- retrieveAveragedImputedData(
@@ -73,12 +77,7 @@ opImputation <- function( Data, ImputationMethods = all_imputation_methods,
   # Create ZDelta plots
   pZdeltasPlotAvgerage <- createBarplotMeanZDeltas(
     meanImputationZDeltaInsertedMissings = Zdeltas$meanImputationZDeltaInsertedMissings,
-    poisoned_imputation_methods = poisoned_imputation_methods,
-    univariate_imputation_methods = univariate_imputation_methods,
-    multivariate_imputation_methods = multivariate_imputation_methods,
-    perfect_imputation_methods = perfect_imputation_methods,
-    BestMethodPerDataset = BestMethodPerDataset,
-    allRanks = MethodsResults$PerDatasetRanksums_insertedMissings
+    BestUniMultivariateMethodPerDataset = BestUniMultivariateMethodPerDataset
   )
 
   # pGMCPlotAvgerage <- createBarplotMeanGMCs(
@@ -89,14 +88,12 @@ opImputation <- function( Data, ImputationMethods = all_imputation_methods,
   # )
 
   pZdeltasPerVar <- createZDeltasPerVarPlot(
-    meanImputationZDeltaInsertedMissings = Zdeltas$meanImputationZDeltaInsertedMissings,
-    perfect_imputation_methods = perfect_imputation_methods
+    meanImputationZDeltaInsertedMissings = Zdeltas$meanImputationZDeltaInsertedMissings
   )
 
   # Create ABC plots
   pABC <- makeABCanaylsis(
-    zABCvalues = MethodsResults$zABCvalues_insertedMissings,
-    poisoned_imputation_methods = poisoned_imputation_methods
+    zABCvalues = MethodsResults$zABCvalues_insertedMissings
   )
 
   # # Assemble main results plots
@@ -110,19 +107,20 @@ opImputation <- function( Data, ImputationMethods = all_imputation_methods,
   # Compare ZDelta values between multivariate and univariate methods
   if ( sum( ImputationMethods %in% univariate_imputation_methods ) > 0 & sum( ImputationMethods %in% multivariate_imputation_methods ) > 0 ) {
     pZdeltasMultivarUnivarPDE <-
-      createpZdeltasMultivarUnivarPDE( allRanks = MethodsResults$PerDatasetRanksums_insertedMissings,
-                                       allZDeltas = Zdeltas,
+      createpZdeltasMultivarUnivarPDE( Zdeltas = Zdeltas,
                                        BestMethodPerDataset = BestMethodPerDataset,
-                                       univariate_imputation_methods = univariate_imputation_methods,
-                                       multivariate_imputation_methods = multivariate_imputation_methods,
-                                       poisoned_imputation_methods = poisoned_imputation_methods )
+                                       BestUnivariateMethodPerDataset = BestUnivariateMethodPerDataset,
+                                       BestMultivariateMethodPerDataset = BestMultivariateMethodPerDataset,
+                                       BestUniMultivariateMethodPerDataset = BestUniMultivariateMethodPerDataset,
+                                       BestPoisonedMethodPerDataset = BestPoisonedMethodPerDataset )
 
     pZdeltasMultivarUnivarQQ <-
-      createpZdeltasMultivarUnivarQQ( allRanks = MethodsResults$PerDatasetRanksums_insertedMissings,
-                                      allZDeltas = Zdeltas,
+      createpZdeltasMultivarUnivarQQ( Zdeltas = Zdeltas,
                                       BestMethodPerDataset = BestMethodPerDataset,
-                                      univariate_imputation_methods = univariate_imputation_methods,
-                                      multivariate_imputation_methods = multivariate_imputation_methods )
+                                      BestUnivariateMethodPerDataset = BestUnivariateMethodPerDataset,
+                                      BestMultivariateMethodPerDataset = BestMultivariateMethodPerDataset,
+                                      BestUniMultivariateMethodPerDataset = BestUniMultivariateMethodPerDataset,
+                                      BestPoisonedMethodPerDataset = BestPoisonedMethodPerDataset )
 
     FigABC <- cowplot::plot_grid(
       cowplot::plot_grid(
@@ -154,8 +152,10 @@ opImputation <- function( Data, ImputationMethods = all_imputation_methods,
 
   # Display main results
   if ( PlotIt == TRUE ) {
-    suppressWarnings( print( "BestMethodPerDataset" ) )
+    suppressWarnings( print( "Best method per dataset" ) )
     suppressWarnings( print( suppressWarnings( BestMethodPerDataset ) ) )
+    suppressWarnings( print( "Best univariate or multivariate method per dataset" ) )
+    suppressWarnings( print( suppressWarnings( BestUniMultivariateMethodPerDataset ) ) )
     # suppressWarnings( print( suppressWarnings( FigZdelta ) ) )
     suppressWarnings( print( suppressWarnings( FigABC ) ) )
   }

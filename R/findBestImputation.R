@@ -63,7 +63,18 @@ calculateCombinedMetrics <-
 
     all.matrix <- abind::abind( ranksumsErrorsMissings, along = 2 )
     PerDatasetRanksums_Missings <- apply( all.matrix, c( 1 ), function( x ) median( x, na.rm = TRUE ) )
-    BestPerDatasetRanksums_Missings <- which.min( PerDatasetRanksums_Missings )
+    BestPerDatasetRanksums_Missings <- names(which.min( PerDatasetRanksums_Missings ))
+    BestUnivariatePerDatasetRanksums_Missings <- names(which.min( PerDatasetRanksums_Missings[gsub(" imputed","",
+                                                                                                    names(PerDatasetRanksums_Missings)) %in% univariate_imputation_methods] ))
+    BestMultivariatePerDatasetRanksums_Missings <- names(which.min( PerDatasetRanksums_Missings[gsub(" imputed","",
+                                                                                                     names(PerDatasetRanksums_Missings)) %in% multivariate_imputation_methods] ))
+    BestUniMultivariatePerDatasetRanksums_Missings <- names(which.min( PerDatasetRanksums_Missings[gsub(" imputed","",
+                                                                                                        names(PerDatasetRanksums_Missings)) %in% c(univariate_imputation_methods, multivariate_imputation_methods)] ))
+    BestPoisonedPerDatasetRanksums_Missings <- names(which.min( PerDatasetRanksums_Missings[gsub(" imputed","",
+                                                                                                        names(PerDatasetRanksums_Missings)) %in% poisoned_imputation_methods] ))
+
+
+
     zABCvalues <- calculateZABCvalues( meanRanks = PerDatasetRanksums_Missings,
                                        nVar = ncol( RMSEMX[[1]] ),
                                        nMethods = length( PerDatasetRanksums_Missings ),
@@ -80,6 +91,10 @@ calculateCombinedMetrics <-
       grandMeanrankErrorsMissings = grandMeanrankErrorsMissings,
       PerDatasetRanksums_Missings = PerDatasetRanksums_Missings,
       BestPerDatasetRanksums_Missings = BestPerDatasetRanksums_Missings,
+      BestUnivariatePerDatasetRanksums_Missings = BestUnivariatePerDatasetRanksums_Missings,
+      BestMultivariatePerDatasetRanksums_Missings = BestMultivariatePerDatasetRanksums_Missings,
+      BestUniMultivariatePerDatasetRanksums_Missings = BestUniMultivariatePerDatasetRanksums_Missings,
+      BestPoisonedPerDatasetRanksums_Missings = BestPoisonedPerDatasetRanksums_Missings,
       zABCvalues = zABCvalues,
       ABCRanksums = ABCRanksums,
       BestRanksumsGrandMean_Missings_ABC_A = BestRanksumsGrandMean_Missings_ABC_A,
@@ -118,6 +133,12 @@ findBestMethod <- function( RepeatedSampleImputations, pfctMtdsInABC, nIter ) {
 
   # Return results
   return( list(
+    BestPerDatasetRanksums_insertedMissings = CombinedMetricsInsertedMissings[["BestPerDatasetRanksums_Missings"]],
+    BestUnivariatePerDatasetRanksums_insertedMissings = CombinedMetricsInsertedMissings[["BestUnivariatePerDatasetRanksums_Missings"]],
+    BestMultivariatePerDatasetRanksums_insertedMissings = CombinedMetricsInsertedMissings[["BestMultivariatePerDatasetRanksums_Missings"]],
+    BestUniMultivariatePerDatasetRanksums_insertedMissings = CombinedMetricsInsertedMissings[["BestUniMultivariatePerDatasetRanksums_Missings"]],
+    BestPoisonedPerDatasetRanksums_insertedMissings = CombinedMetricsInsertedMissings[["BestPoisonedPerDatasetRanksums_Missings"]],
+    BestPerDatasetRanksums_insertedMissings = CombinedMetricsInsertedMissings[["BestPerDatasetRanksums_Missings"]],
     BestPerDatasetRanksums_insertedMissings = CombinedMetricsInsertedMissings[["BestPerDatasetRanksums_Missings"]],
     BestRanksumsGrandMean_insertedMissings_ABC_A = CombinedMetricsInsertedMissings[["BestRanksumsGrandMean_Missings_ABC_A"]],
     ranksumsErrorsInsertedMissings = CombinedMetricsInsertedMissings[["ranksumsErrorsMissings"]],
