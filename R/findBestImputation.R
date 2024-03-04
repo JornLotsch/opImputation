@@ -1,13 +1,13 @@
 # Function to identity the optimal imputation method from the comparative evaluations
 # Function to rank matrices
-rankMEs <-
+rank_MEs <-
   function( rankMx ) {
     Mx <- lapply( rankMx, function( y ) apply( y, 2, function( x ) rank( x, na.last = TRUE ) ) )
     return( Mx )
   }
 
 # Function to z-transform the ABC values
-renameDfcolumnsInNestedList <- function( df ) {
+rename_df_columns_in_nested_list <- function( df ) {
   lapply( seq_along( df ), function( i ) {
     y <- df[[i]]
     colnames( y ) <- gsub( 'RMSE_', 'MeanRank_', colnames( y ) )
@@ -16,7 +16,7 @@ renameDfcolumnsInNestedList <- function( df ) {
 }
 
 # Function to z-transform the ABC values
-calculateZABCvalues <- function( meanRanks, nVar, nMethods, nIter ) {
+calculate_zABC_values <- function( meanRanks, nVar, nMethods, nIter ) {
 
   d <- nVar * nIter
   M <- nMethods
@@ -31,15 +31,15 @@ calculateZABCvalues <- function( meanRanks, nVar, nMethods, nIter ) {
 }
 
 # Function to calculate combined metrics
-calculateCombinedMetrics <-
+calculate_combined_metrics <-
   function( RMSEMX, MEMx, rBiasMx, nIter ) {
 
-    RRMSEMX <- rankMEs( RMSEMX )
-    RMEMx <- rankMEs( MEMx )
-    RrBiasMx <- rankMEs( rBiasMx )
+    RRMSEMX <- rank_MEs( RMSEMX )
+    RMEMx <- rank_MEs( MEMx )
+    RrBiasMx <- rank_MEs( rBiasMx )
 
     rankErrorsMissings <- mapply( function( r1, r2, r3 ) { ( r1 + r2 + r3 ) / 3 }, RRMSEMX, RMEMx, RrBiasMx, SIMPLIFY = FALSE )
-    rankErrorsMissings <- renameDfcolumnsInNestedList( df = rankErrorsMissings )
+    rankErrorsMissings <- rename_df_columns_in_nested_list( df = rankErrorsMissings )
 
     ranksumsErrorsMissings <- lapply( rankErrorsMissings, function( x ) apply( x, 1, median ) )
 
@@ -61,10 +61,10 @@ calculateCombinedMetrics <-
                                                                                                    names( PerDatasetRanksums_Missings ) ) %in% poisoned_imputation_methods] ) )
 
 
-    zABCvalues <- calculateZABCvalues( meanRanks = PerDatasetRanksums_Missings,
-                                       nVar = ncol( RMSEMX[[1]] ),
-                                       nMethods = length( PerDatasetRanksums_Missings ),
-                                       nIter = nIter )
+    zABCvalues <- calculate_zABC_values( meanRanks = PerDatasetRanksums_Missings,
+                                         nVar = ncol( RMSEMX[[1]] ),
+                                         nMethods = length( PerDatasetRanksums_Missings ),
+                                         nIter = nIter )
 
     ABCRanksums <-
       ABCanalysis( as.vector( zABCvalues ) )
@@ -91,7 +91,7 @@ calculateCombinedMetrics <-
   }
 
 # Find best imputation
-findBestMethod <- function( RepeatedSampleImputations, pfctMtdsInABC, nIter ) {
+find_best_method <- function( RepeatedSampleImputations, pfctMtdsInABC, nIter ) {
 
   # Inserted diagnostic missings
   RMSEinsertedMissings <- lapply( RepeatedSampleImputations, function( x ) {
@@ -111,10 +111,10 @@ findBestMethod <- function( RepeatedSampleImputations, pfctMtdsInABC, nIter ) {
   }
 
   CombinedMetricsInsertedMissings <-
-    calculateCombinedMetrics( RMSEMX = RMSEinsertedMissings,
-                              MEMx = MEinsertedMissings,
-                              rBiasMx = rBiasinsertedMissings,
-                              nIter = nIter )
+    calculate_combined_metrics( RMSEMX = RMSEinsertedMissings,
+                                MEMx = MEinsertedMissings,
+                                rBiasMx = rBiasinsertedMissings,
+                                nIter = nIter )
 
   # Return results
   return( list(

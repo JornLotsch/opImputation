@@ -1,6 +1,6 @@
 # Function to calculate metrics for imputed data
 
-calculateMetrics <- function( OrigData, Missings_Which, ImputedData, Metric, OrigDataMiss = NULL, PValueThresholdForMetrics ) {
+calculate_metrics <- function( OrigData, Missings_Which, ImputedData, Metric, OrigDataMiss = NULL, PValueThresholdForMetrics ) {
 
   ME <- NA
 

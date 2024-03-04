@@ -1,8 +1,8 @@
 # Function to plot the ABC analysis results of the ranking of the imputation methods
-makeABCanaylsis <- function( zABCvalues, HighlightPoisonedMethods = TRUE ) {
+make_ABC_anaylsis <- function( zABCvalues, HighlightPoisonedMethods = TRUE ) {
 
   # Function to mark the ABC set membership of the items
-  ABCsetmembership <- function( x = NULL, ABCres = NULL, num = TRUE ) {
+  ABC_set_membership <- function( x = NULL, ABCres = NULL, num = TRUE ) {
     if ( is.null( ABCres ) ) {
       ABCres <- ABCanalysis( x )
       Ind <- seq_along( x )
@@ -19,7 +19,7 @@ makeABCanaylsis <- function( zABCvalues, HighlightPoisonedMethods = TRUE ) {
   }
 
   # Function to prepare the data frame for the bar plot of the item ABC ZDelta values
-  ABCprepareResultsDF <- function( data, ABCres ) {
+  ABC_prepare_results_df <- function( data, ABCres ) {
     dfABC <- cbind.data.frame(
       rSum = data,
       Category = "C",
@@ -28,7 +28,7 @@ makeABCanaylsis <- function( zABCvalues, HighlightPoisonedMethods = TRUE ) {
     )
     dfABC$Method <- gsub( ' imputed|Imp', '', dfABC$Method )
 
-    dfABC$Category <- ABCsetmembership( ABCres = ABCres, num = FALSE )
+    dfABC$Category <- ABC_set_membership( ABCres = ABCres, num = FALSE )
     dfABC <- dfABC[with( dfABC, order( -rSum, Method ) ),]
     dfABC$xloc <- sort( dfABC$xloc )
     dfABC$Method <- factor( dfABC$Method, levels = dfABC$Method )
@@ -37,7 +37,7 @@ makeABCanaylsis <- function( zABCvalues, HighlightPoisonedMethods = TRUE ) {
   }
 
   # Function to prepare the data frames for plotting the ABC curves and set limits
-  createABCxy <- function( ABCres ) {
+  create_ABC_xy_df <- function( ABCres ) {
     ABCx <- ABCres$p
     ABCy <- ABCres$ABC
 
@@ -52,7 +52,7 @@ makeABCanaylsis <- function( zABCvalues, HighlightPoisonedMethods = TRUE ) {
   ABCRanksumsInserted <- ABCanalysis( zABCvalues, PlotIt = FALSE )
 
   # Make the data frames for the bar plot
-  dfABCcat <- ABCprepareResultsDF( data = zABCvalues, ABCres = ABCRanksumsInserted )
+  dfABCcat <- ABC_prepare_results_df( data = zABCvalues, ABCres = ABCRanksumsInserted )
   dfABCcat$Category1 <- dfABCcat$Category
   if ( HighlightPoisonedMethods ) {
     dfABCcat$Category1[dfABCcat$Method %in% poisoned_imputation_methods] <- "poisonedImputation"
@@ -68,7 +68,7 @@ makeABCanaylsis <- function( zABCvalues, HighlightPoisonedMethods = TRUE ) {
   dfABCcat$poisoned <- ifelse( dfABCcat$Category1 == myColorsABC[4], myColorsABC[4], NA )
 
   # Make the data frames for the line plot
-  dfABCxy <- createABCxy( ABCRanksumsInserted )
+  dfABCxy <- create_ABC_xy_df( ABCRanksumsInserted )
 
   # Make the ABC plot
   ABCplot <-

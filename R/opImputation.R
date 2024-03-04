@@ -27,7 +27,7 @@
 
 #' @export
 opImputation <- function( Data,
-                          ImputationMethods =  all_imputation_methods,
+                          ImputationMethods = all_imputation_methods,
                           ImputationRepetitions = 20, seed = 100, nIter = 20,
                           nProc = getOption( "mc.cores", 2L ),
                           probMissing = 0.1, PValueThresholdForMetrics = 0.1,
@@ -46,7 +46,7 @@ opImputation <- function( Data,
   # Functions
 
   # Impute data sets
-  RepeatedSampleImputations <- makeAndMeasureRepeatedImputations(
+  RepeatedSampleImputations <- make_and_measure_repeated_imputations(
     Data = Data,
     seeds = list.of.seeds,
     nProc = nProc,
@@ -58,7 +58,7 @@ opImputation <- function( Data,
   )
 
   # Find best imputation
-  MethodsResults <- findBestMethod(
+  MethodsResults <- find_best_method(
     RepeatedSampleImputations = RepeatedSampleImputations,
     pfctMtdsInABC = pfctMtdsInABC,
     nIter = nIter
@@ -76,27 +76,27 @@ opImputation <- function( Data,
     gsub( " imputed|Imp", "", MethodsResults$BestPoisonedPerDatasetRanksums_insertedMissings )
 
   # Retrieve imputed data
-  ImputedData <- retrieveAveragedImputedData(
+  ImputedData <- retrieve_averaged_imputed_data(
     Data = Data,
     RepeatedSampleImputations = RepeatedSampleImputations
   )
 
   # Look at imputation accuracies
-  Zdeltas <- retrieveZdeltas( RepeatedSampleImputations = RepeatedSampleImputations )
+  Zdeltas <- retrieve_z_deltas( RepeatedSampleImputations = RepeatedSampleImputations )
 
   # Create ZDelta plots
-  pZdeltasPlotAvgerage <- createBarplotMeanZDeltas(
+  pZdeltasPlotAvgerage <- create_barplot_mean_z_deltas(
     meanImputationZDeltaInsertedMissings = Zdeltas$meanImputationZDeltaInsertedMissings,
     BestUniMultivariateMethodPerDataset = BestUniMultivariateMethodPerDataset,
     overallBestZDelta = overallBestZDelta
   )
 
-  pZdeltasPerVar <- createZDeltasPerVarPlot(
+  pZdeltasPerVar <- create_z_deltas_per_var_plot(
     meanImputationZDeltaInsertedMissings = Zdeltas$meanImputationZDeltaInsertedMissings
   )
 
   # Create ABC plots
-  pABC <- makeABCanaylsis(
+  pABC <- make_ABC_anaylsis(
     zABCvalues = MethodsResults$zABCvalues_insertedMissings
   )
 
@@ -104,18 +104,18 @@ opImputation <- function( Data,
   if ( sum( ImputationMethods %in% univariate_imputation_methods ) > 0 &
     sum( ImputationMethods %in% multivariate_imputation_methods ) > 0 ) {
     pZdeltasMultivarUnivarPDE <-
-      createpZdeltasMultivarUnivarPDE( Zdeltas = Zdeltas,
-                                       BestMethodPerDataset = BestMethodPerDataset,
-                                       BestUnivariateMethodPerDataset = BestUnivariateMethodPerDataset,
-                                       BestMultivariateMethodPerDataset = BestMultivariateMethodPerDataset,
-                                       BestPoisonedMethodPerDataset = BestPoisonedMethodPerDataset )
+      create_d_deltas_multivar_univar_PDE_plot( Zdeltas = Zdeltas,
+                                                BestMethodPerDataset = BestMethodPerDataset,
+                                                BestUnivariateMethodPerDataset = BestUnivariateMethodPerDataset,
+                                                BestMultivariateMethodPerDataset = BestMultivariateMethodPerDataset,
+                                                BestPoisonedMethodPerDataset = BestPoisonedMethodPerDataset )
 
     pZdeltasMultivarUnivarQQ <-
-      createpZdeltasMultivarUnivarQQ( Zdeltas = Zdeltas,
-                                      BestMethodPerDataset = BestMethodPerDataset,
-                                      BestUnivariateMethodPerDataset = BestUnivariateMethodPerDataset,
-                                      BestMultivariateMethodPerDataset = BestMultivariateMethodPerDataset,
-                                      BestPoisonedMethodPerDataset = BestPoisonedMethodPerDataset )
+      create_d_deltas_multivar_univar_QQ_plot( Zdeltas = Zdeltas,
+                                               BestMethodPerDataset = BestMethodPerDataset,
+                                               BestUnivariateMethodPerDataset = BestUnivariateMethodPerDataset,
+                                               BestMultivariateMethodPerDataset = BestMultivariateMethodPerDataset,
+                                               BestPoisonedMethodPerDataset = BestPoisonedMethodPerDataset )
 
     FigABC <- cowplot::plot_grid(
       cowplot::plot_grid(

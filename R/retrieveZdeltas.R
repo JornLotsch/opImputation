@@ -1,6 +1,6 @@
 # Function to retrieve diagnostic Zdelta values from the evaluations
 # Function to retrieve Zdelta values from iterations
-retrieveZdeltas <- function( RepeatedSampleImputations ) {
+retrieve_z_deltas <- function( RepeatedSampleImputations ) {
 
   ImputationZDeltaInsertedMissings <- lapply( RepeatedSampleImputations, function( x ) { x[["ImputationZDeltaInsertedMissings"]] } )
   all.matrix <- abind::abind( ImputationZDeltaInsertedMissings, along = 3 )

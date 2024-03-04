@@ -1,6 +1,6 @@
 # Function to insert missing values in complete data sets
 
-createMissings <- function( x, Prob = 0.1, mnarity = 0, mnarshape = 1, lowOnly = FALSE, seed = NULL ) {
+create_missings <- function( x, Prob = 0.1, mnarity = 0, mnarshape = 1, lowOnly = FALSE, seed = NULL ) {
   xm <- as.matrix( x )
   if ( is.null( seed ) ) {
     seed <- .Random.seed[1]

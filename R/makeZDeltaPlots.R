@@ -1,5 +1,5 @@
 # Helper function for data frame creation for bar plot
-generateBarPlotDataFrames <-
+generate_barplot_df <-
   function( data, BestUniMultivariateMethodPerDataset,
             annotate_methods, overallBestZDelta ) {
 
@@ -42,7 +42,7 @@ generateBarPlotDataFrames <-
   }
 
 # Helper function for data frame creation for PDE plot
-generatePDEPlotDataFrames <- function( multivarZDeltas, univarZDeltas, poisonedZDeltas, calibratingZDeltas ) {
+generate_PDE_plot_df <- function( multivarZDeltas, univarZDeltas, poisonedZDeltas, calibratingZDeltas ) {
 
   vZDeltas <- c( multivarZDeltas, univarZDeltas, poisonedZDeltas, calibratingZDeltas )
   namesvZDeltas <- c( rep( "Multivariate", length( multivarZDeltas ) ),
@@ -67,11 +67,11 @@ generatePDEPlotDataFrames <- function( multivarZDeltas, univarZDeltas, poisonedZ
 
 
 # Function to create a bare ZDealta bar plot
-createBarplot <- function( data, BestUniMultivariateMethodPerDataset,
-                           title, ylab, annotate_methods,
-                           overallBestZDelta = overallBestZDelta ) {
+create_barplot <- function( data, BestUniMultivariateMethodPerDataset,
+                            title, ylab, annotate_methods,
+                            overallBestZDelta = overallBestZDelta ) {
   # Data frame creation
-  df <- generateBarPlotDataFrames(
+  df <- generate_barplot_df(
     data = data,
     BestUniMultivariateMethodPerDataset = BestUniMultivariateMethodPerDataset,
     annotate_methods = annotate_methods,
@@ -108,7 +108,7 @@ createBarplot <- function( data, BestUniMultivariateMethodPerDataset,
 }
 
 # Function to create a bare ZDelta PDE plot
-createZDeltaPDEplots <- function( dfParetoAll ) {
+create_z_delta_PDE_plot <- function( dfParetoAll ) {
   names( myColorsZDelta ) <- levels( dfParetoAll$Category )
   PDERawZDeltas <-
     ggplot( ) +
@@ -127,23 +127,23 @@ createZDeltaPDEplots <- function( dfParetoAll ) {
 
 # Main functions
 # Function to create a bar plot of mean Zdelta values from iterations
-createBarplotMeanZDeltas <-
+create_barplot_mean_z_deltas <-
   function( meanImputationZDeltaInsertedMissings, BestUniMultivariateMethodPerDataset, overallBestZDelta ) {
     rowmeanImputationZDeltaInsertedMissings <- apply( meanImputationZDeltaInsertedMissings, 1, function( x ) median( x, na.rm = TRUE ) )
 
-    BarplotMeanZDeltas <- createBarplot( data = rowmeanImputationZDeltaInsertedMissings,
-                                         BestUniMultivariateMethodPerDataset,
-                                         title = "zDelta (means)",
-                                         ylab = "zDelta",
-                                         annotate_methods = c( "Best poisoned", "Best univariate", "Best" ),
-                                         overallBestZDelta = overallBestZDelta ) +
+    BarplotMeanZDeltas <- create_barplot( data = rowmeanImputationZDeltaInsertedMissings,
+                                          BestUniMultivariateMethodPerDataset,
+                                          title = "zDelta (means)",
+                                          ylab = "zDelta",
+                                          annotate_methods = c( "Best poisoned", "Best univariate", "Best" ),
+                                          overallBestZDelta = overallBestZDelta ) +
       scale_y_continuous( trans = "log10" )
 
     return( BarplotMeanZDeltas )
   }
 
 # Function to create a sina plot of raw Zdelta values
-createZDeltasPerVarPlot <- function( meanImputationZDeltaInsertedMissings ) {
+create_z_deltas_per_var_plot <- function( meanImputationZDeltaInsertedMissings ) {
   rowmeanImputationZDeltaInsertedMissings <- apply( meanImputationZDeltaInsertedMissings, 1, function( x ) median( x, na.rm = TRUE ) )
 
   df <- data.frame( reshape2::melt( rowmeanImputationZDeltaInsertedMissings ) )

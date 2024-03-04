@@ -1,7 +1,7 @@
 # Function to insert diagnostic missing values and to perform the imputations
-makeAndMeasureRepeatedImputations <- function( Data, seeds, probMissing, nProc, ImputationMethods, ImputationRepetitions,
-                                               PValueThresholdForMetrics = PValueThresholdForMetrics,
-                                               mnarity = mnarity, lowOnly = lowOnly, mnarshape = mnarshape ) {
+make_and_measure_repeated_imputations <- function( Data, seeds, probMissing, nProc, ImputationMethods, ImputationRepetitions,
+                                                   PValueThresholdForMetrics = PValueThresholdForMetrics,
+                                                   mnarity = mnarity, lowOnly = lowOnly, mnarshape = mnarshape ) {
   # Function to impute data matrices with missing values
   imputeData <- function( dfMtx, dfMtxorig, ImputationMethods, ImputationRepetitions, seed ) {
     lapply( ImputationMethods, function( method ) {
@@ -25,7 +25,7 @@ makeAndMeasureRepeatedImputations <- function( Data, seeds, probMissing, nProc, 
       lapply( seq_along( Missings_Which ), function( i ) {
         by( ImputedData, list( ImputedData$Data ), function( y ) {
           OrigDataMiss_i <- if ( !is.null( OrigDataMiss ) ) OrigDataMiss[, i]
-          calculateMetrics(
+          calculate_metrics(
             OrigData = OrigData[, i],
             Missings_Which = Missings_Which[[i]],
             ImputedData = within( y, rm( Data ) )[, i],
@@ -45,14 +45,14 @@ makeAndMeasureRepeatedImputations <- function( Data, seeds, probMissing, nProc, 
     dfXmatrix <- Data
     dfXmatrixInitialMissings_Which <- lapply( seq_along( Data ), function( i ) which( is.na( Data[, i] ) ) )
     dfXmatrixInsertedMissings_WhichAndData <-
-      createMissings( x = dfXmatrix, Prob = probMissing, seed = seed, mnarity = 0, lowOnly = FALSE, mnarshape = 1 )
+      create_missings( x = dfXmatrix, Prob = probMissing, seed = seed, mnarity = 0, lowOnly = FALSE, mnarshape = 1 )
     iNA <- 1
 
     repeat {
       MaxNAs <- max( apply( dfXmatrixInsertedMissings_WhichAndData$missData, 1, function( x ) sum( is.na( x ) ) ) )
       if ( MaxNAs < ncol( dfXmatrixInsertedMissings_WhichAndData$missData ) ) break
       dfXmatrixInsertedMissings_WhichAndData <-
-        createMissings( x = dfXmatrix, Prob = probMissing, seed = seed + 1000000 * iNA, mnarity = mnarity, lowOnly = lowOnly, mnarshape = mnarshape )
+        create_missings( x = dfXmatrix, Prob = probMissing, seed = seed + 1000000 * iNA, mnarity = mnarity, lowOnly = lowOnly, mnarshape = mnarshape )
       iNA <- iNA + 1
     }
 
