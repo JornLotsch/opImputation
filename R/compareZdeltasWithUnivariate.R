@@ -49,7 +49,7 @@ createpZdeltasMultivarUnivarPDE <- function( Zdeltas,
   dfParetoAll <- generatePDEPlotDataFrames( multivarZDeltas = multivarZDeltas,
                                             univarZDeltas = univarZDeltas,
                                             poisonedZDeltas = poisonedZDeltas,
-                                            perfectZDeltas = NULL
+                                            calibratingZDeltas = NULL
   )
   PDERawZDeltasBest <- createZDeltaPDEplots( dfParetoAll = dfParetoAll )
 
@@ -82,14 +82,14 @@ createpZdeltasMultivarUnivarPDE <- function( Zdeltas,
                   label = "A poisoned method is best!" )
     )
     PDERawZDeltasBest <- PDERawZDeltasBest +
-      geom_line( data = dfParetoAll[dfParetoAll$Category %in% c( "Perfect", "Poisened" ),],
+      geom_line( data = dfParetoAll[dfParetoAll$Category %in% c( "Calibrating", "Poisoned" ),],
                  aes( x = x,
-                      y = PDE / max( dfParetoAll$PDE[dfParetoAll$Category %in% c( "Perfect", "Poisened" )] ) *
+                      y = PDE / max( dfParetoAll$PDE[dfParetoAll$Category %in% c( "Calibrating", "Poisoned" )] ) *
                         max( dfParetoAll$PDE[dfParetoAll$Category %in% c( "Multivariate", "Univariate" )] ), color = Category ) ) +
       scale_y_continuous(
         name = "PDE (univariate, multivariate)",
-        sec.axis = sec_axis( trans = ~. * max( dfParetoAll$PDE[dfParetoAll$Category %in% c( "Perfect", "Poisened" )] ) /
-          max( dfParetoAll$PDE[dfParetoAll$Category %in% c( "Multivariate", "Univariate" )] ), name = "PDE (poisened / perfect)" )
+        sec.axis = sec_axis( trans = ~. * max( dfParetoAll$PDE[dfParetoAll$Category %in% c( "Calibrating", "Poisoned" )] ) /
+          max( dfParetoAll$PDE[dfParetoAll$Category %in% c( "Multivariate", "Univariate" )] ), name = "PDE (poisoned / calibrating)" )
       )
   }
 

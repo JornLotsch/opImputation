@@ -37,11 +37,11 @@ makeBadImputations <- function( x ) {
   return( data.frame( x ) )
 }
 
-medianNotZero <- function (x) {
+medianNotZero <- function( x ) {
   med <- median( abs( x ), na.rm = TRUE )
-  m <- ifelse(med != 0, med, 1)
-return(m)
-  }
+  m <- ifelse( med != 0, med, 1 )
+  return( m )
+}
 
 # Main imputation method selection
 

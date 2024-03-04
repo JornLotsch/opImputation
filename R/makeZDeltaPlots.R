@@ -1,7 +1,7 @@
 # Helper function for data frame creation for bar plot
 generateBarPlotDataFrames <-
   function( data, BestUniMultivariateMethodPerDataset,
-            minmax, annotate_methods, overallBestZDelta ) {
+            annotate_methods, overallBestZDelta ) {
 
     df <- data.frame( reshape2::melt( data ) )
     df$Method <- gsub( " imputed|Imp", "", rownames( df ) )
@@ -12,36 +12,26 @@ generateBarPlotDataFrames <-
     df$Failed <- ifelse( is.na( df$value ), 0.01, NA )
 
     df$color <- "Multivariate"
-    df$color[df$Method %in% gsub( " imputed", "", poisoned_imputation_methods )] <- "Poisened"
+    df$color[df$Method %in% gsub( " imputed", "", poisoned_imputation_methods )] <- "Poisoned"
     df$color[df$Method %in% gsub( " imputed", "", univariate_imputation_methods )] <- "Univariate"
-    df$color[df$Method %in% gsub( " imputed", "", perfect_imputation_methods )] <- "Perfect"
-    df$color <- factor( df$color, levels = c( "Multivariate", "Perfect", "Poisened", "Univariate" ) )
+    df$color[df$Method %in% gsub( " imputed", "", calibrating_imputation_methods )] <- "Calibrating"
+    df$color <- factor( df$color, levels = c( "Multivariate", "Calibrating", "Poisoned", "Univariate" ) )
     names( myColorsZDelta ) <- levels( df$color )
-    df$perfectMtd <- ifelse( df$color == "Perfect", "Calibrating methods", "Methods" )
-    df$perfectMtd <- factor( df$perfectMtd, levels = c( "Calibrating methods", "Methods" ) )
+    df$calibratingMtd <- ifelse( df$color == "Calibrating", "Calibrating methods", "Methods" )
+    df$calibratingMtd <- factor( df$calibratingMtd, levels = c( "Calibrating methods", "Methods" ) )
 
-    if ( minmax == "min" ) {
-      minmaxPoisened <- min( df$value[df$color %in% "Poisened"], na.rm = TRUE )
-      minmaxUnivariate <- min( df$value[df$color %in% "Univariate"], na.rm = TRUE )
-      if ( overallBestZDelta == FALSE ) {
-        minBest <- df$value[df$Method == BestUniMultivariateMethodPerDataset]
-      } else {
-        minBest <- min( df$value[df$Method %in% c( univariate_imputation_methods, multivariate_imputation_methods )], na.rm = TRUE )
-        annotate_methods[3] <- "Best non-poisoned"
-      }
-      dfAnnotate <- data.frame( Methods = annotate_methods,
-                                y = c( minmaxPoisened, minmaxUnivariate, minBest ),
-                                x = c( 3, 3, ifelse(length(df$Method %in% c(univariate_imputation_methods, multivariate_imputation_methods)) > 7, 7, 2) ),
-                                color = c( "salmon", "orange", "darkgreen" ) )
-
+    minmaxPoisoned <- min( df$value[df$color %in% "Poisoned"], na.rm = TRUE )
+    minmaxUnivariate <- min( df$value[df$color %in% "Univariate"], na.rm = TRUE )
+    if ( overallBestZDelta == FALSE ) {
+      minBest <- df$value[df$Method == BestUniMultivariateMethodPerDataset]
     } else {
-      minmaxPoisened <- max( df$value[df$color %in% "Poisened"], na.rm = TRUE )
-      minmaxUnivariate <- max( df$value[df$color %in% "Univariate"], na.rm = TRUE )
-      dfAnnotate <- data.frame( Methods = annotate_methods,
-                                y = c( minmaxPoisened, minmaxUnivariate, 0.4 ),
-                                x = 3,
-                                color = c( "salmon", "orange", "darkgreen" ) )
+      minBest <- min( df$value[df$Method %in% c( univariate_imputation_methods, multivariate_imputation_methods )], na.rm = TRUE )
+      annotate_methods[3] <- "Best non-poisoned"
     }
+    dfAnnotate <- data.frame( Methods = annotate_methods,
+                              y = c( minmaxPoisoned, minmaxUnivariate, minBest ),
+                              x = c( 3, 3, ifelse( length( df$Method %in% c( univariate_imputation_methods, multivariate_imputation_methods ) ) > 7, 7, 2 ) ),
+                              color = c( "salmon", "orange", "darkgreen" ) )
 
     return( list(
       dfBars = df,
@@ -52,13 +42,13 @@ generateBarPlotDataFrames <-
   }
 
 # Helper function for data frame creation for PDE plot
-generatePDEPlotDataFrames <- function( multivarZDeltas, univarZDeltas, poisonedZDeltas, perfectZDeltas ) {
+generatePDEPlotDataFrames <- function( multivarZDeltas, univarZDeltas, poisonedZDeltas, calibratingZDeltas ) {
 
-  vZDeltas <- c( multivarZDeltas, univarZDeltas, poisonedZDeltas, perfectZDeltas )
+  vZDeltas <- c( multivarZDeltas, univarZDeltas, poisonedZDeltas, calibratingZDeltas )
   namesvZDeltas <- c( rep( "Multivariate", length( multivarZDeltas ) ),
                       rep( "Univariate", length( univarZDeltas ) ),
-                      rep( "Poisened", length( poisonedZDeltas ) ),
-                      rep( "Perfect", length( perfectZDeltas ) ) )
+                      rep( "Poisoned", length( poisonedZDeltas ) ),
+                      rep( "Calibrating", length( calibratingZDeltas ) ) )
   df4plot_long <- cbind.data.frame( Category = namesvZDeltas, Zdelta = vZDeltas )
   df4plot_long <- na.omit( df4plot_long )
 
@@ -70,7 +60,7 @@ generatePDEPlotDataFrames <- function( multivarZDeltas, univarZDeltas, poisonedZ
   } )
 
   dfParetoAll <- do.call( rbind.data.frame, ParetoDistributions )
-  dfParetoAll$Category <- factor( dfParetoAll$Category, levels = c( "Multivariate", "Perfect", "Poisened", "Univariate" ) )
+  dfParetoAll$Category <- factor( dfParetoAll$Category, levels = c( "Multivariate", "Calibrating", "Poisoned", "Univariate" ) )
 
   return( dfParetoAll )
 }
@@ -78,13 +68,12 @@ generatePDEPlotDataFrames <- function( multivarZDeltas, univarZDeltas, poisonedZ
 
 # Function to create a bare ZDealta bar plot
 createBarplot <- function( data, BestUniMultivariateMethodPerDataset,
-                           minmax, title, ylab, annotate_methods,
+                           title, ylab, annotate_methods,
                            overallBestZDelta = overallBestZDelta ) {
   # Data frame creation
   df <- generateBarPlotDataFrames(
     data = data,
     BestUniMultivariateMethodPerDataset = BestUniMultivariateMethodPerDataset,
-    minmax = minmax,
     annotate_methods = annotate_methods,
     overallBestZDelta = overallBestZDelta
   )
@@ -96,7 +85,7 @@ createBarplot <- function( data, BestUniMultivariateMethodPerDataset,
   BarplotMeans <-
     ggplot( data = df4plot_long, aes( x = Method, y = value ) ) +
       geom_bar( aes( fill = color ), stat = "identity", position = "dodge", alpha = 0.5 ) +
-      ggh4x::facet_grid2( . ~ perfectMtd, scales = "free", space = "free_x", independent = "y" ) +
+      ggh4x::facet_grid2( . ~ calibratingMtd, scales = "free", space = "free_x", independent = "y" ) +
       theme_light( ) +
       theme(
         axis.text.x = element_text( angle = 90, vjust = 0.5, hjust = 1 ),
@@ -144,7 +133,6 @@ createBarplotMeanZDeltas <-
 
     BarplotMeanZDeltas <- createBarplot( data = rowmeanImputationZDeltaInsertedMissings,
                                          BestUniMultivariateMethodPerDataset,
-                                         minmax = "min",
                                          title = "zDelta (means)",
                                          ylab = "zDelta",
                                          annotate_methods = c( "Best poisoned", "Best univariate", "Best" ),
@@ -153,23 +141,6 @@ createBarplotMeanZDeltas <-
 
     return( BarplotMeanZDeltas )
   }
-
-# Function to create a bar plot of mean GMC values from iterations
-createBarplotMeanGMCs <-
-  function( ImputationZDeltaInsertedMissingsRaw ) {
-    dfImputationZDeltaInsertedMissingsRaw <- do.call( cbind.data.frame, ImputationZDeltaInsertedMissingsRaw )
-    GMCImputationZDeltaInsertedMissings <- apply( dfImputationZDeltaInsertedMissingsRaw, 1, function( x ) skewnessGM( as.vector( x ) ) )
-
-    BarplotMeanGMC <- createBarplot( data = GMCImputationZDeltaInsertedMissings,
-                                     minmax = "max",
-                                     title = "GMC (means)",
-                                     ylab = "GMC",
-                                     annotate_methods = c( "Best poisoned", "Best univariate", "GMC limit" ) )
-    BarplotMeanGMC <- BarplotMeanGMC + geom_hline( yintercept = 0.4, color = "darkgreen" )
-
-    return( BarplotMeanGMC )
-  }
-
 
 # Function to create a sina plot of raw Zdelta values
 createZDeltasPerVarPlot <- function( meanImputationZDeltaInsertedMissings ) {
@@ -183,8 +154,8 @@ createZDeltasPerVarPlot <- function( meanImputationZDeltaInsertedMissings ) {
   zDeltaP$Method <- gsub( ' imputed|Imp', '', rownames( zDeltaP ) )
   zDeltaP$Method <- factor( zDeltaP$Method, levels = MethodsOrder )
 
-  zDeltaP$perfectMtd <- ifelse( zDeltaP$Method %in% perfect_imputation_methods, "Calibrating methods", "Methods" )
-  zDeltaP$perfectMtd <- factor( zDeltaP$perfectMtd, levels = c( "Calibrating methods", "Methods" ) )
+  zDeltaP$calibratingMtd <- ifelse( zDeltaP$Method %in% calibrating_imputation_methods, "Calibrating methods", "Methods" )
+  zDeltaP$calibratingMtd <- factor( zDeltaP$calibratingMtd, levels = c( "Calibrating methods", "Methods" ) )
 
   zDelta_long <- reshape2::melt( zDeltaP )
   zDelta_long$variable <- gsub( "ZDelta_", "", zDelta_long$variable )
@@ -195,7 +166,7 @@ createZDeltasPerVarPlot <- function( meanImputationZDeltaInsertedMissings ) {
     ggplot( data = zDelta_long, aes( x = Method, y = value, color = variable ) ) +
       geom_violin( ) +
       geom_jitter( width = 0.05 ) +
-      ggh4x::facet_grid2( . ~ perfectMtd, scales = "free", space = "free_x", independent = "y" ) +
+      ggh4x::facet_grid2( . ~ calibratingMtd, scales = "free", space = "free_x", independent = "y" ) +
       theme_light( ) +
       theme( axis.text.x = element_text( angle = 90, vjust = 0.5, hjust = 1 ),
              legend.position = "top", legend.direction = "horizontal",

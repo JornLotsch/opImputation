@@ -1,5 +1,5 @@
 # Function to plot the ABC analysis results of the ranking of the imputation methods
-makeABCanaylsis <- function( zABCvalues, HighlightPoisenedMethods = TRUE ) {
+makeABCanaylsis <- function( zABCvalues, HighlightPoisonedMethods = TRUE ) {
 
   # Function to mark the ABC set membership of the items
   ABCsetmembership <- function( x = NULL, ABCres = NULL, num = TRUE ) {
@@ -54,9 +54,8 @@ makeABCanaylsis <- function( zABCvalues, HighlightPoisenedMethods = TRUE ) {
   # Make the data frames for the bar plot
   dfABCcat <- ABCprepareResultsDF( data = zABCvalues, ABCres = ABCRanksumsInserted )
   dfABCcat$Category1 <- dfABCcat$Category
-  dfABCcat$Category2 <- dfABCcat$Category
-  if ( HighlightPoisenedMethods ) {
-    dfABCcat$Category2[dfABCcat$Method %in% poisoned_imputation_methods] <- "poisonedImputation"
+  if ( HighlightPoisonedMethods ) {
+    dfABCcat$Category1[dfABCcat$Method %in% poisoned_imputation_methods] <- "poisonedImputation"
   }
   rep_str <- c(
     "A" = myColorsABC[1],
@@ -64,10 +63,9 @@ makeABCanaylsis <- function( zABCvalues, HighlightPoisenedMethods = TRUE ) {
     "C" = myColorsABC[3],
     "poisonedImputation" = myColorsABC[4]
   )
-  names(myColorsABC) <- c("A", "B", "C", "poisonedImputation")
+  names( myColorsABC ) <- c( "A", "B", "C", "poisonedImputation" )
   dfABCcat$Category1 <- stringr::str_replace_all( dfABCcat$Category1, rep_str )
-  dfABCcat$Category2 <- stringr::str_replace_all( dfABCcat$Category2, rep_str )
-  dfABCcat$poisoned <- ifelse( dfABCcat$Category2 == myColorsABC[4], myColorsABC[4], NA )
+  dfABCcat$poisoned <- ifelse( dfABCcat$Category1 == myColorsABC[4], myColorsABC[4], NA )
 
   # Make the data frames for the line plot
   dfABCxy <- createABCxy( ABCRanksumsInserted )
@@ -75,31 +73,31 @@ makeABCanaylsis <- function( zABCvalues, HighlightPoisenedMethods = TRUE ) {
   # Make the ABC plot
   ABCplot <-
     ggplot( ) +
-    geom_bar( data = dfABCcat,
-              aes( x = xloc, y = rSum / max( rSum ), fill = Category1 ),
-              stat = "identity",
-              position = "dodge",
-              alpha = 0.5
-    ) +
-    geom_line( data = dfABCxy, aes( x = ABCx, y = ABCy ), linewidth = 1 ) +
-    scale_x_continuous( breaks = unique( dfABCcat$xloc ), labels = levels( dfABCcat$Method ) ) +
-    theme_light( ) +
-    theme( axis.text.x = element_text( angle = 90, vjust = 0.5, hjust = 0 ),
-           legend.position = c( 0.9, 0.6 ),
-           legend.background = element_rect( fill = alpha( "white", 0.5 ) ) ) +
-    scale_y_continuous(
-      name = "Fraction of sum of largest rank means",
-      sec.axis = sec_axis( trans = ~. * max( dfABCcat$rSum ), name = "Rank mean" )
-    ) +
-    scale_x_continuous( position = "top", expand = c( 0, 0 ) ) +
-    scale_x_continuous(
-      name = "Fraction of rank means", expand = c( 0, 0 ),
-      sec.axis = sec_axis( trans = ~. * 1, name = "Imputation method",
-                           breaks = unique( dfABCcat$xloc ),
-                           labels = unique( dfABCcat$Method ) )
-    ) +
-    scale_fill_manual( values = myColorsABC[1:3] ) +
-    labs( title = "ABC analysis of mean methods' ranks", x = "Fraction of rank sums", y = "Type of missing", fill = "Category" )
+      geom_bar( data = dfABCcat,
+                aes( x = xloc, y = rSum / max( rSum ), fill = Category ),
+                stat = "identity",
+                position = "dodge",
+                alpha = 0.5
+      ) +
+      geom_line( data = dfABCxy, aes( x = ABCx, y = ABCy ), linewidth = 1 ) +
+      scale_x_continuous( breaks = unique( dfABCcat$xloc ), labels = levels( dfABCcat$Method ) ) +
+      theme_light( ) +
+      theme( axis.text.x = element_text( angle = 90, vjust = 0.5, hjust = 0 ),
+             legend.position = c( 0.9, 0.6 ),
+             legend.background = element_rect( fill = alpha( "white", 0.5 ) ) ) +
+      scale_y_continuous(
+        name = "Fraction of sum of largest rank means",
+        sec.axis = sec_axis( trans = ~. * max( dfABCcat$rSum ), name = "Rank mean" )
+      ) +
+      scale_x_continuous( position = "top", expand = c( 0, 0 ) ) +
+      scale_x_continuous(
+        name = "Fraction of rank means", expand = c( 0, 0 ),
+        sec.axis = sec_axis( trans = ~. * 1, name = "Imputation method",
+                             breaks = unique( dfABCcat$xloc ),
+                             labels = unique( dfABCcat$Method ) )
+      ) +
+      scale_fill_manual( values = myColorsABC[1:3] ) +
+      labs( title = "ABC analysis of mean methods' ranks", x = "Fraction of rank sums", y = "Type of missing", fill = "Category" )
 
   # Return the plot
   return( ABCplot = ABCplot )
