@@ -1,23 +1,3 @@
-# Function to fill a matrix with Na's when an imputation attempt fails
-makeBadImputations <- function( x ) {
-  x[!is.na( x )] <- NA
-  return( data.frame( x ) )
-}
-
-# Calculate Groeneveld - Meeden skewness
-skewnessGM <- function( x ) {
-  GM <- NA
-  x <- na.omit( x )
-  n <- length( x )
-  if ( n > 0 ) {
-    meanX <- mean( x, na.rm = TRUE )
-    medianX <- median( x, na.rm = TRUE )
-    Erw <- sum( abs( x - medianX ) ) / n
-    GM <- ( meanX - medianX ) / Erw
-  }
-  return( GM )
-}
-
 # Function to insert diagnostic missing values and to perform the imputations
 makeAndMeasureRepeatedImputations <- function( Data, seeds, probMissing, nProc, ImputationMethods, ImputationRepetitions,
                                                PValueThresholdForMetrics = PValueThresholdForMetrics,

@@ -45,7 +45,7 @@ calculateZABCvalues <- function( meanRanks, nVar, nMethods, nIter ) {
 
 # Function to calculate combined metrics
 calculateCombinedMetrics <-
-  function( RMSEMX, MEMx, rBiasMx, pfctMtdsInABC, nIter ) {
+  function( RMSEMX, MEMx, rBiasMx, nIter ) {
 
     RRMSEMX <- rankMEs( RMSEMX )
     RMEMx <- rankMEs( MEMx )
@@ -118,16 +118,15 @@ findBestMethod <- function( RepeatedSampleImputations, pfctMtdsInABC, nIter ) {
   } )
 
   if ( pfctMtdsInABC == FALSE ) {
-    RMSEinsertedMissings <- lapply( RMSEinsertedMissings, function( x ) x[!gsub( " imputed", "", rownames( x ) ) %in% perfect_imputation_methods,] )
-    MEinsertedMissings <- lapply( MEinsertedMissings, function( x ) x[!gsub( " imputed", "", rownames( x ) ) %in% perfect_imputation_methods,] )
-    rBiasinsertedMissings <- lapply( rBiasinsertedMissings, function( x ) x[!gsub( " imputed", "", rownames( x ) ) %in% perfect_imputation_methods,] )
+    RMSEinsertedMissings <- lapply( RMSEinsertedMissings, function( x ) x[!gsub( " imputed", "", rownames( x ) ) %in% calibrating_imputation_methods,] )
+    MEinsertedMissings <- lapply( MEinsertedMissings, function( x ) x[!gsub( " imputed", "", rownames( x ) ) %in% calibrating_imputation_methods,] )
+    rBiasinsertedMissings <- lapply( rBiasinsertedMissings, function( x ) x[!gsub( " imputed", "", rownames( x ) ) %in% calibrating_imputation_methods,] )
   }
 
   CombinedMetricsInsertedMissings <-
     calculateCombinedMetrics( RMSEMX = RMSEinsertedMissings,
                               MEMx = MEinsertedMissings,
                               rBiasMx = rBiasinsertedMissings,
-                              pfctMtdsInABC = pfctMtdsInABC,
                               nIter = nIter )
 
   # Return results
