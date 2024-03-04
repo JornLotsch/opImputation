@@ -6,7 +6,7 @@ The package provides the necessary functions for how to impute if you must:
 a method for handling missing values in biomedical numerical tabular data.
 }
 \usage{
-opImputation( Data, ImputationMethods = all_imputation_methods,
+opImputation( Data, ImputationMethods =  all_imputation_methods,
 ImputationRepetitions = 20, seed = 100, nIter = 20, nProc = getOption( "mc.cores", 2L ),
 probMissing = 0.1, PValueThresholdForMetrics = 0.1, pfctMtdsInABC = FALSE,
 mnarity = 0, lowOnly = FALSE, mnarshape = 1, PlotIt = TRUE, overallBestZDelta = FALSE ) 

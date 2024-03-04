@@ -26,7 +26,8 @@
 #' @importFrom(stringr str_replace_all)
 
 #' @export
-opImputation <- function( Data, ImputationMethods = all_imputation_methods,
+opImputation <- function( Data,
+                          ImputationMethods =  all_imputation_methods,
                           ImputationRepetitions = 20, seed = 100, nIter = 20,
                           nProc = getOption( "mc.cores", 2L ),
                           probMissing = 0.1, PValueThresholdForMetrics = 0.1,

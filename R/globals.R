@@ -14,7 +14,7 @@ multivariate_imputation_methods <- c( "bag", "bag_repeated",
 )
 all_imputation_methods <- c( univariate_imputation_methods,
                              poisoned_imputation_methods,
-                             # calibrating_imputation_methods,
+                             calibrating_imputation_methods,
                              multivariate_imputation_methods
 )
 

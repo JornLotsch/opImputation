@@ -6,19 +6,6 @@ rankMEs <-
     return( Mx )
   }
 
-# Function to calculate random rank scores
-calculateRandomRankScores <-
-  function( rankMx, totalPerm = 200 ) {
-    rankMxPerm <- rep( rankMx, round( totalPerm / length( rankMx ) ) )
-    rankMxPerm2 <- lapply( seq_along( rankMxPerm ), function( i ) {
-      set.seed( i )
-      rankMxPerm1 <- data.frame( apply( rankMxPerm[[i]], 2, function( x ) sample( x ) ) )
-      rownames( rankMxPerm1 ) <- rownames( rankMxPerm[[i]] )
-      return( rankMxPerm1 )
-    } )
-    return( rankMxPerm2 )
-  }
-
 # Function to z-transform the ABC values
 renameDfcolumnsInNestedList <- function( df ) {
   lapply( seq_along( df ), function( i ) {

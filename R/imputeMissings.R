@@ -79,7 +79,8 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
         }
         return( ImputedData = ImputedData )
       } )
-      ImputedData <- Reduce( "+", iImputedData ) / length( iImputedData )
+      all.matrix <- abind::abind( iImputedData, along = 3 )
+      ImputedData <- data.frame( apply( all.matrix, c( 1, 2 ), function( x ) mean( x, na.rm = TRUE ) ) )
     },
     rf_mice = {
       set.seed( seed )
@@ -97,7 +98,8 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
         }
         return( ImputedData = ImputedData )
       } )
-      ImputedData <- Reduce( "+", iImputedData ) / length( iImputedData )
+      all.matrix <- abind::abind( iImputedData, along = 3 )
+      ImputedData <- data.frame( apply( all.matrix, c( 1, 2 ), function( x ) mean( x, na.rm = TRUE ) ) )
     },
     rf_missForest = {
       set.seed( seed )
@@ -115,7 +117,8 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
         }
         return( ImputedData = ImputedData )
       } )
-      ImputedData <- Reduce( "+", iImputedData ) / length( iImputedData )
+      all.matrix <- abind::abind( iImputedData, along = 3 )
+      ImputedData <- data.frame( apply( all.matrix, c( 1, 2 ), function( x ) mean( x, na.rm = TRUE ) ) )
     },
     miceRanger = {
       set.seed( seed )
@@ -135,7 +138,8 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
         }
         return( ImputedData = ImputedData )
       } )
-      ImputedData <- Reduce( "+", iImputedData ) / length( iImputedData )
+      all.matrix <- abind::abind( iImputedData, along = 3 )
+      ImputedData <- data.frame( apply( all.matrix, c( 1, 2 ), function( x ) mean( x, na.rm = TRUE ) ) )
     },
     cart = {
       set.seed( seed )
@@ -153,7 +157,8 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
         }
         return( ImputedData = ImputedData )
       } )
-      ImputedData <- Reduce( "+", iImputedData ) / length( iImputedData )
+      all.matrix <- abind::abind( iImputedData, along = 3 )
+      ImputedData <- data.frame( apply( all.matrix, c( 1, 2 ), function( x ) mean( x, na.rm = TRUE ) ) )
     },
     linear = {
       set.seed( seed )
@@ -178,7 +183,8 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
         }
         return( ImputedData = ImputedData )
       } )
-      ImputedData <- Reduce( "+", iImputedData ) / length( iImputedData )
+      all.matrix <- abind::abind( iImputedData, along = 3 )
+      ImputedData <- data.frame( apply( all.matrix, c( 1, 2 ), function( x ) mean( x, na.rm = TRUE ) ) )
     },
     knn3 = {
       Impu <- try( multiUS::KNNimp( x, k = 3 ), TRUE )
@@ -224,7 +230,8 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
       Impu <- try( eval_with_timeout( Amelia::amelia.default( x, m = ImputationRepetitions ), timeout = 30 ), TRUE )
       if ( !inherits( Impu, "try-error" ) ) {
         iImputedData <- Impu$imputations
-        ImputedData <- Reduce( "+", iImputedData ) / length( iImputedData )
+        all.matrix <- abind::abind( iImputedData, along = 3 )
+        ImputedData <- data.frame( apply( all.matrix, c( 1, 2 ), function( x ) mean( x, na.rm = TRUE ) ) )
       }
     },
     miImp = {
@@ -232,7 +239,8 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
       Impu <- try( mi::mi( x, verbose = FALSE, parallel = FALSE ), TRUE )
       if ( !inherits( Impu, "try-error" ) ) {
         iImputedData <- mi::complete( Impu )
-        ImputedDataMI <- Reduce( "+", iImputedData ) / length( iImputedData )
+        all.matrix <- abind::abind( iImputedData, along = 3 )
+        ImputedDataMI <- data.frame( apply( all.matrix, c( 1, 2 ), function( x ) mean( x, na.rm = TRUE ) ) )
         ImputedData <- ImputedDataMI[, names( x )]
       }
     },
