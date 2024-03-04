@@ -10,14 +10,14 @@ fisher_method <- function( p_values ) {
 
 # Function to find best method per category
 retrieveZDeltasForBestMethodPerCategory <- function( Zdeltas,
-                                       BestMethodPerDataset, BestUnivariateMethodPerDataset,
-                                       BestMultivariateMethodPerDataset, BestUniMultivariateMethodPerDataset, BestPoisonedMethodPerDataset ) {
+                                                     BestMethodPerDataset, BestUnivariateMethodPerDataset,
+                                                     BestMultivariateMethodPerDataset, BestPoisonedMethodPerDataset ) {
 
-    multivarZDeltas <- unlist( lapply( Zdeltas$ImputationZDeltaInsertedMissings, function( x )
-      x[gsub( " imputed|Imp", "", rownames( x ) ) %in% BestMultivariateMethodPerDataset,] ) )
+  multivarZDeltas <- unlist( lapply( Zdeltas$ImputationZDeltaInsertedMissings, function( x )
+    x[gsub( " imputed|Imp", "", rownames( x ) ) %in% BestMultivariateMethodPerDataset,] ) )
 
-    univarZDeltas <- unlist( lapply( Zdeltas$ImputationZDeltaInsertedMissings, function( x )
-      x[gsub( " imputed|Imp", "", rownames( x ) ) %in% BestUnivariateMethodPerDataset,] ) )
+  univarZDeltas <- unlist( lapply( Zdeltas$ImputationZDeltaInsertedMissings, function( x )
+    x[gsub( " imputed|Imp", "", rownames( x ) ) %in% BestUnivariateMethodPerDataset,] ) )
 
   if ( BestMethodPerDataset %in% poisoned_imputation_methods ) {
     poisonedZDeltas <- unlist( lapply( Zdeltas$ImputationZDeltaInsertedMissings, function( x )
@@ -34,12 +34,12 @@ retrieveZDeltasForBestMethodPerCategory <- function( Zdeltas,
 # Function to create a PDE plot of Zdelta values for best methods
 createpZdeltasMultivarUnivarPDE <- function( Zdeltas,
                                              BestMethodPerDataset, BestUnivariateMethodPerDataset,
-                                             BestMultivariateMethodPerDataset, BestUniMultivariateMethodPerDataset, BestPoisonedMethodPerDataset ) {
+                                             BestMultivariateMethodPerDataset, BestPoisonedMethodPerDataset ) {
 
   # Retrieve ZDeltas for best method per per category
   BestZDeltas <- retrieveZDeltasForBestMethodPerCategory( Zdeltas,
-                                            BestMethodPerDataset, BestUnivariateMethodPerDataset,
-                                            BestMultivariateMethodPerDataset, BestUniMultivariateMethodPerDataset, BestPoisonedMethodPerDataset )
+                                                          BestMethodPerDataset, BestUnivariateMethodPerDataset,
+                                                          BestMultivariateMethodPerDataset, BestPoisonedMethodPerDataset )
 
   multivarZDeltas <- BestZDeltas$multivarZDeltas
   univarZDeltas <- BestZDeltas$univarZDeltas
@@ -105,17 +105,20 @@ createpZdeltasMultivarUnivarPDE <- function( Zdeltas,
 
 # Function to create a QQ plot of Zdelta values for best methods
 createpZdeltasMultivarUnivarQQ <- function( Zdeltas,
-                                            BestMethodPerDataset, BestUnivariateMethodPerDataset,
-                                            BestMultivariateMethodPerDataset, BestUniMultivariateMethodPerDataset, BestPoisonedMethodPerDataset ) {
+                                            BestMethodPerDataset,
+                                            BestUnivariateMethodPerDataset,
+                                            BestMultivariateMethodPerDataset,
+                                            BestPoisonedMethodPerDataset ) {
 
   # Retrieve ZDeltas for best method per per category
   BestZDeltas <- retrieveZDeltasForBestMethodPerCategory( Zdeltas,
-                                                          BestMethodPerDataset, BestUnivariateMethodPerDataset,
-                                                          BestMultivariateMethodPerDataset, BestUniMultivariateMethodPerDataset, BestPoisonedMethodPerDataset )
+                                                          BestMethodPerDataset,
+                                                          BestUnivariateMethodPerDataset,
+                                                          BestMultivariateMethodPerDataset,
+                                                          BestPoisonedMethodPerDataset )
 
   multivarZDeltas <- BestZDeltas$multivarZDeltas
   univarZDeltas <- BestZDeltas$univarZDeltas
-  poisonedZDeltas <- BestZDeltas$poisonedZDeltas
 
   # QQ plots
   quantiles <- seq( 0, 1, 0.01 )

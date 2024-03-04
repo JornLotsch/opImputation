@@ -1,6 +1,7 @@
 # Function to plot the ABC analysis results of the ranking of the imputation methods
-makeABCanaylsis <- function( zABCvalues, zDelta = NULL, HighlightPoisenedMethods = TRUE ) {
+makeABCanaylsis <- function( zABCvalues, HighlightPoisenedMethods = TRUE ) {
 
+  # Function to mark the ABC set membership of the items
   ABCsetmembership <- function( x = NULL, ABCres = NULL, num = TRUE ) {
     if ( is.null( ABCres ) ) {
       ABCres <- ABCanalysis( x )
@@ -17,12 +18,7 @@ makeABCanaylsis <- function( zABCvalues, zDelta = NULL, HighlightPoisenedMethods
     return( Ind )
   }
 
-  ABCanalysisWrapper <- function( data ) {
-    ABCanalysis( data, PlotIt = FALSE )
-  }
-
-  ABCRanksumsInserted <- ABCanalysisWrapper( zABCvalues )
-
+  # Function to prepare the data frame for the bar plot of the item ABC ZDelta values
   ABCprepareResultsDF <- function( data, ABCres ) {
     dfABC <- cbind.data.frame(
       rSum = data,
@@ -40,8 +36,23 @@ makeABCanaylsis <- function( zABCvalues, zDelta = NULL, HighlightPoisenedMethods
     return( dfABC )
   }
 
-  dfABCcat <- ABCprepareResultsDF( data = zABCvalues, ABCres = ABCRanksumsInserted )
+  # Function to prepare the data frames for plotting the ABC curves and set limits
+  createABCxy <- function( ABCres ) {
+    ABCx <- ABCres$p
+    ABCy <- ABCres$ABC
 
+    return( data.frame(
+      ABCx = ABCx,
+      ABCy = ABCy
+    ) )
+  }
+
+
+  # Perform ABC analysis
+  ABCRanksumsInserted <- ABCanalysis( zABCvalues, PlotIt = FALSE )
+
+  # Make the data frames for the bar plot
+  dfABCcat <- ABCprepareResultsDF( data = zABCvalues, ABCres = ABCRanksumsInserted )
   dfABCcat$Category1 <- dfABCcat$Category
   dfABCcat$Category2 <- dfABCcat$Category
   if ( HighlightPoisenedMethods ) {
@@ -53,43 +64,25 @@ makeABCanaylsis <- function( zABCvalues, zDelta = NULL, HighlightPoisenedMethods
     "C" = myColorsABC[3],
     "poisonedImputation" = myColorsABC[4]
   )
+  names(myColorsABC) <- c("A", "B", "C", "poisonedImputation")
   dfABCcat$Category1 <- stringr::str_replace_all( dfABCcat$Category1, rep_str )
   dfABCcat$Category2 <- stringr::str_replace_all( dfABCcat$Category2, rep_str )
   dfABCcat$poisoned <- ifelse( dfABCcat$Category2 == myColorsABC[4], myColorsABC[4], NA )
 
-  createABCxy <- function( ABCres ) {
-    ABCx <- ABCres$p
-    ABCy <- ABCres$ABC
-
-    return( data.frame(
-      ABCx = ABCx,
-      ABCy = ABCy
-    ) )
-  }
-
-  createABCsetLimits <- function( ABCres ) {
-    return( data.frame(
-      x1 = ABCres$B[["Effort"]],
-      y1 = ABCres$B[["Yield"]],
-      x2 = ABCres$C[["Effort"]],
-      y2 = ABCres$C[["Yield"]]
-    ) )
-  }
-
+  # Make the data frames for the line plot
   dfABCxy <- createABCxy( ABCRanksumsInserted )
-  dfABCsetLimits <- createABCsetLimits( ABCRanksumsInserted )
 
-  ABCplot <- ggplot( ) +
+  # Make the ABC plot
+  ABCplot <-
+    ggplot( ) +
     geom_bar( data = dfABCcat,
-              aes( x = xloc, y = rSum / max( dfABCcat$rSum ), fill = dfABCcat$Category1 ),
+              aes( x = xloc, y = rSum / max( rSum ), fill = Category1 ),
               stat = "identity",
               position = "dodge",
               alpha = 0.5
     ) +
     geom_line( data = dfABCxy, aes( x = ABCx, y = ABCy ), linewidth = 1 ) +
     scale_x_continuous( breaks = unique( dfABCcat$xloc ), labels = levels( dfABCcat$Method ) ) +
-    geom_segment( data = dfABCsetLimits, aes( x = x1, y = -.01, xend = x1, yend = y1 ), linetype = "dashed", color = "grey33" ) +
-    geom_segment( data = dfABCsetLimits, aes( x = -.02, y = y1, xend = x1, yend = y1 ), linetype = "dashed", color = "grey33" ) +
     theme_light( ) +
     theme( axis.text.x = element_text( angle = 90, vjust = 0.5, hjust = 0 ),
            legend.position = c( 0.9, 0.6 ),
@@ -105,11 +98,9 @@ makeABCanaylsis <- function( zABCvalues, zDelta = NULL, HighlightPoisenedMethods
                            breaks = unique( dfABCcat$xloc ),
                            labels = unique( dfABCcat$Method ) )
     ) +
-    scale_fill_identity( name = "Category",
-                         labels = c( "A", "B", "C" ),
-                         breaks = myColorsABC[1:3],
-                         guide = "legend" ) +
-    labs( title = "ABC analysis of mean methods' ranks", x = "Fraction of rank sums", y = "Type of missing" )
+    scale_fill_manual( values = myColorsABC[1:3] ) +
+    labs( title = "ABC analysis of mean methods' ranks", x = "Fraction of rank sums", y = "Type of missing", fill = "Category" )
 
+  # Return the plot
   return( ABCplot = ABCplot )
 }

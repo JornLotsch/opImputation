@@ -28,7 +28,7 @@ calculateMetrics <- function( OrigData, Missings_Which, ImputedData, Metric, Ori
             },
             rBiasImputedUnivar = {
               ME <- 0
-              if (mean( orig, na.rm = TRUE ) != 0 ) {
+              if ( mean( orig, na.rm = TRUE ) != 0 ) {
                 if ( sd( orig, na.rm = TRUE ) / mean( orig, na.rm = TRUE ) > 0.001 ) {
                   St <- try( Rfit::rfit( Diffs ~ Means ), TRUE )
                   if ( !inherits( St, "try-error" ) ) {

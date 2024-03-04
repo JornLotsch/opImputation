@@ -2,7 +2,6 @@
 #' @import(parallel)
 #' @import(ggplot2)
 #' @import(pbmcapply)
-#' @import(stringr)
 #' @import(methods)
 #' @import(cowplot)
 #' @importFrom(stats  na.omit   IQR  coef  sd  median  predict  runif  wilcox.test, ks.test, quantile, pchisq)
@@ -16,7 +15,6 @@
 #' @importFrom(Amelia  amelia  amelia.default)
 #' @importFrom(mi  mi)
 #' @importFrom(reshape2  melt)
-#' @importFrom(scales  pretty_breaks)
 #' @importFrom(DataVisualizations  ParetoDensityEstimation)
 #' @importFrom(abind abind)
 #' @importFrom(ABCanalysis  ABCanalysis)
@@ -24,11 +22,14 @@
 #' @importFrom(Rfit rfit)
 #' @importFrom(twosamples dts_test)
 #' @importFrom(ggh4x facet_grid2)
+#' @importFrom(ggrepel geom_text_repel)
+#' @importFrom(stringr str_replace_all)
+
 #' @export
 opImputation <- function( Data, ImputationMethods = all_imputation_methods,
                           ImputationRepetitions = 20, seed = 100, nIter = 20, nProc = getOption( "mc.cores", 2L ),
                           probMissing = 0.1, PValueThresholdForMetrics = 0.1, pfctMtdsInABC = FALSE,
-                          mnarity = 0, lowOnly = FALSE, mnarshape = 1, PlotIt = TRUE ) {
+                          mnarity = 0, lowOnly = FALSE, mnarshape = 1, PlotIt = TRUE, overallBestZDelta = FALSE ) {
 
   Data <- data.frame( Data )
 
@@ -77,14 +78,12 @@ opImputation <- function( Data, ImputationMethods = all_imputation_methods,
   # Create ZDelta plots
   pZdeltasPlotAvgerage <- createBarplotMeanZDeltas(
     meanImputationZDeltaInsertedMissings = Zdeltas$meanImputationZDeltaInsertedMissings,
-    BestUniMultivariateMethodPerDataset = BestUniMultivariateMethodPerDataset
+    BestUniMultivariateMethodPerDataset = BestUniMultivariateMethodPerDataset,
+    overallBestZDelta = overallBestZDelta
   )
 
   # pGMCPlotAvgerage <- createBarplotMeanGMCs(
-  #   ImputationZDeltaInsertedMissingsRaw = Zdeltas$ImputationZDeltaInsertedMissings,
-  #   poisoned_imputation_methods = poisoned_imputation_methods,
-  #   univariate_imputation_methods = univariate_imputation_methods,
-  #   perfect_imputation_methods = perfect_imputation_methods
+  #   ImputationZDeltaInsertedMissingsRaw = Zdeltas$ImputationZDeltaInsertedMissings
   # )
 
   pZdeltasPerVar <- createZDeltasPerVarPlot(
@@ -111,7 +110,6 @@ opImputation <- function( Data, ImputationMethods = all_imputation_methods,
                                        BestMethodPerDataset = BestMethodPerDataset,
                                        BestUnivariateMethodPerDataset = BestUnivariateMethodPerDataset,
                                        BestMultivariateMethodPerDataset = BestMultivariateMethodPerDataset,
-                                       BestUniMultivariateMethodPerDataset = BestUniMultivariateMethodPerDataset,
                                        BestPoisonedMethodPerDataset = BestPoisonedMethodPerDataset )
 
     pZdeltasMultivarUnivarQQ <-
@@ -119,7 +117,6 @@ opImputation <- function( Data, ImputationMethods = all_imputation_methods,
                                       BestMethodPerDataset = BestMethodPerDataset,
                                       BestUnivariateMethodPerDataset = BestUnivariateMethodPerDataset,
                                       BestMultivariateMethodPerDataset = BestMultivariateMethodPerDataset,
-                                      BestUniMultivariateMethodPerDataset = BestUniMultivariateMethodPerDataset,
                                       BestPoisonedMethodPerDataset = BestPoisonedMethodPerDataset )
 
     FigABC <- cowplot::plot_grid(

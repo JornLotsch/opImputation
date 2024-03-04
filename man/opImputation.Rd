@@ -9,11 +9,11 @@ a method for handling missing values in biomedical numerical tabular data.
 opImputation( Data, ImputationMethods = all_imputation_methods,
 ImputationRepetitions = 20, seed = 100, nIter = 20, nProc = getOption( "mc.cores", 2L ),
 probMissing = 0.1, PValueThresholdForMetrics = 0.1, pfctMtdsInABC = FALSE,
-mnarity = 0, lowOnly = FALSE, mnarshape = 1, PlotIt = TRUE ) 
+mnarity = 0, lowOnly = FALSE, mnarshape = 1, PlotIt = TRUE, overallBestZDelta = FALSE ) 
 }
 \arguments{
 \item{Data}{the (numerical!) data as a matrix or data frame.}
-\item{ImputationMethods}{the imputation methods to test, listed with the command 'all_imputation_methods'. }
+\item{ImputationMethods}{the imputation methods to test, listed with the command 'all_imputation_methods'.}
 \item{ImputationRepetitions}{how many iterations in repeated imputations.}
 \item{seed}{a predefined seed to modify the results.}
 \item{nIter}{how many iterations of missing value insertion to run.}
@@ -25,6 +25,8 @@ mnarity = 0, lowOnly = FALSE, mnarshape = 1, PlotIt = TRUE )
 \item{lowOnly}{if NAR, whether only low values should be over-sampled}
 \item{mnarshape}{the degree of not at randomness}
 \item{PlotIt}{whether to display the main results automatically as two plots.}
+\item{overallBestZDelta}{whether to plot the results of the best select method compared to the measurement methods, 
+or the method with the smallest final deviations from the original missing values.}
 }
 \value{
 Returns a list of results.
@@ -49,7 +51,8 @@ Jorn Lotsch
 \examples{
 ## example 1
 TestImputation <- opImputation(Data = iris[,1:4],
-                         ImputationMethods =  c("rf_missForest", "median", "plus"))
+                         ImputationMethods =  c("rf_missForest", "median", "plus"),
+                         nIter = 5)
 }
 \keyword{opImputation}
 \keyword{data imputation}

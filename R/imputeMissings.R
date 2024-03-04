@@ -37,6 +37,12 @@ makeBadImputations <- function( x ) {
   return( data.frame( x ) )
 }
 
+medianNotZero <- function (x) {
+  med <- median( abs( x ), na.rm = TRUE )
+  m <- ifelse(med != 0, med, 1)
+return(m)
+  }
+
 # Main imputation method selection
 
 imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions = 10, seed = NULL, x_orig = NULL ) {
@@ -235,53 +241,53 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
 
     plusminus = {
       fac <- seq_len( nrow( x_orig ) )
-      ImputedData <- apply( x_orig, 2, function( x ) x + ( -1 )^fac * 0.11 * median( abs( x ), na.rm = TRUE ) )
+      ImputedData <- apply( x_orig, 2, function( x ) x + ( -1 )^fac * 0.11 * medianNotZero( x ) )
     },
     plus = {
-      ImputedData <- apply( x_orig, 2, function( x ) x + 1 * 0.1 * median( abs( x ), na.rm = TRUE ) )
+      ImputedData <- apply( x_orig, 2, function( x ) x + 1 * 0.1 * medianNotZero( x ) )
     },
     factor = {
-      ImputedData <- apply( x_orig, 2, function( x ) x * ( 1 + 0.03 * median( abs( x ), na.rm = TRUE ) ) )
+      ImputedData <- apply( x_orig, 2, function( x ) x * ( 1 + 0.03 * medianNotZero( x ) ) )
     },
     tinyNoise_0.000001 = {
       set.seed( seed )
-      ImputedData <- apply( x_orig, 2, function( x ) jitter( x, amount = .000001 * median( abs( x ), na.rm = TRUE ) ) )
+      ImputedData <- apply( x_orig, 2, function( x ) jitter( x, amount = .000001 * medianNotZero( x ) ) )
     },
     tinyNoise_0.00001 = {
       set.seed( seed )
-      ImputedData <- apply( x_orig, 2, function( x ) jitter( x, amount = .00001 * median( abs( x ), na.rm = TRUE ) ) )
+      ImputedData <- apply( x_orig, 2, function( x ) jitter( x, amount = .00001 * medianNotZero( x ) ) )
     },
     tinyNoise_0.0001 = {
       set.seed( seed )
-      ImputedData <- apply( x_orig, 2, function( x ) jitter( x, amount = .0001 * median( abs( x ), na.rm = TRUE ) ) )
+      ImputedData <- apply( x_orig, 2, function( x ) jitter( x, amount = .0001 * medianNotZero( x ) ) )
     },
     tinyNoise_0.001 = {
       set.seed( seed )
-      ImputedData <- apply( x_orig, 2, function( x ) jitter( x, amount = .001 * median( abs( x ), na.rm = TRUE ) ) )
+      ImputedData <- apply( x_orig, 2, function( x ) jitter( x, amount = .001 * medianNotZero( x ) ) )
     },
     tinyNoise_0.01 = {
       set.seed( seed )
-      ImputedData <- apply( x_orig, 2, function( x ) jitter( x, amount = .01 * median( abs( x ), na.rm = TRUE ) ) )
+      ImputedData <- apply( x_orig, 2, function( x ) jitter( x, amount = .01 * medianNotZero( x ) ) )
     },
     tinyNoise_0.05 = {
       set.seed( seed )
-      ImputedData <- apply( x_orig, 2, function( x ) jitter( x, amount = .05 * median( abs( x ), na.rm = TRUE ) ) )
+      ImputedData <- apply( x_orig, 2, function( x ) jitter( x, amount = .05 * medianNotZero( x ) ) )
     },
     tinyNoise_0.1 = {
       set.seed( seed )
-      ImputedData <- apply( x_orig, 2, function( x ) jitter( x, amount = .1 * median( abs( x ), na.rm = TRUE ) ) )
+      ImputedData <- apply( x_orig, 2, function( x ) jitter( x, amount = .1 * medianNotZero( x ) ) )
     },
     tinyNoise_0.2 = {
       set.seed( seed )
-      ImputedData <- apply( x_orig, 2, function( x ) jitter( x, amount = .2 * median( abs( x ), na.rm = TRUE ) ) )
+      ImputedData <- apply( x_orig, 2, function( x ) jitter( x, amount = .2 * medianNotZero( x ) ) )
     },
     tinyNoise_0.5 = {
       set.seed( seed )
-      ImputedData <- apply( x_orig, 2, function( x ) jitter( x, amount = .5 * median( abs( x ), na.rm = TRUE ) ) )
+      ImputedData <- apply( x_orig, 2, function( x ) jitter( x, amount = .5 * medianNotZero( x ) ) )
     },
     tinyNoise_1 = {
       set.seed( seed )
-      ImputedData <- apply( x_orig, 2, function( x ) jitter( x, amount = 1 * median( abs( x ), na.rm = TRUE ) ) )
+      ImputedData <- apply( x_orig, 2, function( x ) jitter( x, amount = 1 * medianNotZero( x ) ) )
     }
 
   )
