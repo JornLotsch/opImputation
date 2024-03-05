@@ -46,7 +46,7 @@ medianNotZero <- function( x ) {
 median_imputations <- function( x ) {
   all.matrix <- array( unlist( x ), dim = c( dim( x[[1]] )[1], dim( x[[1]] )[2], length( x ) ) )
   avg <- data.frame( apply( all.matrix, c( 1, 2 ), function( x ) median( x, na.rm = TRUE ) ) )
-  names( avg ) <- names( x[[1]] )
+  names( avg ) <- colnames( x[[1]] )
   rownames( avg ) <- rownames( x[[1]] )
   return( avg )
 }
@@ -87,10 +87,7 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
         }
         return( ImputedData = ImputedData )
       } )
-      ImputedData <- try( median_imputations( iImputedData ), TRUE )
-      if ( !inherits( ImputedData, "try-error" ) ) {
-        ImputedData <- ImputedData
-      }
+      ImputedData <- tryCatch( median_imputations( iImputedData ), error = function( e ) NULL )
     },
     rf_mice = {
       set.seed( seed )
@@ -108,10 +105,7 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
         }
         return( ImputedData = ImputedData )
       } )
-      ImputedData <- try( median_imputations( iImputedData ), TRUE )
-      if ( !inherits( ImputedData, "try-error" ) ) {
-        ImputedData <- ImputedData
-      }
+      ImputedData <- tryCatch( median_imputations( iImputedData ), error = function( e ) NULL )
     },
     rf_missForest = {
       set.seed( seed )
@@ -129,10 +123,7 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
         }
         return( ImputedData = ImputedData )
       } )
-      ImputedData <- try( median_imputations( iImputedData ), TRUE )
-      if ( !inherits( ImputedData, "try-error" ) ) {
-        ImputedData <- ImputedData
-      }
+      ImputedData <- tryCatch( median_imputations( iImputedData ), error = function( e ) NULL )
     },
     miceRanger = {
       set.seed( seed )
@@ -152,10 +143,7 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
         }
         return( ImputedData = ImputedData )
       } )
-      ImputedData <- try( median_imputations( iImputedData ), TRUE )
-      if ( !inherits( ImputedData, "try-error" ) ) {
-        ImputedData <- ImputedData
-      }
+      ImputedData <- tryCatch( median_imputations( iImputedData ), error = function( e ) NULL )
     },
     cart = {
       set.seed( seed )
@@ -173,10 +161,7 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
         }
         return( ImputedData = ImputedData )
       } )
-      ImputedData <- try( median_imputations( iImputedData ), TRUE )
-      if ( !inherits( ImputedData, "try-error" ) ) {
-        ImputedData <- ImputedData
-      }
+      ImputedData <- tryCatch( median_imputations( iImputedData ), error = function( e ) NULL )
     },
     linear = {
       set.seed( seed )
@@ -201,10 +186,7 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
         }
         return( ImputedData = ImputedData )
       } )
-      ImputedData <- try( median_imputations( iImputedData ), TRUE )
-      if ( !inherits( ImputedData, "try-error" ) ) {
-        ImputedData <- ImputedData
-      }
+      ImputedData <- tryCatch( median_imputations( iImputedData ), error = function( e ) NULL )
     },
     knn3 = {
       Impu <- try( multiUS::KNNimp( x, k = 3 ), TRUE )
@@ -250,10 +232,7 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
       Impu <- try( eval_with_timeout( Amelia::amelia.default( x, m = ImputationRepetitions ), timeout = 30 ), TRUE )
       if ( !inherits( Impu, "try-error" ) ) {
         iImputedData <- Impu$imputations
-        ImputedData <- try( median_imputations( iImputedData ), TRUE )
-        if ( !inherits( ImputedData, "try-error" ) ) {
-          ImputedData <- ImputedData
-        }
+        ImputedData <- tryCatch( median_imputations( iImputedData ), error = function( e ) NULL )
       }
     },
     miImp = {
@@ -262,10 +241,7 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
       if ( !inherits( Impu, "try-error" ) ) {
         iImputedData <- mi::complete( Impu )
         iImputedDataI <- lapply( iImputedData, function( y ) y[, names( x )] )
-        ImputedData <- try( median_imputations( iImputedData ), TRUE )
-        if ( !inherits( ImputedData, "try-error" ) ) {
-          ImputedData <- ImputedData
-        }
+        ImputedData <- tryCatch( median_imputations( iImputedData ), error = function( e ) NULL )
       }
     },
 

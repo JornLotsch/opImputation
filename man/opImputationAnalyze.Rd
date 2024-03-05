@@ -1,12 +1,12 @@
-\name{opImputation}
-\alias{opImputation}
+\name{opImputationAnalyze}
+\alias{opImputationAnalyze}
 \title{How to Impute if you must}
 \description{
 The package provides the necessary functions for how to impute if you must: 
 a method for handling missing values in biomedical numerical tabular data.
 }
 \usage{
-opImputation( Data, ImputationMethods =  all_imputation_methods,
+opImputationAnalyze( Data, ImputationMethods =  all_imputation_methods,
 ImputationRepetitions = 20, seed = 100, nIter = 20, nProc = getOption( "mc.cores", 2L ),
 probMissing = 0.1, PValueThresholdForMetrics = 0.1, pfctMtdsInABC = FALSE,
 mnarity = 0, lowOnly = FALSE, mnarshape = 1, PlotIt = TRUE, overallBestzDelta = FALSE ) 
@@ -34,7 +34,8 @@ Returns a list of results.
 \item{zDeltas}{the values of zDelta.}
 \item{MethodsResults}{the results of comparative method evaluation.}
 \item{BestMethodPerDataset}{the winning method.}
-\item{ImputedData}{final imputed data.}
+\item{ImputedData}{data imputed with the best method, for diagnostic purposes. 
+see opImputationImpute function for final data.}
 \item{ABCres}{results of ABC analysis.}
 \item{Fig_zDeltaDistributions_bestMethods}{a distribution plot ofzDelta values of best methods.}
 \item{FigABC}{a diagnostic plot of ABC analysis and overall results.}
@@ -50,7 +51,7 @@ Jorn Lotsch
 }
 \examples{
 ## example 1
-TestImputation <- opImputation(Data = iris[,1:4],
+TestImputation <- opImputationAnalyze(Data = iris[,1:4],
                          ImputationMethods =  c("rf_missForest", "median", "plus"),
                          nIter = 5)
 }

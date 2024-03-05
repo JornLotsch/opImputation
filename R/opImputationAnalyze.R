@@ -23,14 +23,14 @@
 #' @importFrom(ggh4x facet_grid2)
 #' @importFrom(ggrepel geom_text_repel)
 #' @export
-opImputation <- function( Data,
-                          ImputationMethods = all_imputation_methods,
-                          ImputationRepetitions = 20, seed = 100, nIter = 20,
-                          nProc = getOption( "mc.cores", 2L ),
-                          probMissing = 0.1, PValueThresholdForMetrics = 0.1,
-                          pfctMtdsInABC = FALSE,
-                          mnarity = 0, lowOnly = FALSE, mnarshape = 1,
-                          PlotIt = TRUE, overallBestzDelta = FALSE ) {
+opImputationAnalyze <- function( Data,
+                                 ImputationMethods = all_imputation_methods,
+                                 ImputationRepetitions = 20, seed = 100, nIter = 20,
+                                 nProc = getOption( "mc.cores", 2L ),
+                                 probMissing = 0.1, PValueThresholdForMetrics = 0.1,
+                                 pfctMtdsInABC = FALSE,
+                                 mnarity = 0, lowOnly = FALSE, mnarshape = 1,
+                                 PlotIt = TRUE, overallBestzDelta = FALSE ) {
 
   Data <- data.frame( Data )
 
@@ -155,3 +155,4 @@ opImputation <- function( Data,
     )
   )
 }
+

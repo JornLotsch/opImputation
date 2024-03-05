@@ -89,7 +89,7 @@ create_barplot <- function( data, BestUniMultivariateMethodPerDataset,
       theme_light( ) +
       theme(
         axis.text.x = element_text( angle = 90, vjust = 0.5, hjust = 1 ),
-        legend.position = c( 0.9, 0.7 ),
+        legend.position.inside = c( 0.9, 0.7 ),
         legend.background = element_rect( fill = alpha( "white", 0.5 ) )
       ) +
       labs( title = title, y = ylab, x = NULL, fill = "Imputation" ) +
