@@ -9,7 +9,7 @@ a method for handling missing values in biomedical numerical tabular data.
 opImputation( Data, ImputationMethods =  all_imputation_methods,
 ImputationRepetitions = 20, seed = 100, nIter = 20, nProc = getOption( "mc.cores", 2L ),
 probMissing = 0.1, PValueThresholdForMetrics = 0.1, pfctMtdsInABC = FALSE,
-mnarity = 0, lowOnly = FALSE, mnarshape = 1, PlotIt = TRUE, overallBestZDelta = FALSE ) 
+mnarity = 0, lowOnly = FALSE, mnarshape = 1, PlotIt = TRUE, overallBestzDelta = FALSE ) 
 }
 \arguments{
 \item{Data}{the (numerical!) data as a matrix or data frame.}
@@ -25,19 +25,19 @@ mnarity = 0, lowOnly = FALSE, mnarshape = 1, PlotIt = TRUE, overallBestZDelta = 
 \item{lowOnly}{if NAR, whether only low values should be over-sampled}
 \item{mnarshape}{the degree of not at randomness}
 \item{PlotIt}{whether to display the main results automatically as two plots.}
-\item{overallBestZDelta}{whether to plot the results of the best select method compared to the measurement methods, 
+\item{overallBestzDelta}{whether to plot the results of the best select method compared to the measurement methods, 
 or the method with the smallest final deviations from the original missing values.}
 }
 \value{
 Returns a list of results.
 \item{RepeatedSampleImputations}{the imputation results.}
-\item{Zdeltas}{the values of Zdelta.}
-\item{FigZdelta}{a diagnostic plot of zDelta values per imputation method category.}
+\item{zDeltas}{the values of zDelta.}
 \item{MethodsResults}{the results of comparative method evaluation.}
 \item{BestMethodPerDataset}{the winning method.}
 \item{ImputedData}{final imputed data.}
 \item{ABCres}{results of ABC analysis.}
-\item{FigABC}{a diagnostic plot of ABC analysis.}
+\item{Fig_zDeltaDistributions_bestMethods}{a distribution plot ofzDelta values of best methods.}
+\item{FigABC}{a diagnostic plot of ABC analysis and overall results.}
 }
 \references{
  Lotsch, J., Ultsch, A. (2024):

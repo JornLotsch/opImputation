@@ -28,8 +28,8 @@ calculate_metrics <- function( OrigData, Missings_Which, ImputedData, Metric, Or
             },
             rBiasImputedUnivar = {
               ME <- 0
-              if ( mean( orig, na.rm = TRUE ) != 0 ) {
-                if ( sd( orig, na.rm = TRUE ) / mean( orig, na.rm = TRUE ) > 0.001 ) {
+              if ( median( orig, na.rm = TRUE ) != 0 ) {
+                if ( ( IQR( orig, na.rm = TRUE ) * 1.4816) / median( orig, na.rm = TRUE ) > 1 ) {
                   St <- try( Rfit::rfit( Diffs ~ Means ), TRUE )
                   if ( !inherits( St, "try-error" ) ) {
                     if ( length( summary( St )$coefficients[2,] == 4 ) &&
@@ -41,7 +41,7 @@ calculate_metrics <- function( OrigData, Missings_Which, ImputedData, Metric, Or
                 }
               }
             },
-            ZDelta = {
+            zDelta = {
               m <- median( OrigDataMiss, na.rm = TRUE )
               s <- max( IQR( OrigDataMiss, na.rm = TRUE ) * 1.4816, 1 )
               Zorig <- ( orig - m ) / s

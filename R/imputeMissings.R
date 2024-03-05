@@ -43,6 +43,14 @@ medianNotZero <- function( x ) {
   return( m )
 }
 
+median_imputations <- function( x ) {
+  all.matrix <- array( unlist( x ), dim = c( dim( x[[1]] )[1], dim( x[[1]] )[2], length( x ) ) )
+  avg <- data.frame( apply( all.matrix, c( 1, 2 ), function( x ) median( x, na.rm = TRUE ) ) )
+  names( avg ) <- names( x[[1]] )
+  rownames( avg ) <- rownames( x[[1]] )
+  return( avg )
+}
+
 # Main imputation method selection
 
 imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions = 10, seed = NULL, x_orig = NULL ) {
@@ -79,8 +87,10 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
         }
         return( ImputedData = ImputedData )
       } )
-      all.matrix <- abind::abind( iImputedData, along = 3 )
-      ImputedData <- data.frame( apply( all.matrix, c( 1, 2 ), function( x ) mean( x, na.rm = TRUE ) ) )
+      ImputedData <- try( median_imputations( iImputedData ), TRUE )
+      if ( !inherits( ImputedData, "try-error" ) ) {
+        ImputedData <- ImputedData
+      }
     },
     rf_mice = {
       set.seed( seed )
@@ -98,8 +108,10 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
         }
         return( ImputedData = ImputedData )
       } )
-      all.matrix <- abind::abind( iImputedData, along = 3 )
-      ImputedData <- data.frame( apply( all.matrix, c( 1, 2 ), function( x ) mean( x, na.rm = TRUE ) ) )
+      ImputedData <- try( median_imputations( iImputedData ), TRUE )
+      if ( !inherits( ImputedData, "try-error" ) ) {
+        ImputedData <- ImputedData
+      }
     },
     rf_missForest = {
       set.seed( seed )
@@ -117,8 +129,10 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
         }
         return( ImputedData = ImputedData )
       } )
-      all.matrix <- abind::abind( iImputedData, along = 3 )
-      ImputedData <- data.frame( apply( all.matrix, c( 1, 2 ), function( x ) mean( x, na.rm = TRUE ) ) )
+      ImputedData <- try( median_imputations( iImputedData ), TRUE )
+      if ( !inherits( ImputedData, "try-error" ) ) {
+        ImputedData <- ImputedData
+      }
     },
     miceRanger = {
       set.seed( seed )
@@ -138,8 +152,10 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
         }
         return( ImputedData = ImputedData )
       } )
-      all.matrix <- abind::abind( iImputedData, along = 3 )
-      ImputedData <- data.frame( apply( all.matrix, c( 1, 2 ), function( x ) mean( x, na.rm = TRUE ) ) )
+      ImputedData <- try( median_imputations( iImputedData ), TRUE )
+      if ( !inherits( ImputedData, "try-error" ) ) {
+        ImputedData <- ImputedData
+      }
     },
     cart = {
       set.seed( seed )
@@ -157,8 +173,10 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
         }
         return( ImputedData = ImputedData )
       } )
-      all.matrix <- abind::abind( iImputedData, along = 3 )
-      ImputedData <- data.frame( apply( all.matrix, c( 1, 2 ), function( x ) mean( x, na.rm = TRUE ) ) )
+      ImputedData <- try( median_imputations( iImputedData ), TRUE )
+      if ( !inherits( ImputedData, "try-error" ) ) {
+        ImputedData <- ImputedData
+      }
     },
     linear = {
       set.seed( seed )
@@ -183,8 +201,10 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
         }
         return( ImputedData = ImputedData )
       } )
-      all.matrix <- abind::abind( iImputedData, along = 3 )
-      ImputedData <- data.frame( apply( all.matrix, c( 1, 2 ), function( x ) mean( x, na.rm = TRUE ) ) )
+      ImputedData <- try( median_imputations( iImputedData ), TRUE )
+      if ( !inherits( ImputedData, "try-error" ) ) {
+        ImputedData <- ImputedData
+      }
     },
     knn3 = {
       Impu <- try( multiUS::KNNimp( x, k = 3 ), TRUE )
@@ -230,8 +250,10 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
       Impu <- try( eval_with_timeout( Amelia::amelia.default( x, m = ImputationRepetitions ), timeout = 30 ), TRUE )
       if ( !inherits( Impu, "try-error" ) ) {
         iImputedData <- Impu$imputations
-        all.matrix <- abind::abind( iImputedData, along = 3 )
-        ImputedData <- data.frame( apply( all.matrix, c( 1, 2 ), function( x ) mean( x, na.rm = TRUE ) ) )
+        ImputedData <- try( median_imputations( iImputedData ), TRUE )
+        if ( !inherits( ImputedData, "try-error" ) ) {
+          ImputedData <- ImputedData
+        }
       }
     },
     miImp = {
@@ -239,9 +261,11 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
       Impu <- try( mi::mi( x, verbose = FALSE, parallel = FALSE ), TRUE )
       if ( !inherits( Impu, "try-error" ) ) {
         iImputedData <- mi::complete( Impu )
-        all.matrix <- abind::abind( iImputedData, along = 3 )
-        ImputedDataMI <- data.frame( apply( all.matrix, c( 1, 2 ), function( x ) mean( x, na.rm = TRUE ) ) )
-        ImputedData <- ImputedDataMI[, names( x )]
+        iImputedDataI <- lapply( iImputedData, function( y ) y[, names( x )] )
+        ImputedData <- try( median_imputations( iImputedData ), TRUE )
+        if ( !inherits( ImputedData, "try-error" ) ) {
+          ImputedData <- ImputedData
+        }
       }
     },
 
@@ -307,6 +331,8 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
       ImputedData <- makeBadImputations( x )
     }
   }
+
+  names( ImputedData ) <- names( x )
 
   return( ImputedData )
 }

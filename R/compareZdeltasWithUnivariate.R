@@ -9,61 +9,60 @@ fisher_method <- function( p_values ) {
 }
 
 # Function to find best method per category
-retrieve_z_deltas_for_best_method_per_category <- function( Zdeltas,
+retrieve_z_deltas_for_best_method_per_category <- function( zDeltas,
                                                             BestMethodPerDataset, BestUnivariateMethodPerDataset,
                                                             BestMultivariateMethodPerDataset, BestPoisonedMethodPerDataset ) {
 
-  multivarZDeltas <- unlist( lapply( Zdeltas$ImputationZDeltaInsertedMissings, function( x )
+  multivarzDeltas <- unlist( lapply( zDeltas$ImputationzDeltaInsertedMissings, function( x )
     x[gsub( " imputed|Imp", "", rownames( x ) ) %in% BestMultivariateMethodPerDataset,] ) )
 
-  univarZDeltas <- unlist( lapply( Zdeltas$ImputationZDeltaInsertedMissings, function( x )
+  univarzDeltas <- unlist( lapply( zDeltas$ImputationzDeltaInsertedMissings, function( x )
     x[gsub( " imputed|Imp", "", rownames( x ) ) %in% BestUnivariateMethodPerDataset,] ) )
 
   if ( BestMethodPerDataset %in% poisoned_imputation_methods ) {
-    poisonedZDeltas <- unlist( lapply( Zdeltas$ImputationZDeltaInsertedMissings, function( x )
+    poisonedzDeltas <- unlist( lapply( zDeltas$ImputationzDeltaInsertedMissings, function( x )
       x[gsub( " imputed|Imp", "", rownames( x ) ) %in% BestPoisonedMethodPerDataset,] ) )
   } else {
-    poisonedZDeltas <- NULL
+    poisonedzDeltas <- NULL
   }
 
-  return( list( multivarZDeltas = multivarZDeltas,
-                univarZDeltas = univarZDeltas,
-                poisonedZDeltas = poisonedZDeltas ) )
+  return( list( multivarzDeltas = multivarzDeltas,
+                univarzDeltas = univarzDeltas,
+                poisonedzDeltas = poisonedzDeltas ) )
 }
 
-# Function to create a PDE plot of Zdelta values for best methods
-create_d_deltas_multivar_univar_PDE_plot <- function( Zdeltas,
+# Function to create a PDE plot of zDelta values for best methods
+create_d_deltas_multivar_univar_PDE_plot <- function( zDeltas,
                                                       BestMethodPerDataset, BestUnivariateMethodPerDataset,
                                                       BestMultivariateMethodPerDataset, BestPoisonedMethodPerDataset ) {
 
-  # Retrieve ZDeltas for best method per per category
-  BestZDeltas <- retrieve_z_deltas_for_best_method_per_category( Zdeltas,
+  # Retrieve zDeltas for best method per per category
+  BestzDeltas <- retrieve_z_deltas_for_best_method_per_category( zDeltas,
                                                                  BestMethodPerDataset, BestUnivariateMethodPerDataset,
                                                                  BestMultivariateMethodPerDataset, BestPoisonedMethodPerDataset )
 
-  multivarZDeltas <- BestZDeltas$multivarZDeltas
-  univarZDeltas <- BestZDeltas$univarZDeltas
-  poisonedZDeltas <- BestZDeltas$poisonedZDeltas
+  multivarzDeltas <- BestzDeltas$multivarzDeltas
+  univarzDeltas <- BestzDeltas$univarzDeltas
+  poisonedzDeltas <- BestzDeltas$poisonedzDeltas
 
   # Create PDE plot
-  dfParetoAll <- generate_PDE_plot_df( multivarZDeltas = multivarZDeltas,
-                                       univarZDeltas = univarZDeltas,
-                                       poisonedZDeltas = poisonedZDeltas,
-                                       calibratingZDeltas = NULL
+  dfParetoAll <- generate_PDE_plot_df( multivarzDeltas = multivarzDeltas,
+                                       univarzDeltas = univarzDeltas,
+                                       poisonedzDeltas = poisonedzDeltas,
+                                       calibratingzDeltas = NULL
   )
-  PDERawZDeltasBest <- create_z_delta_PDE_plot( dfParetoAll = dfParetoAll )
+  PDERawzDeltasBest <- create_z_delta_PDE_plot( dfParetoAll = dfParetoAll )
 
-  PDERawZDeltasBest <- PDERawZDeltasBest +
-    labs( title = "PDE of raw Zdelta (best uni/multivariate)" )
+  PDERawzDeltasBest <- PDERawzDeltasBest +
+    labs( title = "PDE of raw zDelta (best uni/multivariate)" )
 
   # Do stats multivariate versus univariate imputation errors
   df.stat.deltas <- rbind.data.frame(
-    cbind.data.frame( y = 1, x = univarZDeltas ),
-    cbind.data.frame( y = 2, x = multivarZDeltas )
+    cbind.data.frame( y = 1, x = univarzDeltas ),
+    cbind.data.frame( y = 2, x = multivarzDeltas )
   )
   stat.deltas.W <- suppressWarnings( wilcox.test( df.stat.deltas$x ~ df.stat.deltas$y )$p.value )
-  # stat.deltas.CDF <- ks.test( univarZDeltas, multivarZDeltas )$p.value
-  stat.deltas.CDF <- suppressWarnings( twosamples::dts_test( univarZDeltas, multivarZDeltas )["P-Value"] )
+  stat.deltas.CDF <- suppressWarnings( twosamples::dts_test( univarzDeltas, multivarzDeltas )["P-Value"] )
   stat.deltas <- suppressWarnings( fisher_method( p_values = c( stat.deltas.W, stat.deltas.CDF ) ) )
 
   # Creating a data frame for statistical tests
@@ -81,7 +80,7 @@ create_d_deltas_multivar_univar_PDE_plot <- function( Zdeltas,
       data.frame( Test = NA, pValue = NA, x = 0.5 * max( dfParetoAll$x ), y = NA,
                   label = "A poisoned method is best!" )
     )
-    PDERawZDeltasBest <- PDERawZDeltasBest +
+    PDERawzDeltasBest <- PDERawzDeltasBest +
       geom_line( data = dfParetoAll[dfParetoAll$Category %in% c( "Calibrating", "Poisoned" ),],
                  aes( x = x,
                       y = PDE / max( dfParetoAll$PDE[dfParetoAll$Category %in% c( "Calibrating", "Poisoned" )] ) *
@@ -96,36 +95,36 @@ create_d_deltas_multivar_univar_PDE_plot <- function( Zdeltas,
   # Finalize plot labels
   dfStats$y <- seq( from = 0.95, by = -0.05, length.out = nrow( dfStats ) ) *
     max( dfParetoAll$PDE[dfParetoAll$Category %in% c( "Multivariate", "Univariate" )] )
-  PDERawZDeltasBest <- PDERawZDeltasBest +
+  PDERawzDeltasBest <- PDERawzDeltasBest +
     geom_text( data = dfStats, aes( label = label, x = x, y = y ), inherit.aes = FALSE )
 
-  return( PDERawZDeltasBest )
+  return( PDERawzDeltasBest )
 }
 
 
-# Function to create a QQ plot of Zdelta values for best methods
-create_d_deltas_multivar_univar_QQ_plot <- function( Zdeltas,
+# Function to create a QQ plot of zDelta values for best methods
+create_d_deltas_multivar_univar_QQ_plot <- function( zDeltas,
                                                      BestMethodPerDataset,
                                                      BestUnivariateMethodPerDataset,
                                                      BestMultivariateMethodPerDataset,
                                                      BestPoisonedMethodPerDataset ) {
 
-  # Retrieve ZDeltas for best method per per category
-  BestZDeltas <- retrieve_z_deltas_for_best_method_per_category( Zdeltas,
+  # Retrieve zDeltas for best method per per category
+  BestzDeltas <- retrieve_z_deltas_for_best_method_per_category( zDeltas,
                                                                  BestMethodPerDataset,
                                                                  BestUnivariateMethodPerDataset,
                                                                  BestMultivariateMethodPerDataset,
                                                                  BestPoisonedMethodPerDataset )
 
-  multivarZDeltas <- BestZDeltas$multivarZDeltas
-  univarZDeltas <- BestZDeltas$univarZDeltas
+  multivarzDeltas <- BestzDeltas$multivarzDeltas
+  univarzDeltas <- BestzDeltas$univarzDeltas
 
   # QQ plots
   quantiles <- seq( 0, 1, 0.01 )
 
   df_quantiles <- cbind.data.frame(
-    BestUnivariate = quantile( univarZDeltas, quantiles, na.rm = TRUE ),
-    Multivariate = quantile( multivarZDeltas, quantiles, na.rm = TRUE )
+    BestUnivariate = quantile( univarzDeltas, quantiles, na.rm = TRUE ),
+    Multivariate = quantile( multivarzDeltas, quantiles, na.rm = TRUE )
   )
 
   p_qq <-
@@ -136,7 +135,7 @@ create_d_deltas_multivar_univar_QQ_plot <- function( Zdeltas,
       theme( legend.position = c( 0.1, 0.9 ),
              strip.background = element_rect( fill = "cornsilk" ),
              strip.text = element_text( colour = "black" ) ) +
-      labs( title = "QQ plot raw Zdelta (best methods)" ) +
+      labs( title = "QQ plot raw zDelta (best methods)" ) +
       xlim( 0, 1 ) +
       ylim( 0, 1 )
 

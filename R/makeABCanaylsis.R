@@ -18,7 +18,7 @@ make_ABC_anaylsis <- function( zABCvalues, HighlightPoisonedMethods = TRUE ) {
     return( Ind )
   }
 
-  # Function to prepare the data frame for the bar plot of the item ABC ZDelta values
+  # Function to prepare the data frame for the bar plot of the item ABC zDelta values
   ABC_prepare_results_df <- function( data, ABCres ) {
     dfABC <- cbind.data.frame(
       rSum = data,
@@ -36,17 +36,12 @@ make_ABC_anaylsis <- function( zABCvalues, HighlightPoisonedMethods = TRUE ) {
     return( dfABC )
   }
 
-  # Function to prepare the data frames for plotting the ABC curves and set limits
-  create_ABC_xy_df <- function( ABCres ) {
-    ABCx <- ABCres$p
-    ABCy <- ABCres$ABC
-
-    return( data.frame(
-      ABCx = ABCx,
-      ABCy = ABCy
-    ) )
+  #Simple string replacement function
+  replaceString <- function(x, replaceList) {
+    where <- match(x, replaceList$old)
+    new <- replaceList$new[where]
+    return(new)
   }
-
 
   # Perform ABC analysis
   ABCRanksumsInserted <- ABCanalysis( zABCvalues, PlotIt = FALSE )
@@ -57,18 +52,12 @@ make_ABC_anaylsis <- function( zABCvalues, HighlightPoisonedMethods = TRUE ) {
   if ( HighlightPoisonedMethods ) {
     dfABCcat$Category1[dfABCcat$Method %in% poisoned_imputation_methods] <- "poisonedImputation"
   }
-  rep_str <- c(
-    "A" = myColorsABC[1],
-    "B" = myColorsABC[2],
-    "C" = myColorsABC[3],
-    "poisonedImputation" = myColorsABC[4]
-  )
-  names( myColorsABC ) <- c( "A", "B", "C", "poisonedImputation" )
-  dfABCcat$Category1 <- stringr::str_replace_all( dfABCcat$Category1, rep_str )
-  dfABCcat$poisoned <- ifelse( dfABCcat$Category1 == myColorsABC[4], myColorsABC[4], NA )
 
-  # Make the data frames for the line plot
-  dfABCxy <- create_ABC_xy_df( ABCRanksumsInserted )
+  rep_list <- list(old = c("A", "B", "C", "poisonedImputation" ),
+                  new = myColorsABC[1:4])
+  names( myColorsABC ) <- rep_list$old
+  dfABCcat$Category1 <- replaceString( dfABCcat$Category1, rep_list )
+  dfABCcat$poisoned <- ifelse( dfABCcat$Category1 == myColorsABC[4], myColorsABC[4], NA )
 
   # Make the ABC plot
   ABCplot <-
@@ -79,25 +68,13 @@ make_ABC_anaylsis <- function( zABCvalues, HighlightPoisonedMethods = TRUE ) {
                 position = "dodge",
                 alpha = 0.5
       ) +
-      geom_line( data = dfABCxy, aes( x = ABCx, y = ABCy ), linewidth = 1 ) +
-      scale_x_continuous( breaks = unique( dfABCcat$xloc ), labels = levels( dfABCcat$Method ) ) +
+      scale_x_continuous( breaks = unique( dfABCcat$xloc ), labels = levels( dfABCcat$Method ),  expand = c( 0, 0 ) ) +
       theme_light( ) +
-      theme( axis.text.x = element_text( angle = 90, vjust = 0.5, hjust = 0 ),
+      theme( axis.text.x = element_text( angle = 90, vjust = 0.5, hjust = 1 ),
              legend.position = c( 0.9, 0.6 ),
              legend.background = element_rect( fill = alpha( "white", 0.5 ) ) ) +
-      scale_y_continuous(
-        name = "Fraction of sum of largest rank means",
-        sec.axis = sec_axis( trans = ~. * max( dfABCcat$rSum ), name = "Rank mean" )
-      ) +
-      scale_x_continuous( position = "top", expand = c( 0, 0 ) ) +
-      scale_x_continuous(
-        name = "Fraction of rank means", expand = c( 0, 0 ),
-        sec.axis = sec_axis( trans = ~. * 1, name = "Imputation method",
-                             breaks = unique( dfABCcat$xloc ),
-                             labels = unique( dfABCcat$Method ) )
-      ) +
       scale_fill_manual( values = myColorsABC[1:3] ) +
-      labs( title = "ABC analysis of mean methods' ranks", x = "Fraction of rank sums", y = "Type of missing", fill = "Category" )
+      labs( title = "ABC analysis of mean methods' ranks", x = NULL, y = "Fraction of sum of zR values", fill = "Category" )
 
   # Return the plot
   return( ABCplot = ABCplot )

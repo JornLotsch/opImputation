@@ -12,8 +12,7 @@ retrieve_averaged_imputed_data <- function( Data, RepeatedSampleImputations ) {
   ImputedDataXWithoutData <- lapply( ImputedDataX, function( x ) x[, !colnames( x ) %in% "Data", drop = FALSE] )
 
   # Average imputed data
-  all.matrix <- abind::abind( ImputedDataXWithoutData, along = 3 )
-  ImputedDataXAverage <- data.frame( apply( all.matrix, c( 1, 2 ), function( x ) mean( x, na.rm = TRUE ) ) )
+  ImputedDataXAverage <- median_imputations( ImputedDataXWithoutData )
 
   # Repeat original data to match the dimensions
   DataRepeated <- do.call( "rbind.data.frame", replicate( ( dim( ImputedDataXAverage )[1] / nrow( Data ) ), Data, simplify = FALSE ) )

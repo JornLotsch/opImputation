@@ -4,7 +4,7 @@
 #' @import(pbmcapply)
 #' @import(methods)
 #' @import(cowplot)
-#' @importFrom(stats  na.omit   IQR  coef  sd  median  predict  runif  wilcox.test, ks.test, quantile, pchisq)
+#' @importFrom(stats  na.omit   IQR  coef  median  predict  runif  wilcox.test, quantile, pchisq)
 #' @importFrom(utils  sessionInfo)
 #' @importFrom(doParallel  registerDoParallel  stopImplicitCluster)
 #' @importFrom(caret  preProcess)
@@ -16,15 +16,12 @@
 #' @importFrom(mi  mi)
 #' @importFrom(reshape2  melt)
 #' @importFrom(DataVisualizations  ParetoDensityEstimation)
-#' @importFrom(abind abind)
 #' @importFrom(ABCanalysis  ABCanalysis)
 #' @importFrom(doParallel  registerDoParallel  stopImplicitCluster)
 #' @importFrom(Rfit rfit)
 #' @importFrom(twosamples dts_test)
 #' @importFrom(ggh4x facet_grid2)
 #' @importFrom(ggrepel geom_text_repel)
-#' @importFrom(stringr str_replace_all)
-
 #' @export
 opImputation <- function( Data,
                           ImputationMethods = all_imputation_methods,
@@ -33,7 +30,7 @@ opImputation <- function( Data,
                           probMissing = 0.1, PValueThresholdForMetrics = 0.1,
                           pfctMtdsInABC = FALSE,
                           mnarity = 0, lowOnly = FALSE, mnarshape = 1,
-                          PlotIt = TRUE, overallBestZDelta = FALSE ) {
+                          PlotIt = TRUE, overallBestzDelta = FALSE ) {
 
   Data <- data.frame( Data )
 
@@ -82,17 +79,17 @@ opImputation <- function( Data,
   )
 
   # Look at imputation accuracies
-  Zdeltas <- retrieve_z_deltas( RepeatedSampleImputations = RepeatedSampleImputations )
+  zDeltas <- retrieve_z_deltas( RepeatedSampleImputations = RepeatedSampleImputations )
 
-  # Create ZDelta plots
-  pZdeltasPlotAvgerage <- create_barplot_mean_z_deltas(
-    meanImputationZDeltaInsertedMissings = Zdeltas$meanImputationZDeltaInsertedMissings,
+  # Create zDelta plots
+  pzDeltasPlotAvgerage <- create_barplot_mean_z_deltas(
+    meanImputationzDeltaInsertedMissings = zDeltas$meanImputationzDeltaInsertedMissings,
     BestUniMultivariateMethodPerDataset = BestUniMultivariateMethodPerDataset,
-    overallBestZDelta = overallBestZDelta
+    overallBestzDelta = overallBestzDelta
   )
 
-  pZdeltasPerVar <- create_z_deltas_per_var_plot(
-    meanImputationZDeltaInsertedMissings = Zdeltas$meanImputationZDeltaInsertedMissings
+  pzDeltasPerVar <- create_z_deltas_per_var_plot(
+    meanImputationzDeltaInsertedMissings = zDeltas$meanImputationzDeltaInsertedMissings
   )
 
   # Create ABC plots
@@ -100,56 +97,38 @@ opImputation <- function( Data,
     zABCvalues = MethodsResults$zABCvalues_insertedMissings
   )
 
-  # Compare ZDelta values between multivariate and univariate methods
+  # Compare zDelta values between multivariate and univariate methods
   if ( sum( ImputationMethods %in% univariate_imputation_methods ) > 0 &
     sum( ImputationMethods %in% multivariate_imputation_methods ) > 0 ) {
-    pZdeltasMultivarUnivarPDE <-
-      create_d_deltas_multivar_univar_PDE_plot( Zdeltas = Zdeltas,
+    pzDeltasMultivarUnivarPDE <-
+      create_d_deltas_multivar_univar_PDE_plot( zDeltas = zDeltas,
                                                 BestMethodPerDataset = BestMethodPerDataset,
                                                 BestUnivariateMethodPerDataset = BestUnivariateMethodPerDataset,
                                                 BestMultivariateMethodPerDataset = BestMultivariateMethodPerDataset,
                                                 BestPoisonedMethodPerDataset = BestPoisonedMethodPerDataset )
 
-    pZdeltasMultivarUnivarQQ <-
-      create_d_deltas_multivar_univar_QQ_plot( Zdeltas = Zdeltas,
+    pzDeltasMultivarUnivarQQ <-
+      create_d_deltas_multivar_univar_QQ_plot( zDeltas = zDeltas,
                                                BestMethodPerDataset = BestMethodPerDataset,
                                                BestUnivariateMethodPerDataset = BestUnivariateMethodPerDataset,
                                                BestMultivariateMethodPerDataset = BestMultivariateMethodPerDataset,
                                                BestPoisonedMethodPerDataset = BestPoisonedMethodPerDataset )
 
-    FigABC <- cowplot::plot_grid(
+    Fig_zDeltaDistributions_bestMethods <-
       cowplot::plot_grid(
-        pABC,
-        pZdeltasPlotAvgerage,
-        pZdeltasPerVar,
-        labels = LETTERS[1:3],
-        ncol = 1 ),
-      cowplot::plot_grid(
-        pZdeltasMultivarUnivarPDE,
-        pZdeltasMultivarUnivarQQ,
-        labels = LETTERS[4:5],
-        nrow = 1
-      ),
-      align = "v", axis = "lr",
-      ncol = 1,
-      rel_heights = c( 3, 1 )
-    )
-  } else {
-    FigABC <- cowplot::plot_grid(
-      pABC,
-      pZdeltasPlotAvgerage,
-      pZdeltasPerVar,
-      align = "v", axis = "lr",
-      labels = LETTERS[1:3],
-      ncol = 1
-    )
+        pzDeltasMultivarUnivarPDE,
+        pzDeltasMultivarUnivarQQ,
+        labels = LETTERS[1:2],
+        nrow = 1,
+        align = "h", axis = "tb"
+      )
   }
 
-  FigABCshort <-
+  FigABC <-
     cowplot::plot_grid(
       pABC,
-      pZdeltasPlotAvgerage,
-      pZdeltasPerVar,
+      pzDeltasPlotAvgerage,
+      pzDeltasPerVar,
       labels = LETTERS[1:3],
       ncol = 1 )
 
@@ -166,13 +145,13 @@ opImputation <- function( Data,
   return(
     list(
       RepeatedSampleImputations = RepeatedSampleImputations,
-      Zdeltas = Zdeltas,
+      zDeltas = zDeltas,
       MethodsResults = MethodsResults,
       BestMethodPerDataset = BestMethodPerDataset,
       ImputedData = ImputedData,
       ABCres = pABC,
-      FigABC = FigABC,
-      FigABCshort = FigABCshort
+      Fig_zDeltaDistributions_bestMethods = Fig_zDeltaDistributions_bestMethods,
+      FigABC = FigABC
     )
   )
 }

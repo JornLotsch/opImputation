@@ -23,6 +23,6 @@ utils::globalVariables( c( "ABCx", "ABCy", "Category", "Failed", "Method", "colo
                            "y", "y1", "BestUnivariate", "Imputation", "Multivariate", "PDE", "label", "Methods" ) )
 
 # Colors
-myColorsZDelta <- c( "#0072B2", "#009E73", "#D55E00", "#F0E442" )
+myColorszDelta <- c( "#0072B2", "#009E73", "#D55E00", "#F0E442" )
 myColorsABC <- c( "#009E73", "#56B4E9", "#E69F00", "red" )
 

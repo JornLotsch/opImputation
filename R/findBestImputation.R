@@ -43,12 +43,19 @@ calculate_combined_metrics <-
 
     ranksumsErrorsMissings <- lapply( rankErrorsMissings, function( x ) apply( x, 1, median ) )
 
-    a <- do.call( abind::abind, c( rankErrorsMissings, list( along = 3 ) ) )
-    grandMeanrankErrorsMissings <- apply( a, 1:2, median )
+    grandMeanrankErrorsMissings <- median_imputations( rankErrorsMissings )
 
     # grandMeanrankErrorsMissings <- Reduce( "+", rankErrorsMissings ) / length( rankErrorsMissings )
 
-    all.matrix <- abind::abind( ranksumsErrorsMissings, along = 2 )
+
+    median_imputations_2d <- function( x ) {
+      all.matrix <- array( unlist( x ), dim = c( dim( x[[1]] )[1], dim( x[[1]] )[2], length( x ) ) )
+      avg <- data.frame( apply( all.matrix, c( 1, 2 ), function( x ) median( x, na.rm = TRUE ) ) )
+      return( avg )
+    }
+
+    all.matrix <- data.frame( array( unlist( ranksumsErrorsMissings ), dim = c( length( ranksumsErrorsMissings[[1]] ), length( ranksumsErrorsMissings ) ) ) )
+    rownames( all.matrix ) <- names( ranksumsErrorsMissings[[1]] )
     PerDatasetRanksums_Missings <- apply( all.matrix, c( 1 ), function( x ) median( x, na.rm = TRUE ) )
     BestPerDatasetRanksums_Missings <- names( which.min( PerDatasetRanksums_Missings ) )
     BestUnivariatePerDatasetRanksums_Missings <- names( which.min( PerDatasetRanksums_Missings[gsub( " imputed", "",

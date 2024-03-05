@@ -95,11 +95,11 @@ make_and_measure_repeated_imputations <- function( Data, seeds, probMissing, nPr
     )
     names( ImputationrBiasInsertedMissings ) <- paste0( "rBias_", names( dfXmatrix ) )
 
-    ImputationZDeltaInsertedMissings <- makeMetricsMatrix(
-      OrigData = dfXmatrix, Missings_Which = dfXmatrixInsertedMissings_Which, ImputedData = dfImputedDataAll, Metric = "ZDelta", PValueThresholdForMetrics = PValueThresholdForMetrics,
+    ImputationzDeltaInsertedMissings <- makeMetricsMatrix(
+      OrigData = dfXmatrix, Missings_Which = dfXmatrixInsertedMissings_Which, ImputedData = dfImputedDataAll, Metric = "zDelta", PValueThresholdForMetrics = PValueThresholdForMetrics,
       OrigDataMiss = dfXmatrixInsertedMissings
     )
-    names( ImputationZDeltaInsertedMissings ) <- paste0( "ZDelta_", names( dfXmatrix ) )
+    names( ImputationzDeltaInsertedMissings ) <- paste0( "zDelta_", names( dfXmatrix ) )
 
     return( list(
       dfXmatrixall = dfXmatrixall,
@@ -107,7 +107,7 @@ make_and_measure_repeated_imputations <- function( Data, seeds, probMissing, nPr
       ImputationRMSEInsertedMissings = ImputationRMSEInsertedMissings,
       ImputationMEInsertedMissings = ImputationMEInsertedMissings,
       ImputationrBiasInsertedMissings = ImputationrBiasInsertedMissings,
-      ImputationZDeltaInsertedMissings = ImputationZDeltaInsertedMissings
+      ImputationzDeltaInsertedMissings = ImputationzDeltaInsertedMissings
     ) )
   }
 
