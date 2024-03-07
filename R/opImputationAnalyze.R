@@ -23,26 +23,31 @@
 #' @importFrom(ggh4x facet_grid2)
 #' @importFrom(ggrepel geom_text_repel)
 #' @export
-opImputationAnalyze <- function( Data,
-                                 ImputationMethods = all_imputation_methods,
-                                 ImputationRepetitions = 20, seed = 100, nIter = 20,
-                                 nProc = getOption( "mc.cores", 2L ),
-                                 probMissing = 0.1, PValueThresholdForMetrics = 0.1,
-                                 pfctMtdsInABC = FALSE,
-                                 mnarity = 0, lowOnly = FALSE, mnarshape = 1,
-                                 PlotIt = TRUE, overallBestzDelta = FALSE ) {
+opImputationAnalyze <- function(
+    Data,
+    ImputationMethods = all_imputation_methods,
+    ImputationRepetitions = 20,
+    seed = 100,
+    nIter = 20,
+    nProc = getOption("mc.cores", 2L),
+    probMissing = 0.1,
+    PValueThresholdForMetrics = 0.1,
+    pfctMtdsInABC = FALSE,
+    mnarity = 0,
+    lowOnly = FALSE,
+    mnarshape = 1,
+    PlotIt = TRUE,
+    overallBestzDelta = FALSE
+) {
+  Data <- data.frame(Data)
 
-  Data <- data.frame( Data )
-
-  if ( is.numeric( as.matrix( na.omit( Data ) ) ) == FALSE ) {
-    stop( "opImputation: Only numeric data allowed. Execution stopped." )
+  if (!is.numeric(as.matrix(na.omit(Data)))) {
+    stop("opImputation: Only numeric data allowed. Execution stopped.")
   }
 
   list.of.seeds <- 1:nIter + seed - 1
 
   # Functions
-
-  # Impute data sets
   RepeatedSampleImputations <- make_and_measure_repeated_imputations(
     Data = Data,
     seeds = list.of.seeds,
@@ -50,38 +55,26 @@ opImputationAnalyze <- function( Data,
     probMissing = probMissing,
     ImputationMethods = ImputationMethods,
     ImputationRepetitions = ImputationRepetitions,
-    mnarity = mnarity, lowOnly = lowOnly, mnarshape = mnarshape,
+    mnarity = mnarity,
+    lowOnly = lowOnly,
+    mnarshape = mnarshape,
     PValueThresholdForMetrics = PValueThresholdForMetrics
   )
 
-  # Find best imputation
   MethodsResults <- find_best_method(
     RepeatedSampleImputations = RepeatedSampleImputations,
     pfctMtdsInABC = pfctMtdsInABC,
     nIter = nIter
   )
 
-  BestMethodPerDataset <-
-    gsub( " imputed|Imp", "", MethodsResults$BestPerDatasetRanksums_insertedMissings )
-  BestUnivariateMethodPerDataset <-
-    gsub( " imputed|Imp", "", MethodsResults$BestUnivariatePerDatasetRanksums_insertedMissings )
-  BestMultivariateMethodPerDataset <-
-    gsub( " imputed|Imp", "", MethodsResults$BestMultivariatePerDatasetRanksums_insertedMissings )
-  BestUniMultivariateMethodPerDataset <-
-    gsub( " imputed|Imp", "", MethodsResults$BestUniMultivariatePerDatasetRanksums_insertedMissings )
-  BestPoisonedMethodPerDataset <-
-    gsub( " imputed|Imp", "", MethodsResults$BestPoisonedPerDatasetRanksums_insertedMissings )
+  BestMethodPerDataset <- gsub(" imputed|Imp", "", MethodsResults$BestPerDatasetRanksums_insertedMissings)
+  BestUnivariateMethodPerDataset <- gsub(" imputed|Imp", "", MethodsResults$BestUnivariatePerDatasetRanksums_insertedMissings)
+  BestMultivariateMethodPerDataset <- gsub(" imputed|Imp", "", MethodsResults$BestMultivariatePerDatasetRanksums_insertedMissings)
+  BestUniMultivariateMethodPerDataset <- gsub(" imputed|Imp", "", MethodsResults$BestUniMultivariatePerDatasetRanksums_insertedMissings)
+  BestPoisonedMethodPerDataset <- gsub(" imputed|Imp", "", MethodsResults$BestPoisonedPerDatasetRanksums_insertedMissings)
 
-  # Retrieve imputed data
-  ImputedData <- retrieve_averaged_imputed_data(
-    Data = Data,
-    RepeatedSampleImputations = RepeatedSampleImputations
-  )
+  zDeltas <- retrieve_z_deltas(RepeatedSampleImputations = RepeatedSampleImputations)
 
-  # Look at imputation accuracies
-  zDeltas <- retrieve_z_deltas( RepeatedSampleImputations = RepeatedSampleImputations )
-
-  # Create zDelta plots
   pzDeltasPlotAvgerage <- create_barplot_mean_z_deltas(
     meanImputationzDeltaInsertedMissings = zDeltas$meanImputationzDeltaInsertedMissings,
     BestUniMultivariateMethodPerDataset = BestUniMultivariateMethodPerDataset,
@@ -92,63 +85,62 @@ opImputationAnalyze <- function( Data,
     meanImputationzDeltaInsertedMissings = zDeltas$meanImputationzDeltaInsertedMissings
   )
 
-  # Create ABC plots
   pABC <- make_ABC_anaylsis(
     zABCvalues = MethodsResults$zABCvalues_insertedMissings
   )
 
-  # Compare zDelta values between multivariate and univariate methods
-  if ( sum( ImputationMethods %in% univariate_imputation_methods ) > 0 &
-    sum( ImputationMethods %in% multivariate_imputation_methods ) > 0 ) {
-    pzDeltasMultivarUnivarPDE <-
-      create_d_deltas_multivar_univar_PDE_plot( zDeltas = zDeltas,
-                                                BestMethodPerDataset = BestMethodPerDataset,
-                                                BestUnivariateMethodPerDataset = BestUnivariateMethodPerDataset,
-                                                BestMultivariateMethodPerDataset = BestMultivariateMethodPerDataset,
-                                                BestPoisonedMethodPerDataset = BestPoisonedMethodPerDataset )
+  if (
+    sum(ImputationMethods %in% univariate_imputation_methods) > 0 &
+    sum(ImputationMethods %in% multivariate_imputation_methods) > 0
+  ) {
+    pzDeltasMultivarUnivarPDE <- create_d_deltas_multivar_univar_PDE_plot(
+      zDeltas = zDeltas,
+      BestMethodPerDataset = BestMethodPerDataset,
+      BestUnivariateMethodPerDataset = BestUnivariateMethodPerDataset,
+      BestMultivariateMethodPerDataset = BestMultivariateMethodPerDataset,
+      BestPoisonedMethodPerDataset = BestPoisonedMethodPerDataset
+    )
 
-    pzDeltasMultivarUnivarQQ <-
-      create_d_deltas_multivar_univar_QQ_plot( zDeltas = zDeltas,
-                                               BestMethodPerDataset = BestMethodPerDataset,
-                                               BestUnivariateMethodPerDataset = BestUnivariateMethodPerDataset,
-                                               BestMultivariateMethodPerDataset = BestMultivariateMethodPerDataset,
-                                               BestPoisonedMethodPerDataset = BestPoisonedMethodPerDataset )
+    pzDeltasMultivarUnivarQQ <- create_d_deltas_multivar_univar_QQ_plot(
+      zDeltas = zDeltas,
+      BestMethodPerDataset = BestMethodPerDataset,
+      BestUnivariateMethodPerDataset = BestUnivariateMethodPerDataset,
+      BestMultivariateMethodPerDataset = BestMultivariateMethodPerDataset,
+      BestPoisonedMethodPerDataset = BestPoisonedMethodPerDataset
+    )
 
-    Fig_zDeltaDistributions_bestMethods <-
-      cowplot::plot_grid(
-        pzDeltasMultivarUnivarPDE,
-        pzDeltasMultivarUnivarQQ,
-        labels = LETTERS[1:2],
-        nrow = 1,
-        align = "h", axis = "tb"
-      )
+    Fig_zDeltaDistributions_bestMethods <- cowplot::plot_grid(
+      pzDeltasMultivarUnivarPDE,
+      pzDeltasMultivarUnivarQQ,
+      labels = LETTERS[1:2],
+      nrow = 1,
+      align = "h",
+      axis = "tb"
+    )
   }
 
-  FigABC <-
-    cowplot::plot_grid(
-      pABC,
-      pzDeltasPlotAvgerage,
-      pzDeltasPerVar,
-      labels = LETTERS[1:3],
-      ncol = 1 )
+  FigABC <- cowplot::plot_grid(
+    pABC,
+    pzDeltasPlotAvgerage,
+    pzDeltasPerVar,
+    labels = LETTERS[1:3],
+    ncol = 1
+  )
 
-  # Display main results
-  if ( PlotIt == TRUE ) {
-    suppressWarnings( print( "Best method per dataset" ) )
-    suppressWarnings( print( suppressWarnings( BestMethodPerDataset ) ) )
-    suppressWarnings( print( "Best univariate or multivariate method per dataset" ) )
-    suppressWarnings( print( suppressWarnings( BestUniMultivariateMethodPerDataset ) ) )
-    suppressWarnings( print( suppressWarnings( FigABC ) ) )
+  if (PlotIt) {
+    suppressWarnings(print("Best method per dataset"))
+    suppressWarnings(print(suppressWarnings(BestMethodPerDataset)))
+    suppressWarnings(print("Best univariate or multivariate method per dataset"))
+    suppressWarnings(print(suppressWarnings(BestUniMultivariateMethodPerDataset)))
+    suppressWarnings(print(suppressWarnings(FigABC)))
   }
 
-  # Return results
   return(
     list(
       RepeatedSampleImputations = RepeatedSampleImputations,
       zDeltas = zDeltas,
       MethodsResults = MethodsResults,
       BestMethodPerDataset = BestMethodPerDataset,
-      ImputedData = ImputedData,
       ABCres = pABC,
       Fig_zDeltaDistributions_bestMethods = Fig_zDeltaDistributions_bestMethods,
       FigABC = FigABC

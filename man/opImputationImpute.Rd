@@ -10,12 +10,12 @@ opImputationImpute( Data, ImputationMethod, ImputationRepetitions = 20,
 seed = 100, nIter = 100, nProc = getOption( "mc.cores", 2L )) 
 }
 \arguments{
-\item{Data}{the (numerical!) data as a matrix or data frame.}
-\item{ImputationMethod}{the imputation methods to test, listed with the command 'all_imputation_methods'.}
-\item{ImputationRepetitions}{how many iterations in repeated imputations.}
-\item{seed}{a predefined seed to modify the results.}
-\item{nIter}{how many iterations of missing value insertion to run.}
-\item{nProc}{number of parallel processes.}
+\item{Data}{Numerical data in matrix or data frame format.}
+\item{ImputationMethod}{Imputation methods to test (use 'all_imputation_methods').}
+\item{ImputationRepetitions}{Number of repeated imputations.}
+\item{seed}{Predefined seed for result reproducibility.}
+\item{nIter}{Iterations for missing value insertion.}
+\item{nProc}{Number of parallel processes.}
 }
 \value{
 Returns the imputed data frame.

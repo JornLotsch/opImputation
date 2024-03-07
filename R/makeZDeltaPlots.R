@@ -119,7 +119,7 @@ create_z_delta_PDE_plot <- function( dfParetoAll ) {
         legend.direction = "horizontal",
         legend.background = element_rect( colour = "transparent", fill = ggplot2::alpha( "white", 0.4 ) )
       ) +
-      labs( title = "PDE of raw zDelta values", x = "Data", y = "PDE" ) +
+      labs( title = "PDE of raw zDelta values", x = "zDelta", y = "PDE" ) +
       scale_color_manual( values = myColorszDelta )
 
   return( PDERawzDeltas )
@@ -133,7 +133,7 @@ create_barplot_mean_z_deltas <-
 
     BarplotMeanzDeltas <- create_barplot( data = rowmeanImputationzDeltaInsertedMissings,
                                           BestUniMultivariateMethodPerDataset,
-                                          title = "zDelta",
+                                          title = "1 - zDelta",
                                           ylab = " 1 - zDelta",
                                           annotate_methods = c( "Best poisoned", "Best univariate", "Best" ),
                                           overallBestzDelta = overallBestzDelta ) +

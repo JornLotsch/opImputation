@@ -12,33 +12,31 @@ probMissing = 0.1, PValueThresholdForMetrics = 0.1, pfctMtdsInABC = FALSE,
 mnarity = 0, lowOnly = FALSE, mnarshape = 1, PlotIt = TRUE, overallBestzDelta = FALSE ) 
 }
 \arguments{
-\item{Data}{the (numerical!) data as a matrix or data frame.}
-\item{ImputationMethods}{the imputation methods to test, listed with the command 'all_imputation_methods'.}
-\item{ImputationRepetitions}{how many iterations in repeated imputations.}
-\item{seed}{a predefined seed to modify the results.}
-\item{nIter}{how many iterations of missing value insertion to run.}
-\item{nProc}{number of parallel processes.}
-\item{probMissing}{the probability of diagnostic missing values to be inserted in each variable.}
-\item{PValueThresholdForMetrics}{the p-value from which a test for biased imputation is regarded as passed.}
-\item{pfctMtdsInABC}{whether to include so-called perfect imputation methods in comparative selections.}
-\item{mnarity}{degree of not at random sampling, 0...1.}
-\item{lowOnly}{if NAR, whether only low values should be over-sampled}
-\item{mnarshape}{the degree of not at randomness}
-\item{PlotIt}{whether to display the main results automatically as two plots.}
-\item{overallBestzDelta}{whether to plot the results of the best select method compared to the measurement methods, 
-or the method with the smallest final deviations from the original missing values.}
+\item{Data}{Numeric data represented as a matrix or data frame.}
+\item{ImputationMethods}{Imputation methods to be tested, listed using the 'all_imputation_methods' command.}
+\item{ImputationRepetitions}{Number of iterations for repeated imputations.}
+\item{seed}{Predefined seed to control the randomness of results.}
+\item{nIter}{Number of iterations for missing value insertion.}
+\item{nProc}{Number of parallel processes to be utilized.}
+\item{probMissing}{Probability of diagnostic missing values to be inserted in each variable.}
+\item{PValueThresholdForMetrics}{Threshold p-value for considering a test for biased imputation as passed.}
+\item{pfctMtdsInABC}{Whether to include perfect imputation methods in comparative selections.}
+\item{mnarity}{Degree of not-at-random (NAR) sampling, ranging from 0 to 1.}
+\item{lowOnly}{If NAR, whether only low values should be oversampled.}
+\item{mnarshape}{An additional parameter emphasizing the degree of not-at-randomness (probability NAR)^mnarshape).}
+\item{PlotIt}{Whether to automatically display the main results as two plots.}
+\item{overallBestzDelta}{Whether to plot the results of the best selected method 
+compared to the measurement methods or the method with the smallest final deviations from the original missing values.}
 }
 \value{
 Returns a list of results.
-\item{RepeatedSampleImputations}{the imputation results.}
-\item{zDeltas}{the values of zDelta.}
-\item{MethodsResults}{the results of comparative method evaluation.}
-\item{BestMethodPerDataset}{the winning method.}
-\item{ImputedData}{data imputed with the best method, for diagnostic purposes. 
-see opImputationImpute function for final data.}
-\item{ABCres}{results of ABC analysis.}
-\item{Fig_zDeltaDistributions_bestMethods}{a distribution plot ofzDelta values of best methods.}
-\item{FigABC}{a diagnostic plot of ABC analysis and overall results.}
+\item{RepeatedSampleImputations}{Imputation results.}
+\item{zDeltas}{Values of zDelta.}
+\item{MethodsResults}{Results of comparative method evaluation.}
+\item{BestMethodPerDataset}{Winning method for each dataset.}
+\item{ABCres}{Results of ABC analysis.}
+\item{Fig_zDeltaDistributions_bestMethods}{Distribution plot of zDelta values for best methods.}
+\item{FigABC}{Diagnostic plot of ABC analysis and overall results.}
 }
 \references{
  Lotsch, J., Ultsch, A. (2024):
