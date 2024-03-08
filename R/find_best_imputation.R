@@ -42,17 +42,7 @@ calculate_combined_metrics <-
     rankErrorsMissings <- rename_df_columns_in_nested_list( df = rankErrorsMissings )
 
     ranksumsErrorsMissings <- lapply( rankErrorsMissings, function( x ) apply( x, 1, median ) )
-
     grandMeanrankErrorsMissings <- median_imputations( rankErrorsMissings )
-
-    # grandMeanrankErrorsMissings <- Reduce( "+", rankErrorsMissings ) / length( rankErrorsMissings )
-
-
-    median_imputations_2d <- function( x ) {
-      all.matrix <- array( unlist( x ), dim = c( dim( x[[1]] )[1], dim( x[[1]] )[2], length( x ) ) )
-      avg <- data.frame( apply( all.matrix, c( 1, 2 ), function( x ) median( x, na.rm = TRUE ) ) )
-      return( avg )
-    }
 
     all.matrix <- data.frame( array( unlist( ranksumsErrorsMissings ), dim = c( length( ranksumsErrorsMissings[[1]] ), length( ranksumsErrorsMissings ) ) ) )
     rownames( all.matrix ) <- names( ranksumsErrorsMissings[[1]] )

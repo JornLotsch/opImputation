@@ -9,7 +9,8 @@ Imports: parallel, Rfit, methods, stats, caret, ABCanalysis, ggplot2, doParallel
         missForest, utils, mice, miceRanger, multiUS, Amelia, mi, reshape2, DataVisualizations,
         cowplot, twosamples, ggh4x, ggrepel
 LazyData: true
-Suggests: testthat
+Suggests: 
+    testthat (>= 3.0.0)
 License: GPL-3
 URL: https://github.com/JornLotsch/opImputation
 Encoding: UTF-8
@@ -18,3 +19,4 @@ Author: Jorn Lotsch [aut,cre] (<https://orcid.org/0000-0002-5818-6958>),
 Maintainer: Jorn Lotsch <j.lotsch@em.uni-frankfurt.de>
 NeedsCompilation: no
 Date: 2024-02-20
+Config/testthat/edition: 3
