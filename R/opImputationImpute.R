@@ -2,7 +2,9 @@
 #' @export
 opImputationImpute <- function( Data,
                                 ImputationMethod,
-                                ImputationRepetitions = 20, seed = 100, nIter = 100,
+                                ImputationRepetitions = 20,
+                                seed = 100,
+                                nIter = 100,
                                 nProc = getOption( "mc.cores", 2L ) ) {
 
   list.of.seeds <- 1:nIter + seed - 1
