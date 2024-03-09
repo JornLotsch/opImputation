@@ -3,7 +3,7 @@ generate_barplot_df <-
   function( data, BestUniMultivariateMethodPerDataset,
             annotate_methods, overallBestzDelta ) {
 
-    df <- data.frame( reshape2::melt( data ) )
+    df <- data.frame( suppressWarnings( reshape2::melt( data ) ) )
     df$Method <- gsub( " imputed|Imp", "", rownames( df ) )
 
     MethodsOrder <- df$Method[order( df$value )]
@@ -89,7 +89,7 @@ create_barplot <- function( data, BestUniMultivariateMethodPerDataset,
       theme_light( ) +
       theme(
         axis.text.x = element_text( angle = 90, vjust = 0.5, hjust = 1 ),
-        legend.position.inside = c( 0.9, 0.7 ),
+        legend.position = c( 0.9, 0.7 ),
         legend.background = element_rect( fill = alpha( "white", 0.5 ) )
       ) +
       labs( title = title, y = ylab, x = NULL, fill = "Imputation" ) +
@@ -146,7 +146,7 @@ create_barplot_mean_z_deltas <-
 create_z_deltas_per_var_plot <- function( meanImputationzDeltaInsertedMissings ) {
   rowmeanImputationzDeltaInsertedMissings <- apply( meanImputationzDeltaInsertedMissings, 1, function( x ) median( x, na.rm = TRUE ) )
 
-  df <- data.frame( reshape2::melt( rowmeanImputationzDeltaInsertedMissings ) )
+  df <- data.frame( suppressWarnings( reshape2::melt( rowmeanImputationzDeltaInsertedMissings ) ) )
   df$Method <- gsub( " imputed|Imp", "", rownames( df ) )
   MethodsOrder <- df$Method[order( df$value )]
 
@@ -157,7 +157,7 @@ create_z_deltas_per_var_plot <- function( meanImputationzDeltaInsertedMissings )
   zDeltaP$calibratingMtd <- ifelse( zDeltaP$Method %in% calibrating_imputation_methods, "Calibrating methods", "Methods" )
   zDeltaP$calibratingMtd <- factor( zDeltaP$calibratingMtd, levels = c( "Calibrating methods", "Methods" ) )
 
-  zDelta_long <- reshape2::melt( zDeltaP )
+  zDelta_long <- suppressWarnings( reshape2::melt( zDeltaP ) )
   zDelta_long$variable <- gsub( "zDelta_", "", zDelta_long$variable )
 
   zDelta_long$Failed <- ifelse( is.na( zDelta_long$value ), 0.01, NA )

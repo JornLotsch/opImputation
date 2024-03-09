@@ -112,16 +112,36 @@ make_and_measure_repeated_imputations <- function( Data, seeds, probMissing, nPr
   }
 
   # Apply pbmclapply with above function
-  rImputations <- pbmcapply::pbmclapply( seeds, function( seed ) {
+  switch( Sys.info( )[["sysname"]],
+    Windows = {
+      requireNamespace( "foreach" )
+      doParallel::registerDoParallel( nProc )
 
-    performImputation( seed = seed,
-                       Data = Data,
-                       probMissing = probMissing,
-                       ImputationMethods = ImputationMethods,
-                       ImputationRepetitions = ImputationRepetitions,
-                       PValueThresholdForMetrics = PValueThresholdForMetrics,
-                       mnarity = mnarity, lowOnly = lowOnly, mnarshape = mnarshape )
-  }, mc.cores = nProc )
+      i <- integer( )
+      rImputations <- foreach::foreach( i = seq( seeds ) ) %dopar% {
 
+        performImputation( seed = seeds[i],
+                           Data = Data,
+                           probMissing = probMissing,
+                           ImputationMethods = ImputationMethods,
+                           ImputationRepetitions = ImputationRepetitions,
+                           PValueThresholdForMetrics = PValueThresholdForMetrics,
+                           mnarity = mnarity, lowOnly = lowOnly, mnarshape = mnarshape )
+      }
+      doParallel::stopImplicitCluster( )
+    },
+  {
+    rImputations <- pbmcapply::pbmclapply( seeds, function( seed ) {
+
+      performImputation( seed = seed,
+                         Data = Data,
+                         probMissing = probMissing,
+                         ImputationMethods = ImputationMethods,
+                         ImputationRepetitions = ImputationRepetitions,
+                         PValueThresholdForMetrics = PValueThresholdForMetrics,
+                         mnarity = mnarity, lowOnly = lowOnly, mnarshape = mnarshape )
+    }, mc.cores = nProc )
+  }
+  )
   return( rImputations )
 }

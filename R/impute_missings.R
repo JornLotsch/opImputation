@@ -73,7 +73,7 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
 
     bag = {
       set.seed( seed )
-      Impu <- try( caret::preProcess( x, method = "bagImpute" ), TRUE )
+      Impu <- try( suppressWarnings( caret::preProcess( x, method = "bagImpute" ) ), TRUE )
       if ( !inherits( Impu, "try-error" ) ) {
         ImputedData <- predict( Impu, x )
       }
@@ -81,7 +81,7 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
     bag_repeated = {
       iImputedData <- lapply( list.of.seeds, function( s ) {
         set.seed( s )
-        Impu <- try( caret::preProcess( x, method = "bagImpute" ), TRUE )
+        Impu <- try( suppressWarnings( caret::preProcess( x, method = "bagImpute" ) ), TRUE )
         if ( !inherits( Impu, "try-error" ) ) {
           ImputedData <- predict( Impu, x )
         }
@@ -91,7 +91,7 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
     },
     rf_mice = {
       set.seed( seed )
-      Impu <- try( mice::mice( x, method = "rf_mice", print = FALSE ), TRUE )
+      Impu <- try( suppressWarnings( mice::mice( x, method = "rf", print = FALSE ) ), TRUE )
       if ( !inherits( Impu, "try-error" ) ) {
         ImputedData <- mice::complete( Impu )
       }
@@ -99,7 +99,7 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
     rf_mice_repeated = {
       iImputedData <- lapply( list.of.seeds, function( s ) {
         set.seed( s )
-        Impu <- try( mice::mice( x, method = "rf_mice" ), TRUE )
+        Impu <- try( suppressWarnings( mice::mice( x, method = "rf", print = FALSE ) ), TRUE )
         if ( !inherits( Impu, "try-error" ) ) {
           ImputedData <- mice::complete( Impu )
         }
@@ -109,7 +109,7 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
     },
     rf_missForest = {
       set.seed( seed )
-      Impu <- try( missForest::missForest( x ), TRUE )
+      Impu <- try( suppressWarnings( missForest::missForest( x ) ), TRUE )
       if ( !inherits( Impu, "try-error" ) ) {
         ImputedData <- Impu$ximp
       }
@@ -117,7 +117,7 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
     rf_missForest_repeated = {
       iImputedData <- lapply( list.of.seeds, function( s ) {
         set.seed( s )
-        Impu <- try( missForest::missForest( x ), TRUE )
+        Impu <- try( suppressWarnings( missForest::missForest( x ) ), TRUE )
         if ( !inherits( Impu, "try-error" ) ) {
           ImputedData <- Impu$ximp
         }
@@ -127,8 +127,8 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
     },
     miceRanger = {
       set.seed( seed )
-      miceObj <- miceRanger::miceRanger( x, 1, 1, returnModels = TRUE, verbose = FALSE )
-      Impu <- try( miceRanger::impute( x, miceObj ), TRUE )
+      miceObj <- suppressWarnings( miceRanger::miceRanger( x, 1, 1, returnModels = TRUE, verbose = FALSE ) )
+      Impu <- try( suppressWarnings( miceRanger::impute( x, miceObj, verbose = FALSE ) ), TRUE )
       if ( !inherits( Impu, "try-error" ) ) {
         ImputedData <- data.frame( Impu$imputedData[[1]] )
       }
@@ -136,8 +136,8 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
     miceRanger_repeated = {
       iImputedData <- lapply( list.of.seeds, function( s ) {
         set.seed( s )
-        miceObj <- miceRanger::miceRanger( x, 1, 1, returnModels = TRUE, verbose = FALSE )
-        Impu <- try( miceRanger::impute( x, miceObj ), TRUE )
+        miceObj <- suppressWarnings( miceRanger::miceRanger( x, 1, 1, returnModels = TRUE, verbose = FALSE ) )
+        Impu <- try( suppressWarnings( miceRanger::impute( x, miceObj, verbose = FALSE ) ), TRUE )
         if ( !inherits( Impu, "try-error" ) ) {
           ImputedData <- data.frame( Impu$imputedData[[1]] )
         }
@@ -147,7 +147,7 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
     },
     cart = {
       set.seed( seed )
-      Impu <- try( mice::mice( x, method = "cart", print = FALSE ), TRUE )
+      Impu <- try( suppressWarnings( mice::mice( x, method = "cart", print = FALSE ) ), TRUE )
       if ( !inherits( Impu, "try-error" ) ) {
         ImputedData <- mice::complete( Impu )
       }
@@ -155,7 +155,7 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
     cart_repeated = {
       iImputedData <- lapply( list.of.seeds, function( s ) {
         set.seed( s )
-        Impu <- try( mice::mice( x, method = "cart" ), TRUE )
+        Impu <- try( suppressWarnings( mice::mice( x, method = "cart", print = FALSE ) ), TRUE )
         if ( !inherits( Impu, "try-error" ) ) {
           ImputedData <- mice::complete( Impu )
         }
@@ -165,14 +165,14 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
     },
     linear = {
       set.seed( seed )
-      Impu <- try( mice::mice( x, method = "lasso.norm", print = FALSE ), TRUE )
+      Impu <- try( suppressWarnings( mice::mice( x, method = "lasso.norm", print = FALSE ) ), TRUE )
       if ( !inherits( Impu, "try-error" ) ) {
         ImputedData <- mice::complete( Impu )
       }
     },
     pmm = {
       set.seed( seed )
-      Impu <- try( mice::mice( x, method = "pmm" ), TRUE )
+      Impu <- try( suppressWarnings( mice::mice( x, method = "pmm", printFlag = FALSE ) ), TRUE )
       if ( !inherits( Impu, "try-error" ) ) {
         ImputedData <- mice::complete( Impu )
       }
@@ -180,7 +180,7 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
     pmm_repeated = {
       iImputedData <- lapply( list.of.seeds, function( s ) {
         set.seed( s )
-        Impu <- try( mice::mice( x, method = "pmm" ), TRUE )
+        Impu <- try( suppressWarnings( mice::mice( x, method = "pmm", printFlag = FALSE ) ), TRUE )
         if ( !inherits( Impu, "try-error" ) ) {
           ImputedData <- mice::complete( Impu )
         }
@@ -222,14 +222,14 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
     },
     ameliaImp = {
       set.seed( seed )
-      Impu <- try( eval_with_timeout( Amelia::amelia.default( x ), timeout = 30 ), TRUE )
+      Impu <- try( eval_with_timeout( suppressWarnings( Amelia::amelia.default( x ) ), timeout = 30 ), TRUE )
       if ( !inherits( Impu, "try-error" ) ) {
         ImputedData <- Impu$imputations[[1]]
       }
     },
     ameliaImp_repeated = {
       set.seed( seed )
-      Impu <- try( eval_with_timeout( Amelia::amelia.default( x, m = ImputationRepetitions ), timeout = 30 ), TRUE )
+      Impu <- try( eval_with_timeout( suppressWarnings( Amelia::amelia.default( x, m = ImputationRepetitions ) ), timeout = 30 ), TRUE )
       if ( !inherits( Impu, "try-error" ) ) {
         iImputedData <- Impu$imputations
         ImputedData <- tryCatch( median_imputations( iImputedData ), error = function( e ) NULL )
@@ -237,11 +237,11 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
     },
     miImp = {
       set.seed( seed )
-      Impu <- try( mi::mi( x, verbose = FALSE, parallel = FALSE ), TRUE )
+      Impu <- try( suppressWarnings( mi::mi( x, verbose = FALSE, parallel = FALSE ) ), TRUE )
       if ( !inherits( Impu, "try-error" ) ) {
         iImputedData <- mi::complete( Impu )
         iImputedDataI <- lapply( iImputedData, function( y ) y[, names( x )] )
-        ImputedData <- tryCatch( median_imputations( iImputedData ), error = function( e ) NULL )
+        ImputedData <- tryCatch( median_imputations( iImputedDataI ), error = function( e ) NULL )
       }
     },
 

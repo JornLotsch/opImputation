@@ -7,17 +7,38 @@ opImputationImpute <- function( Data,
                                 nIter = 100,
                                 nProc = getOption( "mc.cores", 2L ) ) {
 
-  list.of.seeds <- 1:nIter + seed - 1
+  if ( length( grep( "repeated", ImputationMethod ) ) > 0 ) {
+    ImputationMethod <- gsub( "_repeated", "", ImputationMethod )
+    nIter <- max( nIter, 20 )
+  } else {
+    nIter <- 1
+  }
 
-  iImputedData <- pbmcapply::pbmclapply( list.of.seeds, function( seed ) {
+  if ( nIter > 1 ) {
 
-    imputeMissings( x = Data, method = ImputationMethod, ImputationRepetitions = ImputationRepetitions, seed = seed, x_orig = NULL )
+    list.of.seeds <- 1:nIter + seed - 1
+    switch( Sys.info( )[["sysname"]],
+      Windows = {
+        requireNamespace( "foreach" )
+        doParallel::registerDoParallel( nProc )
 
-  }, mc.cores = nProc )
+        i <- integer( )
+        iImputedData <- foreach::foreach( i = seq( list.of.seeds ) ) %dopar% {
+          imputeMissings( x = Data, method = ImputationMethod, ImputationRepetitions = ImputationRepetitions, seed = seed, x_orig = NULL )
+        }
+        doParallel::stopImplicitCluster( )
+      },
+    {
+      iImputedData <- pbmcapply::pbmclapply( list.of.seeds, function( seed ) {
+        imputeMissings( x = Data, method = ImputationMethod, ImputationRepetitions = ImputationRepetitions, seed = seed, x_orig = NULL )
+      }, mc.cores = nProc )
+    }
+    )
+    ImputedData <- tryCatch( median_imputations( iImputedData ), error = function( e ) NULL )
 
-  ImputedData <- tryCatch( median_imputations( iImputedData ), error = function( e ) NULL )
+  } else {
+    ImputedData <- imputeMissings( x = Data, method = ImputationMethod, ImputationRepetitions = ImputationRepetitions, seed = seed, x_orig = NULL )
+  }
 
   return( ImputedData )
 }
-
-

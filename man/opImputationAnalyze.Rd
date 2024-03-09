@@ -35,7 +35,7 @@ Returns a list of results.
 \item{MethodsResults}{Results of comparative method evaluation.}
 \item{BestMethodPerDataset}{Winning method for each dataset.}
 \item{ABCres}{Results of ABC analysis.}
-\item{Fig_zDeltaDistributions_bestMethods}{Distribution plot of zDelta values for best methods.}
+\item{Fig_zDeltaDistributions_bestMethods}{Distribution plots (pdf, QQ) of zDelta values for best methods.}
 \item{FigABC}{Diagnostic plot of ABC analysis and overall results.}
 }
 \references{
