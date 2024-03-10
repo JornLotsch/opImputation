@@ -61,9 +61,9 @@ create_d_deltas_multivar_univar_PDE_plot <- function( zDeltas,
     cbind.data.frame( y = 1, x = univarzDeltas ),
     cbind.data.frame( y = 2, x = multivarzDeltas )
   )
-  stat.deltas.W <- suppressWarnings( wilcox.test( df.stat.deltas$x ~ df.stat.deltas$y )$p.value )
-  stat.deltas.CDF <- suppressWarnings( twosamples::dts_test( univarzDeltas, multivarzDeltas )["P-Value"] )
-  stat.deltas <- suppressWarnings( fisher_method( p_values = c( stat.deltas.W, stat.deltas.CDF ) ) )
+  stat.deltas.W <- suppressMessages( wilcox.test( df.stat.deltas$x ~ df.stat.deltas$y )$p.value )
+  stat.deltas.CDF <- suppressMessages( twosamples::dts_test( univarzDeltas, multivarzDeltas )["P-Value"] )
+  stat.deltas <- fisher_method( p_values = c( stat.deltas.W, stat.deltas.CDF ) )
 
   # Creating a data frame for statistical tests
   dfStats <- data.frame(

@@ -22,6 +22,7 @@
 #' @importFrom(ggh4x facet_grid2)
 #' @importFrom(ggrepel geom_text_repel)
 #' @importFrom doParallel registerDoParallel stopImplicitCluster
+#' @importFrom(tools pskill)
 #' @export
 opImputationAnalyze <- function(
   Data,
@@ -42,7 +43,7 @@ opImputationAnalyze <- function(
 
   if ( length( ImputationMethods ) < 2 ) {
     stop( paste0( "opImputation: This is a comparative analysis. The number of 'ImputationMethods' must be > 1. Select at least two from: ",
-                  paste(sort(all_imputation_methods), collapse = ", "), " and enter them as a comma separated list. Execution stopped." ) )
+                  paste( sort( all_imputation_methods ), collapse = ", " ), " and enter them as a comma separated list. Execution stopped." ) )
   }
 
   Data <- data.frame( Data )

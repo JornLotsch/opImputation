@@ -1,13 +1,13 @@
 Package: opImputation
 Type: Package
 Title: Optimal Selection of Imputation Methods for Bio-Medical Data
-Version: 0.1
+Version: 0.2
 Description: How to impute if you must: A data science approach to 
         selecting imputation methods for missing values in biomedical numerical tabular data. 
 Depends: R (>= 3.5.0)
 Imports: parallel, Rfit, methods, stats, caret, ABCanalysis, ggplot2, pbmcapply,
         missForest, utils, mice, miceRanger, multiUS, Amelia, mi, reshape2, DataVisualizations,
-        cowplot, twosamples, ggh4x, ggrepel, doParallel, foreach
+        cowplot, twosamples, ggh4x, ggrepel, doParallel, foreach, tools
 LazyData: true
 Suggests: 
     testthat (>= 3.0.0)

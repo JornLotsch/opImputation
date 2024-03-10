@@ -1,4 +1,5 @@
 # Function to insert diagnostic missing values and to perform the imputations
+
 make_and_measure_repeated_imputations <- function( Data, seeds, probMissing, nProc, ImputationMethods, ImputationRepetitions,
                                                    PValueThresholdForMetrics = PValueThresholdForMetrics,
                                                    mnarity = mnarity, lowOnly = lowOnly, mnarshape = mnarshape ) {
@@ -17,7 +18,6 @@ make_and_measure_repeated_imputations <- function( Data, seeds, probMissing, nPr
     } )
   }
 
-  # y = ImputedData[ImputedData$Data == "tinyNoise001 imputed",]
   # Function to calculate metrics for the imputations
   makeMetricsMatrix <- function( OrigData, Missings_Which, ImputedData, Metric, OrigDataMiss = NULL, PValueThresholdForMetrics ) {
     data.frame( do.call(

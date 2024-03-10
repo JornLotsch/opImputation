@@ -40,9 +40,9 @@ Returns a list of results.
 }
 \references{
  Lotsch, J., Ultsch, A. (2024):
- How to impute if you must: A data science method for handling 
- missing values in biomedical numerical tabular data.
- (paper submitted).
+ How to impute if you must: A data science method for selecting the 
+ missing value imputation strategy for cross-sectional biomedical numerical data. 
+ (paper submitted)
 }
 \author{
 Jorn Lotsch

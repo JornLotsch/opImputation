@@ -1,22 +1,20 @@
-# Function to perform impuations with the selected method imputed data
+#' Function to perform imputations with the selected method on imputed data
 #' @export
 opImputationImpute <- function( Data,
                                 ImputationMethod,
                                 ImputationRepetitions = 20,
                                 seed = 100,
-                                nIter = 100,
                                 nProc = getOption( "mc.cores", 2L ) ) {
 
   if ( length( grep( "repeated", ImputationMethod ) ) > 0 ) {
     ImputationMethod <- gsub( "_repeated", "", ImputationMethod )
-    nIter <- max( nIter, 20 )
+    ImputationRepetitions <- max( ImputationRepetitions, 20 )
   } else {
-    nIter <- 1
+    ImputationRepetitions <- 1
   }
 
-  if ( nIter > 1 ) {
-
-    list.of.seeds <- 1:nIter + seed - 1
+  if ( ImputationRepetitions > 1 ) {
+    list.of.seeds <- 1:ImputationRepetitions + seed - 1
     switch( Sys.info( )[["sysname"]],
       Windows = {
         requireNamespace( "foreach" )
@@ -35,7 +33,6 @@ opImputationImpute <- function( Data,
     }
     )
     ImputedData <- tryCatch( median_imputations( iImputedData ), error = function( e ) NULL )
-
   } else {
     ImputedData <- imputeMissings( x = Data, method = ImputationMethod, ImputationRepetitions = ImputationRepetitions, seed = seed, x_orig = NULL )
   }

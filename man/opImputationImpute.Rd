@@ -7,14 +7,13 @@ a method for handling missing values in biomedical numerical tabular data.
 }
 \usage{
 opImputationImpute( Data, ImputationMethod, ImputationRepetitions = 20, 
-seed = 100, nIter = 100, nProc = getOption( "mc.cores", 2L )) 
+seed = 100, nProc = getOption( "mc.cores", 2L )) 
 }
 \arguments{
 \item{Data}{Numerical data in matrix or data frame format.}
 \item{ImputationMethod}{Imputation methods to test (use 'all_imputation_methods').}
 \item{ImputationRepetitions}{Number of repeated imputations.}
 \item{seed}{Predefined seed for result reproducibility.}
-\item{nIter}{Iterations for missing value insertion.}
 \item{nProc}{Number of parallel processes.}
 }
 \value{
@@ -22,9 +21,9 @@ Returns the imputed data frame.
 }
 \references{
  Lotsch, J., Ultsch, A. (2024):
- How to impute if you must: A data science method for handling 
- missing values in biomedical numerical tabular data.
- (paper submitted).
+ How to impute if you must: A data science method for selecting the 
+ missing value imputation strategy for cross-sectional biomedical numerical data. 
+ (paper submitted)
 }
 \author{
 Jorn Lotsch
@@ -32,8 +31,7 @@ Jorn Lotsch
 \examples{
 ## example 1
 TestImputationData <- opImputationImpute(Data = iris[,1:4],
-                         ImputationMethod =  "rf_missForest",
-                         nIter = 5)
+                         ImputationMethod =  "rf_missForest")
 }
 \keyword{opImputation}
 \keyword{data imputation}

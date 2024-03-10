@@ -19,8 +19,8 @@ all_imputation_methods <- c( univariate_imputation_methods,
 )
 
 # Omit unnecessary notes for variables to plot
-utils::globalVariables( c( "ABCx", "ABCy", "Category", "Failed", "Method", "color", "rSum", "value", "variable", "x", "x1", "xloc",
-                           "y", "y1", "BestUnivariate", "Imputation", "Multivariate", "PDE", "label", "Methods" ) )
+utils::globalVariables( c( "Category", "Failed", "Method", "color", "rSum", "value", "variable", "xloc", "x", "y",
+                          "BestUnivariate", "Imputation", "Multivariate", "PDE", "label", "Methods", "poisoned" ) )
 
 # Colors
 myColorszDelta <- c( "#0072B2", "#009E73", "#D55E00", "#F0E442" )

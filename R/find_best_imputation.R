@@ -1,5 +1,6 @@
 # Function to identity the optimal imputation method from the comparative evaluations
 # Function to rank matrices
+
 rank_MEs <-
   function( rankMx ) {
     Mx <- lapply( rankMx, function( y ) apply( y, 2, function( x ) rank( x, na.last = TRUE ) ) )

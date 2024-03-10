@@ -1,4 +1,5 @@
 # Function to plot the ABC analysis results of the ranking of the imputation methods
+
 make_ABC_anaylsis <- function( zABCvalues, HighlightPoisonedMethods = TRUE ) {
 
   # Function to mark the ABC set membership of the items
@@ -63,7 +64,9 @@ make_ABC_anaylsis <- function( zABCvalues, HighlightPoisonedMethods = TRUE ) {
   ABCplot <-
     ggplot( ) +
       geom_bar( data = dfABCcat,
-                aes( x = xloc, y = rSum / max( rSum ), fill = Category ),
+                aes( x = xloc, y = rSum / max( rSum ),
+                     fill = Category,
+                     color = poisoned ),
                 stat = "identity",
                 position = "dodge",
                 alpha = 0.5
@@ -73,8 +76,10 @@ make_ABC_anaylsis <- function( zABCvalues, HighlightPoisonedMethods = TRUE ) {
       theme( axis.text.x = element_text( angle = 90, vjust = 0.5, hjust = 1 ),
              legend.position = c( 0.9, 0.6 ),
              legend.background = element_rect( fill = alpha( "white", 0.5 ) ) ) +
-      scale_fill_manual( values = myColorsABC[1:3] ) +
-      labs( title = "ABC analysis of mean methods' ranks", x = NULL, y = "Fraction of sum of zR values", fill = "Category" )
+    scale_fill_manual( values = myColorsABC ) +
+    scale_color_manual( values = c( "red", NA ), labels = c( "Poisoned method", "True method" ) ) +
+    labs( title = "ABC analysis of mean methods' ranks", x = NULL, y = "Fraction of sum of zR values",
+          fill = "Category" , color = "Method type" )
 
   # Return the plot
   return( ABCplot = ABCplot )

@@ -1,4 +1,5 @@
 # Helper function for data frame creation for bar plot
+
 generate_barplot_df <-
   function( data, BestUniMultivariateMethodPerDataset,
             annotate_methods, overallBestzDelta ) {
