@@ -19,7 +19,6 @@ opImputationImpute <- function( Data,
       Windows = {
         requireNamespace( "foreach" )
         doParallel::registerDoParallel( nProc )
-
         i <- integer( )
         iImputedData <- foreach::foreach( i = seq( list.of.seeds ) ) %dopar% {
           imputeMissings( x = Data, method = ImputationMethod, ImputationRepetitions = ImputationRepetitions, seed = seed, x_orig = NULL )

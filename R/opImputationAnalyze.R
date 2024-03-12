@@ -126,7 +126,7 @@ opImputationAnalyze <- function(
     )
   }
 
-  FigABC <- cowplot::plot_grid(
+  Fig_opImputationAnalyze <- cowplot::plot_grid(
     pABC,
     pzDeltasPlotAvgerage,
     pzDeltasPerVar,
@@ -139,7 +139,7 @@ opImputationAnalyze <- function(
     suppressWarnings( print( suppressWarnings( BestMethodPerDataset ) ) )
     suppressWarnings( print( "Best univariate or multivariate method per dataset" ) )
     suppressWarnings( print( suppressWarnings( BestUniMultivariateMethodPerDataset ) ) )
-    suppressWarnings( print( suppressWarnings( FigABC ) ) )
+    suppressWarnings( print( suppressWarnings( Fig_opImputationAnalyze ) ) )
   }
 
   return(
@@ -148,9 +148,8 @@ opImputationAnalyze <- function(
       zDeltas = zDeltas,
       MethodsResults = MethodsResults,
       BestMethodPerDataset = BestMethodPerDataset,
-      ABCres = pABC,
       Fig_zDeltaDistributions_bestMethods = Fig_zDeltaDistributions_bestMethods,
-      FigABC = FigABC
+      Fig_opImputationAnalyze = Fig_opImputationAnalyze
     )
   )
 }

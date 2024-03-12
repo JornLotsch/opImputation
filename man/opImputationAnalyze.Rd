@@ -34,9 +34,8 @@ Returns a list of results.
 \item{zDeltas}{Values of zDelta.}
 \item{MethodsResults}{Results of comparative method evaluation.}
 \item{BestMethodPerDataset}{Winning method for each dataset.}
-\item{ABCres}{Results of ABC analysis.}
 \item{Fig_zDeltaDistributions_bestMethods}{Distribution plots (pdf, QQ) of zDelta values for best methods.}
-\item{FigABC}{Diagnostic plot of ABC analysis and overall results.}
+\item{Fig_opImputationAnalyze}{Diagnostic plot of overall results.}
 }
 \references{
  Lotsch, J., Ultsch, A. (2024):
