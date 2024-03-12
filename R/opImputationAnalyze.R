@@ -83,13 +83,13 @@ opImputationAnalyze <- function(
   zDeltas <- retrieve_z_deltas( RepeatedSampleImputations = RepeatedSampleImputations )
 
   pzDeltasPlotAvgerage <- create_barplot_mean_z_deltas(
-    meanImputationzDeltaInsertedMissings = zDeltas$meanImputationzDeltaInsertedMissings,
+    medianImputationzDeltaInsertedMissings = zDeltas$medianImputationzDeltaInsertedMissings,
     BestUniMultivariateMethodPerDataset = BestUniMultivariateMethodPerDataset,
     overallBestzDelta = overallBestzDelta
   )
 
   pzDeltasPerVar <- create_z_deltas_per_var_plot(
-    meanImputationzDeltaInsertedMissings = zDeltas$meanImputationzDeltaInsertedMissings
+    medianImputationzDeltaInsertedMissings = zDeltas$medianImputationzDeltaInsertedMissings
   )
 
   pABC <- make_ABC_anaylsis(

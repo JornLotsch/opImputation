@@ -129,10 +129,10 @@ create_z_delta_PDE_plot <- function( dfParetoAll ) {
 # Main functions
 # Function to create a bar plot of mean zDelta values from iterations
 create_barplot_mean_z_deltas <-
-  function( meanImputationzDeltaInsertedMissings, BestUniMultivariateMethodPerDataset, overallBestzDelta ) {
-    rowmeanImputationzDeltaInsertedMissings <- apply( meanImputationzDeltaInsertedMissings, 1, function( x ) median( x, na.rm = TRUE ) )
+  function( medianImputationzDeltaInsertedMissings, BestUniMultivariateMethodPerDataset, overallBestzDelta ) {
+    rowmedianImputationzDeltaInsertedMissings <- apply( medianImputationzDeltaInsertedMissings, 1, function( x ) median( x, na.rm = TRUE ) )
 
-    BarplotMeanzDeltas <- create_barplot( data = rowmeanImputationzDeltaInsertedMissings,
+    BarplotMeanzDeltas <- create_barplot( data = rowmedianImputationzDeltaInsertedMissings,
                                           BestUniMultivariateMethodPerDataset,
                                           title = "1 - zDelta",
                                           ylab = " 1 - zDelta",
@@ -144,14 +144,14 @@ create_barplot_mean_z_deltas <-
   }
 
 # Function to create a sina plot of raw zDelta values
-create_z_deltas_per_var_plot <- function( meanImputationzDeltaInsertedMissings ) {
-  rowmeanImputationzDeltaInsertedMissings <- apply( meanImputationzDeltaInsertedMissings, 1, function( x ) median( x, na.rm = TRUE ) )
+create_z_deltas_per_var_plot <- function( medianImputationzDeltaInsertedMissings ) {
+  rowmedianImputationzDeltaInsertedMissings <- apply( medianImputationzDeltaInsertedMissings, 1, function( x ) median( x, na.rm = TRUE ) )
 
-  df <- data.frame( suppressWarnings( reshape2::melt( rowmeanImputationzDeltaInsertedMissings ) ) )
+  df <- data.frame( suppressWarnings( reshape2::melt( rowmedianImputationzDeltaInsertedMissings ) ) )
   df$Method <- gsub( " imputed|Imp", "", rownames( df ) )
   MethodsOrder <- df$Method[order( df$value )]
 
-  zDeltaP <- data.frame( meanImputationzDeltaInsertedMissings )
+  zDeltaP <- data.frame( medianImputationzDeltaInsertedMissings )
   zDeltaP$Method <- gsub( ' imputed|Imp', '', rownames( zDeltaP ) )
   zDeltaP$Method <- factor( zDeltaP$Method, levels = MethodsOrder )
 
