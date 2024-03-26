@@ -26,12 +26,15 @@ generate_barplot_df <-
     if ( overallBestzDelta == FALSE ) {
       minBest <- df$value[df$Method == BestUniMultivariateMethodPerDataset]
     } else {
-      minBest <- min( df$value[df$Method %in% c( univariate_imputation_methods, multivariate_imputation_methods )], na.rm = TRUE )
+      minBest <- min( df$value[df$Method %in%
+                                 c( univariate_imputation_methods, multivariate_imputation_methods )], na.rm = TRUE )
       annotate_methods[3] <- "Best non-poisoned"
     }
     dfAnnotate <- data.frame( Methods = annotate_methods,
                               y = c( minmaxPoisoned, minmaxUnivariate, minBest ),
-                              x = c( 3, 3, ifelse( length( df$Method %in% c( univariate_imputation_methods, multivariate_imputation_methods ) ) > 7, 7, 2 ) ),
+                              x = c( 3, 3, ifelse( length( df$Method %in%
+                                                             c( univariate_imputation_methods,
+                                                                multivariate_imputation_methods ) ) > 7, 7, 2 ) ),
                               color = c( "salmon", "orange", "darkgreen" ) )
 
     return( list(
@@ -55,13 +58,17 @@ generate_PDE_plot_df <- function( multivarzDeltas, univarzDeltas, poisonedzDelta
 
   # Calculate PDE xy
   ParetoDistributions <- lapply( unique( df4plot_long$Category ), function( Category ) {
-    Pareto <- DataVisualizations::ParetoDensityEstimation( Data = df4plot_long$zDelta[df4plot_long$Category == Category], PlotIt = FALSE )
-    dfPareto <- data.frame( Category = Category, x = Pareto$kernels, PDE = Pareto$paretoDensity )
+    Pareto <-
+      DataVisualizations::ParetoDensityEstimation( Data = df4plot_long$zDelta[df4plot_long$Category == Category],
+                                                   PlotIt = FALSE )
+    dfPareto <-
+      data.frame( Category = Category, x = Pareto$kernels, PDE = Pareto$paretoDensity )
     return( dfPareto )
   } )
 
   dfParetoAll <- do.call( rbind.data.frame, ParetoDistributions )
-  dfParetoAll$Category <- factor( dfParetoAll$Category, levels = c( "Multivariate", "Calibrating", "Poisoned", "Univariate" ) )
+  dfParetoAll$Category <-
+    factor( dfParetoAll$Category, levels = c( "Multivariate", "Calibrating", "Poisoned", "Univariate" ) )
 
   return( dfParetoAll )
 }
@@ -98,7 +105,8 @@ create_barplot <- function( data, BestUniMultivariateMethodPerDataset,
       geom_hline( yintercept = dfAnnotate$y[1], color = "salmon", linetype = "dashed" ) +
       geom_hline( yintercept = dfAnnotate$y[2], color = "orange", linetype = "dotdash" ) +
       geom_hline( yintercept = dfAnnotate$y[3], color = "darkgreen" ) +
-      ggrepel::geom_text_repel( data = dfAnnotate, aes( label = Methods, x = x, y = y, color = color ), inherit.aes = FALSE ) +
+      ggrepel::geom_text_repel( data = dfAnnotate,
+                                aes( label = Methods, x = x, y = y, color = color ), inherit.aes = FALSE ) +
       scale_color_manual( values = myColorszDelta )
 
 
@@ -113,7 +121,8 @@ create_z_delta_PDE_plot <- function( dfParetoAll ) {
   names( myColorszDelta ) <- levels( dfParetoAll$Category )
   PDERawzDeltas <-
     ggplot( ) +
-      geom_line( data = dfParetoAll[dfParetoAll$Category %in% c( "Multivariate", "Univariate" ),], aes( x = x, y = PDE, color = Category ) ) +
+      geom_line( data = dfParetoAll[dfParetoAll$Category %in%
+                                      c( "Multivariate", "Univariate" ),], aes( x = x, y = PDE, color = Category ) ) +
       theme_light( ) +
       theme(
         legend.position = "bottom",
@@ -130,7 +139,8 @@ create_z_delta_PDE_plot <- function( dfParetoAll ) {
 # Function to create a bar plot of mean zDelta values from iterations
 create_barplot_mean_z_deltas <-
   function( medianImputationzDeltaInsertedMissings, BestUniMultivariateMethodPerDataset, overallBestzDelta ) {
-    rowmedianImputationzDeltaInsertedMissings <- apply( medianImputationzDeltaInsertedMissings, 1, function( x ) median( x, na.rm = TRUE ) )
+    rowmedianImputationzDeltaInsertedMissings <-
+      apply( medianImputationzDeltaInsertedMissings, 1, function( x ) median( x, na.rm = TRUE ) )
 
     BarplotMeanzDeltas <- create_barplot( data = rowmedianImputationzDeltaInsertedMissings,
                                           BestUniMultivariateMethodPerDataset,
@@ -145,7 +155,8 @@ create_barplot_mean_z_deltas <-
 
 # Function to create a sina plot of raw zDelta values
 create_z_deltas_per_var_plot <- function( medianImputationzDeltaInsertedMissings ) {
-  rowmedianImputationzDeltaInsertedMissings <- apply( medianImputationzDeltaInsertedMissings, 1, function( x ) median( x, na.rm = TRUE ) )
+  rowmedianImputationzDeltaInsertedMissings <-
+    apply( medianImputationzDeltaInsertedMissings, 1, function( x ) median( x, na.rm = TRUE ) )
 
   df <- data.frame( suppressWarnings( reshape2::melt( rowmedianImputationzDeltaInsertedMissings ) ) )
   df$Method <- gsub( " imputed|Imp", "", rownames( df ) )
@@ -155,8 +166,10 @@ create_z_deltas_per_var_plot <- function( medianImputationzDeltaInsertedMissings
   zDeltaP$Method <- gsub( ' imputed|Imp', '', rownames( zDeltaP ) )
   zDeltaP$Method <- factor( zDeltaP$Method, levels = MethodsOrder )
 
-  zDeltaP$calibratingMtd <- ifelse( zDeltaP$Method %in% calibrating_imputation_methods, "Calibrating methods", "Methods" )
-  zDeltaP$calibratingMtd <- factor( zDeltaP$calibratingMtd, levels = c( "Calibrating methods", "Methods" ) )
+  zDeltaP$calibratingMtd <-
+    ifelse( zDeltaP$Method %in% calibrating_imputation_methods, "Calibrating methods", "Methods" )
+  zDeltaP$calibratingMtd <-
+    factor( zDeltaP$calibratingMtd, levels = c( "Calibrating methods", "Methods" ) )
 
   zDelta_long <- suppressWarnings( reshape2::melt( zDeltaP ) )
   zDelta_long$variable <- gsub( "zDelta_", "", zDelta_long$variable )

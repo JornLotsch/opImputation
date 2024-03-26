@@ -42,8 +42,10 @@ opImputationAnalyze <- function(
 ) {
 
   if ( length( ImputationMethods ) < 2 ) {
-    stop( paste0( "opImputation: This is a comparative analysis. The number of 'ImputationMethods' must be > 1. Select at least two from: ",
-                  paste( sort( all_imputation_methods ), collapse = ", " ), " and enter them as a comma separated list. Execution stopped." ) )
+    stop( paste0( "opImputation: This is a comparative analysis.
+    The number of 'ImputationMethods' must be > 1. Select at least two from: ",
+                  paste( sort( all_imputation_methods ), collapse = ", " ),
+                  " and enter them as a comma separated list. Execution stopped." ) )
   }
 
   Data <- data.frame( Data )
@@ -74,11 +76,16 @@ opImputationAnalyze <- function(
     nIter = nIter
   )
 
-  BestMethodPerDataset <- gsub( " imputed|Imp", "", MethodsResults$BestPerDatasetRanksums_insertedMissings )
-  BestUnivariateMethodPerDataset <- gsub( " imputed|Imp", "", MethodsResults$BestUnivariatePerDatasetRanksums_insertedMissings )
-  BestMultivariateMethodPerDataset <- gsub( " imputed|Imp", "", MethodsResults$BestMultivariatePerDatasetRanksums_insertedMissings )
-  BestUniMultivariateMethodPerDataset <- gsub( " imputed|Imp", "", MethodsResults$BestUniMultivariatePerDatasetRanksums_insertedMissings )
-  BestPoisonedMethodPerDataset <- gsub( " imputed|Imp", "", MethodsResults$BestPoisonedPerDatasetRanksums_insertedMissings )
+  BestMethodPerDataset <- gsub( " imputed|Imp", "",
+                                MethodsResults$BestPerDatasetRanksums_insertedMissings )
+  BestUnivariateMethodPerDataset <- gsub( " imputed|Imp", "",
+                                          MethodsResults$BestUnivariatePerDatasetRanksums_insertedMissings )
+  BestMultivariateMethodPerDataset <- gsub( " imputed|Imp", "",
+                                            MethodsResults$BestMultivariatePerDatasetRanksums_insertedMissings )
+  BestUniMultivariateMethodPerDataset <- gsub( " imputed|Imp", "",
+                                               MethodsResults$BestUniMultivariatePerDatasetRanksums_insertedMissings )
+  BestPoisonedMethodPerDataset <- gsub( " imputed|Imp", "",
+                                        MethodsResults$BestPoisonedPerDatasetRanksums_insertedMissings )
 
   zDeltas <- retrieve_z_deltas( RepeatedSampleImputations = RepeatedSampleImputations )
 

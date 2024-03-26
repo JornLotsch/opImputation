@@ -21,19 +21,22 @@ opImputationImpute <- function( Data,
         doParallel::registerDoParallel( nProc )
         i <- integer( )
         iImputedData <- foreach::foreach( i = seq( list.of.seeds ) ) %dopar% {
-          imputeMissings( x = Data, method = ImputationMethod, ImputationRepetitions = ImputationRepetitions, seed = seed, x_orig = NULL )
+          imputeMissings( x = Data, method = ImputationMethod, ImputationRepetitions = ImputationRepetitions,
+                          seed = seed, x_orig = NULL )
         }
         doParallel::stopImplicitCluster( )
       },
     {
       iImputedData <- pbmcapply::pbmclapply( list.of.seeds, function( seed ) {
-        imputeMissings( x = Data, method = ImputationMethod, ImputationRepetitions = ImputationRepetitions, seed = seed, x_orig = NULL )
+        imputeMissings( x = Data, method = ImputationMethod, ImputationRepetitions = ImputationRepetitions,
+                        seed = seed, x_orig = NULL )
       }, mc.cores = nProc )
     }
     )
     ImputedData <- tryCatch( median_imputations( iImputedData ), error = function( e ) NULL )
   } else {
-    ImputedData <- imputeMissings( x = Data, method = ImputationMethod, ImputationRepetitions = ImputationRepetitions, seed = seed, x_orig = NULL )
+    ImputedData <- imputeMissings( x = Data, method = ImputationMethod, ImputationRepetitions = ImputationRepetitions,
+                                   seed = seed, x_orig = NULL )
   }
 
   return( ImputedData )

@@ -8,7 +8,9 @@ make_and_measure_repeated_imputations <- function( Data, seeds, probMissing, nPr
     lapply( ImputationMethods, function( method ) {
       dfXmatriximputed <- cbind.data.frame( Data = paste0( method, " imputed" ), makeBadImputations( dfMtx ) )
       dfXmatriximputed_list <- data.frame( imputeMissings( x = dfMtx, method = method,
-                                                           ImputationRepetitions = ImputationRepetitions, seed = seed, x_orig = dfMtxorig ) )
+                                                           ImputationRepetitions = ImputationRepetitions,
+                                                           seed = seed,
+                                                           x_orig = dfMtxorig ) )
 
       if ( identical( dim( dfXmatriximputed_list ), dim( dfMtx ) ) ) {
         dfXmatriximputed <- cbind.data.frame( Data = paste0( method, " imputed" ), dfXmatriximputed_list )
@@ -19,7 +21,8 @@ make_and_measure_repeated_imputations <- function( Data, seeds, probMissing, nPr
   }
 
   # Function to calculate metrics for the imputations
-  makeMetricsMatrix <- function( OrigData, Missings_Which, ImputedData, Metric, OrigDataMiss = NULL, PValueThresholdForMetrics ) {
+  makeMetricsMatrix <- function( OrigData, Missings_Which, ImputedData, Metric, OrigDataMiss = NULL,
+                                 PValueThresholdForMetrics ) {
     data.frame( do.call(
       cbind,
       lapply( seq_along( Missings_Which ), function( i ) {
@@ -40,8 +43,8 @@ make_and_measure_repeated_imputations <- function( Data, seeds, probMissing, nPr
 
   # Main
   # Define a function to perform imputation
-  performImputation <- function( seed, Data, probMissing, ImputationMethods, ImputationRepetitions, PValueThresholdForMetrics,
-                                 mnarity, lowOnly, mnarshape ) {
+  performImputation <- function( seed, Data, probMissing, ImputationMethods, ImputationRepetitions,
+                                 PValueThresholdForMetrics, mnarity, lowOnly, mnarshape ) {
     dfXmatrix <- Data
     dfXmatrixInitialMissings_Which <- lapply( seq_along( Data ), function( i ) which( is.na( Data[, i] ) ) )
     dfXmatrixInsertedMissings_WhichAndData <-
@@ -49,17 +52,20 @@ make_and_measure_repeated_imputations <- function( Data, seeds, probMissing, nPr
     iNA <- 1
 
     repeat {
-      MaxNAs <- max( apply( dfXmatrixInsertedMissings_WhichAndData$missData, 1, function( x ) sum( is.na( x ) ) ) )
+      MaxNAs <- max( apply( dfXmatrixInsertedMissings_WhichAndData$missData, 1,
+                            function( x ) sum( is.na( x ) ) ) )
       if ( MaxNAs < ncol( dfXmatrixInsertedMissings_WhichAndData$missData ) ) break
       dfXmatrixInsertedMissings_WhichAndData <-
-        create_missings( x = dfXmatrix, Prob = probMissing, seed = seed + 1000000 * iNA, mnarity = mnarity, lowOnly = lowOnly, mnarshape = mnarshape )
+        create_missings( x = dfXmatrix, Prob = probMissing, seed = seed + 1000000 * iNA,
+                         mnarity = mnarity, lowOnly = lowOnly, mnarshape = mnarshape )
       iNA <- iNA + 1
     }
 
     dfXmatrixInsertedMissings <- dfXmatrixInsertedMissings_WhichAndData$missData
     dfXmatrixInsertedMissings_Which <-
       lapply( seq_along( dfXmatrixInsertedMissings_WhichAndData$toDelete ),
-              function( i ) setdiff( dfXmatrixInsertedMissings_WhichAndData$toDelete[[i]], dfXmatrixInitialMissings_Which[[i]] ) )
+              function( i ) setdiff( dfXmatrixInsertedMissings_WhichAndData$toDelete[[i]],
+                                     dfXmatrixInitialMissings_Which[[i]] ) )
 
     # Impute data set
     ImputedDataAll <- imputeData(
@@ -81,22 +87,30 @@ make_and_measure_repeated_imputations <- function( Data, seeds, probMissing, nPr
 
     # Calculate metrics
     ImputationRMSEInsertedMissings <- makeMetricsMatrix(
-      OrigData = dfXmatrix, Missings_Which = dfXmatrixInsertedMissings_Which, ImputedData = dfImputedDataAll, Metric = "RMSEImputedUnivar", PValueThresholdForMetrics = PValueThresholdForMetrics
+      OrigData = dfXmatrix, Missings_Which = dfXmatrixInsertedMissings_Which,
+      ImputedData = dfImputedDataAll,
+      Metric = "RMSEImputedUnivar", PValueThresholdForMetrics = PValueThresholdForMetrics
     )
     names( ImputationRMSEInsertedMissings ) <- paste0( "RMSE_", names( dfXmatrix ) )
 
     ImputationMEInsertedMissings <- makeMetricsMatrix(
-      OrigData = dfXmatrix, Missings_Which = dfXmatrixInsertedMissings_Which, ImputedData = dfImputedDataAll, Metric = "MEImputedUnivar", PValueThresholdForMetrics = PValueThresholdForMetrics
+      OrigData = dfXmatrix, Missings_Which = dfXmatrixInsertedMissings_Which,
+      ImputedData = dfImputedDataAll,
+      Metric = "MEImputedUnivar", PValueThresholdForMetrics = PValueThresholdForMetrics
     )
     names( ImputationMEInsertedMissings ) <- paste0( "ME_", names( dfXmatrix ) )
 
     ImputationrBiasInsertedMissings <- makeMetricsMatrix(
-      OrigData = dfXmatrix, Missings_Which = dfXmatrixInsertedMissings_Which, ImputedData = dfImputedDataAll, Metric = "rBiasImputedUnivar", PValueThresholdForMetrics = PValueThresholdForMetrics
+      OrigData = dfXmatrix, Missings_Which = dfXmatrixInsertedMissings_Which,
+      ImputedData = dfImputedDataAll,
+      Metric = "rBiasImputedUnivar", PValueThresholdForMetrics = PValueThresholdForMetrics
     )
     names( ImputationrBiasInsertedMissings ) <- paste0( "rBias_", names( dfXmatrix ) )
 
     ImputationzDeltaInsertedMissings <- makeMetricsMatrix(
-      OrigData = dfXmatrix, Missings_Which = dfXmatrixInsertedMissings_Which, ImputedData = dfImputedDataAll, Metric = "zDelta", PValueThresholdForMetrics = PValueThresholdForMetrics,
+      OrigData = dfXmatrix, Missings_Which = dfXmatrixInsertedMissings_Which,
+      ImputedData = dfImputedDataAll,
+      Metric = "zDelta", PValueThresholdForMetrics = PValueThresholdForMetrics,
       OrigDataMiss = dfXmatrixInsertedMissings
     )
     names( ImputationzDeltaInsertedMissings ) <- paste0( "zDelta_", names( dfXmatrix ) )

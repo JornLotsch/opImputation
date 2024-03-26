@@ -229,7 +229,8 @@ imputeMissings <- function( x, method = "rf_missForest", ImputationRepetitions =
     },
     ameliaImp_repeated = {
       set.seed( seed )
-      Impu <- try( eval_with_timeout( suppressWarnings( Amelia::amelia.default( x, m = ImputationRepetitions ) ), timeout = 30 ), TRUE )
+      Impu <- try( eval_with_timeout( suppressWarnings( Amelia::amelia.default( x, m = ImputationRepetitions ) ),
+                                      timeout = 30 ), TRUE )
       if ( !inherits( Impu, "try-error" ) ) {
         iImputedData <- Impu$imputations
         ImputedData <- tryCatch( median_imputations( iImputedData ), error = function( e ) NULL )

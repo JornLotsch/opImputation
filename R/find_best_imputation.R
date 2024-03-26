@@ -45,22 +45,27 @@ calculate_combined_metrics <-
     ranksumsErrorsMissings <- lapply( rankErrorsMissings, function( x ) apply( x, 1, median ) )
     grandMeanrankErrorsMissings <- median_imputations( rankErrorsMissings )
 
-    all.matrix <- data.frame( array( unlist( ranksumsErrorsMissings ), dim = c( length( ranksumsErrorsMissings[[1]] ), length( ranksumsErrorsMissings ) ) ) )
+    all.matrix <- data.frame( array( unlist( ranksumsErrorsMissings ),
+                                     dim = c( length( ranksumsErrorsMissings[[1]] ), length( ranksumsErrorsMissings ) ) ) )
     rownames( all.matrix ) <- names( ranksumsErrorsMissings[[1]] )
     PerDatasetRanksums_Missings <- apply( all.matrix, c( 1 ), function( x ) median( x, na.rm = TRUE ) )
     BestPerDatasetRanksums_Missings <- names( which.min( PerDatasetRanksums_Missings ) )
     BestUnivariatePerDatasetRanksums_Missings <-
       names( which.min( PerDatasetRanksums_Missings[gsub( " imputed", "",
-                                                          names( PerDatasetRanksums_Missings ) ) %in% univariate_imputation_methods] ) )
+                                                          names( PerDatasetRanksums_Missings ) ) %in%
+                                                      univariate_imputation_methods] ) )
     BestMultivariatePerDatasetRanksums_Missings <-
       names( which.min( PerDatasetRanksums_Missings[gsub( " imputed", "",
-                                                          names( PerDatasetRanksums_Missings ) ) %in% multivariate_imputation_methods] ) )
+                                                          names( PerDatasetRanksums_Missings ) ) %in%
+                                                      multivariate_imputation_methods] ) )
     BestUniMultivariatePerDatasetRanksums_Missings <-
       names( which.min( PerDatasetRanksums_Missings[gsub( " imputed", "",
-                                                          names( PerDatasetRanksums_Missings ) ) %in% c( univariate_imputation_methods, multivariate_imputation_methods )] ) )
+                                                          names( PerDatasetRanksums_Missings ) ) %in%
+                                                      c( univariate_imputation_methods, multivariate_imputation_methods )] ) )
     BestPoisonedPerDatasetRanksums_Missings <-
       names( which.min( PerDatasetRanksums_Missings[gsub( " imputed", "",
-                                                          names( PerDatasetRanksums_Missings ) ) %in% poisoned_imputation_methods] ) )
+                                                          names( PerDatasetRanksums_Missings ) ) %in%
+                                                      poisoned_imputation_methods] ) )
 
 
     zABCvalues <- calculate_zABC_values( meanRanks = PerDatasetRanksums_Missings,
