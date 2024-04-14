@@ -2,20 +2,20 @@
 \alias{opImputationAnalyze}
 \title{How to Impute if you must}
 \description{
-The package provides the necessary functions for how to impute if you must: 
+The package provides the necessary functions for how to impute if you must:
 a method for handling missing values in biomedical numerical tabular data.
 }
 \usage{
 opImputationAnalyze( Data, ImputationMethods =  all_imputation_methods,
-ImputationRepetitions = 20, seed = 100, nIter = 20, nProc = getOption( "mc.cores", 2L ),
+ImputationRepetitions = 20, Seed, nIter = 20, nProc = getOption( "mc.cores", 2L ),
 probMissing = 0.1, PValueThresholdForMetrics = 0.1, pfctMtdsInABC = FALSE,
-mnarity = 0, lowOnly = FALSE, mnarshape = 1, PlotIt = TRUE, overallBestzDelta = FALSE ) 
+mnarity = 0, lowOnly = FALSE, mnarshape = 1, PlotIt = TRUE, overallBestzDelta = FALSE )
 }
 \arguments{
 \item{Data}{Numeric data represented as a matrix or data frame.}
 \item{ImputationMethods}{Imputation methods to be tested, listed using the 'all_imputation_methods' command.}
 \item{ImputationRepetitions}{Number of iterations for repeated imputations.}
-\item{seed}{Predefined seed to control the randomness of results.}
+\item{Seed}{Predefined seed to control the randomness of results.}
 \item{nIter}{Number of iterations for missing value insertion.}
 \item{nProc}{Number of parallel processes to be utilized.}
 \item{probMissing}{Probability of diagnostic missing values to be inserted in each variable.}
@@ -25,7 +25,7 @@ mnarity = 0, lowOnly = FALSE, mnarshape = 1, PlotIt = TRUE, overallBestzDelta = 
 \item{lowOnly}{If NAR, whether only low values should be oversampled.}
 \item{mnarshape}{An additional parameter emphasizing the degree of not-at-randomness (probability NAR)^mnarshape).}
 \item{PlotIt}{Whether to automatically display the main results as two plots.}
-\item{overallBestzDelta}{Whether to plot the results of the best selected method 
+\item{overallBestzDelta}{Whether to plot the results of the best selected method
 compared to the measurement methods or the method with the smallest final deviations from the original missing values.}
 }
 \value{
@@ -39,8 +39,8 @@ Returns a list of results.
 }
 \references{
  Lotsch, J., Ultsch, A. (2024):
- How to impute if you must: A data science method for selecting the 
- missing value imputation strategy for cross-sectional biomedical numerical data. 
+ How to impute if you must: A data science method for selecting the
+ missing value imputation strategy for cross-sectional biomedical numerical data.
  (paper submitted)
 }
 \author{

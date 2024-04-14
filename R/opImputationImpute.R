@@ -3,7 +3,7 @@
 opImputationImpute <- function(Data,
                                ImputationMethod,
                                ImputationRepetitions = 20,
-                               seed = 100,
+                               Seed,
                                nProc = getOption("mc.cores", 2L)) {
 
   # Check if the method is a repeated imputation method
@@ -12,6 +12,13 @@ opImputationImpute <- function(Data,
     ImputationRepetitions <- max(ImputationRepetitions, 20)
   } else {
     ImputationRepetitions <- 1
+  }
+
+  # Set the seed if provided, otherwise use the current seed
+  if (missing(Seed)) {
+    seed <- as.integer(get_seed()[1])
+  } else {
+    seed <- Seed
   }
 
   # Perform the imputations

@@ -28,7 +28,7 @@ opImputationAnalyze <- function(
     Data,
     ImputationMethods = all_imputation_methods,
     ImputationRepetitions = 20,
-    seed = 100,
+    Seed,
     nIter = 20,
     nProc = getOption("mc.cores", 2L),
     probMissing = 0.1,
@@ -51,6 +51,13 @@ opImputationAnalyze <- function(
   Data <- data.frame(Data)
   if (!is.numeric(as.matrix(na.omit(Data)))) {
     stop("opImputation: Only numeric data allowed. Execution stopped.")
+  }
+
+  # Set the seed if provided, otherwise use the current seed
+  if (missing(Seed)) {
+    seed <- as.integer(get_seed()[1])
+  } else {
+    seed <- Seed
   }
 
   # Define the list of seeds
