@@ -1,55 +1,64 @@
 # Collection of implemented imputation methods
 # Helper functions
 
-imputeMedian <- function( x ) {
-  x <- as.numeric( as.character( x ) )
-  x[is.na( x )] <- median( x, na.rm = TRUE )
-  return( x )
+# Function to impute missing values with median
+imputeMedian <- function(x) {
+  x <- as.numeric(as.character(x))
+  x[is.na(x)] <- stats::median(x, na.rm = TRUE)
+  return(x)
 }
 
-imputeMean <- function( x ) {
-  x <- as.numeric( as.character( x ) )
-  x[is.na( x )] <- mean( x, na.rm = TRUE )
-  return( x )
+# Function to impute missing values with mean
+imputeMean <- function(x) {
+  x <- as.numeric(as.character(x))
+  x[is.na(x)] <- mean(x, na.rm = TRUE)
+  return(x)
 }
 
-getMode <- function( v ) {
-  v <- na.omit( v )
-  uniqv <- unique( v )
-  mode <- uniqv[which.max( tabulate( match( v, uniqv ) ) )]
-  return( mode )
+# Function to get the mode of a vector
+getMode <- function(v) {
+  v <- stats::na.omit(v)
+  uniqv <- unique(v)
+  mode <- uniqv[which.max(tabulate(match(v, uniqv)))]
+  return(mode)
 }
 
-imputeMode <- function( x ) {
-  x <- as.numeric( as.character( x ) )
-  x[is.na( x )] <- getMode( x )
-  return( x )
+# Function to impute missing values with mode
+imputeMode <- function(x) {
+  x <- as.numeric(as.character(x))
+  x[is.na(x)] <- getMode(x)
+  return(x)
 }
 
-imputeRandom <- function( x ) {
-  x <- as.numeric( as.character( x ) )
-  x[is.na( x )] <- sample( na.omit( x ), replace = TRUE )
-  return( x )
+# Function to impute missing values with random samples
+imputeRandom <- function(x) {
+  x <- as.numeric(as.character(x))
+  x[is.na(x)] <- sample(stats::na.omit(x), size = sum(is.na(x)), replace = TRUE)
+  return(x)
 }
 
-makeBadImputations <- function( x ) {
-  x[!is.na( x )] <- NA
-  return( data.frame( x ) )
+# Function to create bad imputations (all missing)
+makeBadImputations <- function(x) {
+  x[!is.na(x)] <- NA
+  return(data.frame(x))
 }
 
-medianNotZero <- function( x ) {
-  med <- median( abs( x ), na.rm = TRUE )
-  m <- ifelse( med != 0, med, 1 )
-  return( m )
+# Function to calculate the median of the absolute values, with a minimum of 1
+medianNotZero <- function(x) {
+  med <- stats::median(abs(x), na.rm = TRUE)
+  m <- ifelse(med != 0, med, 1)
+  return(m)
 }
 
-median_imputations <- function( x ) {
-  all.matrix <- array( unlist( x ), dim = c( dim( x[[1]] )[1], dim( x[[1]] )[2], length( x ) ) )
-  avg <- data.frame( apply( all.matrix, c( 1, 2 ), function( x ) median( x, na.rm = TRUE ) ) )
-  names( avg ) <- colnames( x[[1]] )
-  rownames( avg ) <- rownames( x[[1]] )
-  return( avg )
+# Function to calculate the median of imputations across multiple datasets
+median_imputations <- function(x) {
+  all.matrix <- array(unlist(x), dim = c(dim(x[[1]])[1], dim(x[[1]])[2], length(x)))
+  avg <- data.frame(apply(all.matrix, c(1, 2), function(x) stats::median(x, na.rm = TRUE)))
+  names(avg) <- colnames(x[[1]])
+  rownames(avg) <- rownames(x[[1]])
+  return(avg)
 }
+
 
 # Main imputation method selection
 

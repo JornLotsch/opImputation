@@ -25,38 +25,38 @@
 #' @importFrom(tools pskill)
 #' @export
 opImputationAnalyze <- function(
-  Data,
-  ImputationMethods = all_imputation_methods,
-  ImputationRepetitions = 20,
-  seed = 100,
-  nIter = 20,
-  nProc = getOption( "mc.cores", 2L ),
-  probMissing = 0.1,
-  PValueThresholdForMetrics = 0.1,
-  pfctMtdsInABC = FALSE,
-  mnarity = 0,
-  lowOnly = FALSE,
-  mnarshape = 1,
-  PlotIt = TRUE,
-  overallBestzDelta = FALSE
-) {
+    Data,
+    ImputationMethods = all_imputation_methods,
+    ImputationRepetitions = 20,
+    seed = 100,
+    nIter = 20,
+    nProc = getOption("mc.cores", 2L),
+    probMissing = 0.1,
+    PValueThresholdForMetrics = 0.1,
+    pfctMtdsInABC = FALSE,
+    mnarity = 0,
+    lowOnly = FALSE,
+    mnarshape = 1,
+    PlotIt = TRUE,
+    overallBestzDelta = FALSE) {
 
-  if ( length( ImputationMethods ) < 2 ) {
-    stop( paste0( "opImputation: This is a comparative analysis.
-    The number of 'ImputationMethods' must be > 1. Select at least two from: ",
-                  paste( sort( all_imputation_methods ), collapse = ", " ),
-                  " and enter them as a comma separated list. Execution stopped." ) )
+  # Check if at least two imputation methods are provided
+  if (length(ImputationMethods) < 2) {
+    stop(paste0("opImputation: This is a comparative analysis. The number of 'ImputationMethods' must be > 1. Select at least two from: ",
+                paste(sort(all_imputation_methods), collapse = ", "),
+                " and enter them as a comma separated list. Execution stopped."))
   }
 
-  Data <- data.frame( Data )
-
-  if ( !is.numeric( as.matrix( na.omit( Data ) ) ) ) {
-    stop( "opImputation: Only numeric data allowed. Execution stopped." )
+  # Check if the input data is numeric
+  Data <- data.frame(Data)
+  if (!is.numeric(as.matrix(na.omit(Data)))) {
+    stop("opImputation: Only numeric data allowed. Execution stopped.")
   }
 
+  # Define the list of seeds
   list.of.seeds <- 1:nIter + seed - 1
 
-  # Functions
+  # Perform repeated sample imputations and calculate metrics
   RepeatedSampleImputations <- make_and_measure_repeated_imputations(
     Data = Data,
     seeds = list.of.seeds,
@@ -70,25 +70,24 @@ opImputationAnalyze <- function(
     PValueThresholdForMetrics = PValueThresholdForMetrics
   )
 
+  # Find the best imputation methods
   MethodsResults <- find_best_method(
     RepeatedSampleImputations = RepeatedSampleImputations,
     pfctMtdsInABC = pfctMtdsInABC,
     nIter = nIter
   )
 
-  BestMethodPerDataset <- gsub( " imputed|Imp", "",
-                                MethodsResults$BestPerDatasetRanksums_insertedMissings )
-  BestUnivariateMethodPerDataset <- gsub( " imputed|Imp", "",
-                                          MethodsResults$BestUnivariatePerDatasetRanksums_insertedMissings )
-  BestMultivariateMethodPerDataset <- gsub( " imputed|Imp", "",
-                                            MethodsResults$BestMultivariatePerDatasetRanksums_insertedMissings )
-  BestUniMultivariateMethodPerDataset <- gsub( " imputed|Imp", "",
-                                               MethodsResults$BestUniMultivariatePerDatasetRanksums_insertedMissings )
-  BestPoisonedMethodPerDataset <- gsub( " imputed|Imp", "",
-                                        MethodsResults$BestPoisonedPerDatasetRanksums_insertedMissings )
+  # Extract the best methods
+  BestMethodPerDataset <- gsub(" imputed|Imp", "", MethodsResults$BestPerDatasetRanksums_insertedMissings)
+  BestUnivariateMethodPerDataset <- gsub(" imputed|Imp", "", MethodsResults$BestUnivariatePerDatasetRanksums_insertedMissings)
+  BestMultivariateMethodPerDataset <- gsub(" imputed|Imp", "", MethodsResults$BestMultivariatePerDatasetRanksums_insertedMissings)
+  BestUniMultivariateMethodPerDataset <- gsub(" imputed|Imp", "", MethodsResults$BestUniMultivariatePerDatasetRanksums_insertedMissings)
+  BestPoisonedMethodPerDataset <- gsub(" imputed|Imp", "", MethodsResults$BestPoisonedPerDatasetRanksums_insertedMissings)
 
-  zDeltas <- retrieve_z_deltas( RepeatedSampleImputations = RepeatedSampleImputations )
+  # Retrieve the zDelta values
+  zDeltas <- retrieve_z_deltas(RepeatedSampleImputations = RepeatedSampleImputations)
 
+  # Create the plots
   pzDeltasPlotAvgerage <- create_barplot_mean_z_deltas(
     medianImputationzDeltaInsertedMissings = zDeltas$medianImputationzDeltaInsertedMissings,
     BestUniMultivariateMethodPerDataset = BestUniMultivariateMethodPerDataset,
@@ -103,11 +102,9 @@ opImputationAnalyze <- function(
     zABCvalues = MethodsResults$zABCvalues_insertedMissings
   )
 
-  if (
-    sum( ImputationMethods %in% univariate_imputation_methods ) > 0 &
-      sum( ImputationMethods %in% multivariate_imputation_methods ) > 0
-  ) {
-    pzDeltasMultivarUnivarPDE <- create_d_deltas_multivar_univar_PDE_plot(
+  if (sum(ImputationMethods %in% univariate_imputation_methods) > 0 &
+      sum(ImputationMethods %in% multivariate_imputation_methods) > 0) {
+    pzDeltasMultivarUnivarPDE <- create_z_deltas_multivar_univar_PDE_plot(
       zDeltas = zDeltas,
       BestMethodPerDataset = BestMethodPerDataset,
       BestUnivariateMethodPerDataset = BestUnivariateMethodPerDataset,
@@ -141,12 +138,12 @@ opImputationAnalyze <- function(
     ncol = 1
   )
 
-  if ( PlotIt ) {
-    suppressWarnings( print( "Best method per dataset" ) )
-    suppressWarnings( print( suppressWarnings( BestMethodPerDataset ) ) )
-    suppressWarnings( print( "Best univariate or multivariate method per dataset" ) )
-    suppressWarnings( print( suppressWarnings( BestUniMultivariateMethodPerDataset ) ) )
-    suppressWarnings( print( suppressWarnings( Fig_opImputationAnalyze ) ) )
+  if (PlotIt) {
+    suppressWarnings(print("Best method per dataset"))
+    suppressWarnings(print(suppressWarnings(BestMethodPerDataset)))
+    suppressWarnings(print("Best univariate or multivariate method per dataset"))
+    suppressWarnings(print(suppressWarnings(BestUniMultivariateMethodPerDataset)))
+    suppressWarnings(print(suppressWarnings(Fig_opImputationAnalyze)))
   }
 
   return(
@@ -160,4 +157,3 @@ opImputationAnalyze <- function(
     )
   )
 }
-
