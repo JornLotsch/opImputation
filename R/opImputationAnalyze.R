@@ -37,6 +37,7 @@ opImputationAnalyze <- function(
     mnarity = 0,
     lowOnly = FALSE,
     mnarshape = 1,
+    test_only_varibales_with_missings = FALSE,
     PlotIt = TRUE,
     overallBestzDelta = FALSE) {
 
@@ -74,7 +75,8 @@ opImputationAnalyze <- function(
     mnarity = mnarity,
     lowOnly = lowOnly,
     mnarshape = mnarshape,
-    PValueThresholdForMetrics = PValueThresholdForMetrics
+    PValueThresholdForMetrics = PValueThresholdForMetrics,
+    test_only_varibales_with_missings = test_only_varibales_with_missings
   )
 
   # Find the best imputation methods

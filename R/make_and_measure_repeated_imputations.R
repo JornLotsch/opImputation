@@ -47,8 +47,17 @@ make_and_measure_repeated_imputations <- function(Data, seeds, probMissing, nPro
     dfXmatrix <- Data
     dfXmatrixInitialMissings_Which <- lapply(seq_along(Data), function(i) which(is.na(Data[, i])))
     dfXmatrixInsertedMissings_WhichAndData <- create_missings(x = dfXmatrix, Prob = probMissing, seed = seed, mnarity = 0, lowOnly = FALSE, mnarshape = 1)
-    iNA <- 1
 
+    names(dfXmatrixInitialMissings_Which) <- names(Data)
+    names(dfXmatrixInsertedMissings_WhichAndData$toDelete) <- names(Data)
+    complete_variables <- names(Data)[which(apply(Data,2,function(x) sum(is.na(x))) == 0)]
+
+    if (test_only_varibales_with_missings) {
+      dfXmatrixInsertedMissings_WhichAndData$toDelete[complete_variables] <- dfXmatrixInitialMissings_Which[complete_variables]
+      dfXmatrixInsertedMissings_WhichAndData$missData[complete_variables] <- Data[complete_variables]
+    }
+
+    iNA <- 1
     repeat {
       MaxNAs <- max(apply(dfXmatrixInsertedMissings_WhichAndData$missData, 1, function(x) sum(is.na(x))))
       if (MaxNAs < ncol(dfXmatrixInsertedMissings_WhichAndData$missData)) break

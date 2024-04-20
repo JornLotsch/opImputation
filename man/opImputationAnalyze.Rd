@@ -9,7 +9,8 @@ a method for handling missing values in biomedical numerical tabular data.
 opImputationAnalyze( Data, ImputationMethods =  all_imputation_methods,
 ImputationRepetitions = 20, Seed, nIter = 20, nProc = getOption( "mc.cores", 2L ),
 probMissing = 0.1, PValueThresholdForMetrics = 0.1, pfctMtdsInABC = FALSE,
-mnarity = 0, lowOnly = FALSE, mnarshape = 1, PlotIt = TRUE, overallBestzDelta = FALSE )
+mnarity = 0, lowOnly = FALSE, mnarshape = 1, test_only_varibales_with_missings = FALSE, 
+PlotIt = TRUE, overallBestzDelta = FALSE )
 }
 \arguments{
 \item{Data}{Numeric data represented as a matrix or data frame.}
@@ -24,6 +25,7 @@ mnarity = 0, lowOnly = FALSE, mnarshape = 1, PlotIt = TRUE, overallBestzDelta = 
 \item{mnarity}{Degree of not-at-random (NAR) sampling, ranging from 0 to 1.}
 \item{lowOnly}{If NAR, whether only low values should be oversampled.}
 \item{mnarshape}{An additional parameter emphasizing the degree of not-at-randomness (probability NAR)^mnarshape).}
+\item{test_only_varibales_with_missings}{Whether to include only variables that already have missing values in the analyses.}
 \item{PlotIt}{Whether to automatically display the main results as two plots.}
 \item{overallBestzDelta}{Whether to plot the results of the best selected method
 compared to the measurement methods or the method with the smallest final deviations from the original missing values.}
