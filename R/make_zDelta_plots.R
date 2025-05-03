@@ -1,40 +1,44 @@
-# Helper function for data frame creation for bar plot
+#' Generate Data Frame for Bar Plot
+#'
+#' @param data Input data for plotting
+#' @param BestUniMultivariateMethodPerDataset Best method name
+#' @param annotate_methods Vector of method names to annotate
+#' @param overallBestzDelta Logical; whether to use overall best zDelta
+#' @return List containing plot data frames and color settings
+#' @importFrom reshape2 melt
+#' @keywords internal
 generate_barplot_df <- function(data, BestUniMultivariateMethodPerDataset,
-                               annotate_methods, overallBestzDelta) {
-  # Create the base data frame
+                                annotate_methods, overallBestzDelta) {
   df <- data.frame(suppressWarnings(reshape2::melt(data)))
   df$Method <- gsub(" imputed|Imp", "", rownames(df))
-
-  # Order the methods based on the values
-  MethodsOrder <- df$Method[order(df$value)]
-  df$Method <- factor(df$Method, levels = MethodsOrder)
-
-  # Indicate failed imputations
+  df$Method <- factor(df$Method, levels = df$Method[order(df$value)])
   df$Failed <- ifelse(is.na(df$value), 0.01, NA)
 
-  # Assign colors based on method categories
+  # Color assignment
   df$color <- "Multivariate"
   df$color[df$Method %in% gsub(" imputed", "", poisoned_imputation_methods)] <- "Poisoned"
   df$color[df$Method %in% gsub(" imputed", "", univariate_imputation_methods)] <- "Univariate"
   df$color[df$Method %in% gsub(" imputed", "", calibrating_imputation_methods)] <- "Calibrating"
   df$color <- factor(df$color, levels = c("Multivariate", "Calibrating", "Poisoned", "Univariate"))
+
+  # Set color names and method categories
   names(myColorszDelta) <- levels(df$color)
+  df$calibratingMtd <- factor(
+    ifelse(df$color == "Calibrating", "Calibrating methods", "Methods"),
+    levels = c("Calibrating methods", "Methods")
+  )
 
-  # Indicate if the method is a calibrating method
-  df$calibratingMtd <- ifelse(df$color == "Calibrating", "Calibrating methods", "Methods")
-  df$calibratingMtd <- factor(df$calibratingMtd, levels = c("Calibrating methods", "Methods"))
-
-  # Determine the minimum values for the annotation
+  # Calculate minimum values
   minmaxPoisoned <- min(df$value[df$color %in% "Poisoned"], na.rm = TRUE)
   minmaxUnivariate <- min(df$value[df$color %in% "Univariate"], na.rm = TRUE)
-  if (overallBestzDelta == FALSE) {
-    minBest <- df$value[df$Method == BestUniMultivariateMethodPerDataset]
+  minBest <- if (!overallBestzDelta) {
+    df$value[df$Method == BestUniMultivariateMethodPerDataset]
   } else {
-    minBest <- min(df$value[df$Method %in% c(univariate_imputation_methods, multivariate_imputation_methods)], na.rm = TRUE)
     annotate_methods[3] <- "Best non-poisoned"
+    min(df$value[df$Method %in% c(univariate_imputation_methods, multivariate_imputation_methods)], na.rm = TRUE)
   }
 
-  # Create the annotation data frame
+  # Create annotation data frame
   dfAnnotate <- data.frame(
     Methods = annotate_methods,
     y = c(minmaxPoisoned, minmaxUnivariate, minBest),
@@ -42,55 +46,78 @@ generate_barplot_df <- function(data, BestUniMultivariateMethodPerDataset,
     color = c("salmon", "orange", "darkgreen")
   )
 
-  return(list(
-    dfBars = df,
-    dfAnnotate = dfAnnotate,
-    myColorszDelta = myColorszDelta
-  ))
+  list(dfBars = df, dfAnnotate = dfAnnotate, myColorszDelta = myColorszDelta)
 }
 
-# Helper function for data frame creation for PDE plot
+#' Generate Data Frame for PDE Plot
+#'
+#' @param multivarzDeltas Vector of multivariate zDelta values
+#' @param univarzDeltas Vector of univariate zDelta values
+#' @param poisonedzDeltas Vector of poisoned zDelta values
+#' @param calibratingzDeltas Vector of calibrating zDelta values
+#' @return Data frame for PDE plot
+#' @importFrom DataVisualizations ParetoDensityEstimation
+#' @keywords internal
 generate_PDE_plot_df <- function(multivarzDeltas, univarzDeltas, poisonedzDeltas, calibratingzDeltas) {
-  # Combine all the zDelta values
   vzDeltas <- c(multivarzDeltas, univarzDeltas, poisonedzDeltas, calibratingzDeltas)
-  namesvzDeltas <- c(rep("Multivariate", length(multivarzDeltas)),
-                    rep("Univariate", length(univarzDeltas)),
-                    rep("Poisoned", length(poisonedzDeltas)),
-                    rep("Calibrating", length(calibratingzDeltas)))
-  df4plot_long <- cbind.data.frame(Category = namesvzDeltas, zDelta = vzDeltas)
-  df4plot_long <- na.omit(df4plot_long)
+  namesvzDeltas <- c(
+    rep("Multivariate", length(multivarzDeltas)),
+    rep("Univariate", length(univarzDeltas)),
+    rep("Poisoned", length(poisonedzDeltas)),
+    rep("Calibrating", length(calibratingzDeltas))
+  )
 
-  # Calculate PDE xy
+  df4plot_long <- na.omit(data.frame(
+    Category = namesvzDeltas,
+    zDelta = vzDeltas
+  ))
+
+  # Calculate PDE distributions
   ParetoDistributions <- lapply(unique(df4plot_long$Category), function(Category) {
-    Pareto <- DataVisualizations::ParetoDensityEstimation(Data = df4plot_long$zDelta[df4plot_long$Category == Category],
-                                                          PlotIt = FALSE)
-    dfPareto <- data.frame(Category = Category, x = Pareto$kernels, PDE = Pareto$paretoDensity)
-    return(dfPareto)
+    Pareto <- DataVisualizations::ParetoDensityEstimation(
+      Data = df4plot_long$zDelta[df4plot_long$Category == Category],
+      PlotIt = FALSE
+    )
+    data.frame(
+      Category = Category,
+      x = Pareto$kernels,
+      PDE = Pareto$paretoDensity
+    )
   })
 
   dfParetoAll <- do.call(rbind.data.frame, ParetoDistributions)
-  dfParetoAll$Category <- factor(dfParetoAll$Category, levels = c("Multivariate", "Calibrating", "Poisoned", "Univariate"))
+  dfParetoAll$Category <- factor(
+    dfParetoAll$Category,
+    levels = c("Multivariate", "Calibrating", "Poisoned", "Univariate")
+  )
 
-  return(dfParetoAll)
+  dfParetoAll
 }
 
-# Function to create a bare ZDealta bar plot
+#' Create Bar Plot for zDelta Values
+#'
+#' @param data Input data for plotting
+#' @param BestUniMultivariateMethodPerDataset Best method name
+#' @param title Plot title
+#' @param ylab Y-axis label
+#' @param annotate_methods Vector of method names to annotate
+#' @param overallBestzDelta Logical; whether to use overall best zDelta
+#' @return ggplot object
+#' @importFrom ggplot2 ggplot aes geom_bar theme_light theme element_text element_rect labs scale_fill_manual geom_hline
+#' @importFrom ggh4x facet_grid2
+#' @importFrom ggrepel geom_text_repel
+#' @export
 create_barplot <- function(data, BestUniMultivariateMethodPerDataset,
-                          title, ylab, annotate_methods,
-                          overallBestzDelta = overallBestzDelta) {
-  # Data frame creation
+                           title, ylab, annotate_methods,
+                           overallBestzDelta = overallBestzDelta) {
   df <- generate_barplot_df(
     data = data,
     BestUniMultivariateMethodPerDataset = BestUniMultivariateMethodPerDataset,
     annotate_methods = annotate_methods,
     overallBestzDelta = overallBestzDelta
   )
-  df4plot_long <- df$dfBars
-  dfAnnotate <- df$dfAnnotate
-  myColorszDelta <- df$myColorszDelta
 
-  # Plotting
-  BarplotMeans <- ggplot(data = df4plot_long, aes(x = Method, y = value)) +
+  plot <- ggplot(data = df$dfBars, aes(x = Method, y = value)) +
     geom_bar(aes(fill = color), stat = "identity", position = "dodge", alpha = 0.5) +
     ggh4x::facet_grid2(. ~ calibratingMtd, scales = "free", space = "free_x", independent = "y") +
     theme_light() +
@@ -100,44 +127,61 @@ create_barplot <- function(data, BestUniMultivariateMethodPerDataset,
       legend.background = element_rect(fill = alpha("white", 0.5))
     ) +
     labs(title = title, y = ylab, x = NULL, fill = "Imputation") +
-    scale_fill_manual(values = myColorszDelta) +
-    geom_hline(yintercept = dfAnnotate$y[1], color = "salmon", linetype = "dashed") +
-    geom_hline(yintercept = dfAnnotate$y[2], color = "orange", linetype = "dotdash") +
-    geom_hline(yintercept = dfAnnotate$y[3], color = "darkgreen") +
-    ggrepel::geom_text_repel(data = dfAnnotate,
-                            aes(label = Methods, x = x, y = y, color = color), inherit.aes = FALSE) +
-    scale_color_manual(values = myColorszDelta)
+    scale_fill_manual(values = df$myColorszDelta) +
+    geom_hline(yintercept = df$dfAnnotate$y[1], color = "salmon", linetype = "dashed") +
+    geom_hline(yintercept = df$dfAnnotate$y[2], color = "orange", linetype = "dotdash") +
+    geom_hline(yintercept = df$dfAnnotate$y[3], color = "darkgreen") +
+    ggrepel::geom_text_repel(
+      data = df$dfAnnotate,
+      aes(label = Methods, x = x, y = y, color = color),
+      inherit.aes = FALSE
+    ) +
+    scale_color_manual(values = df$myColorszDelta)
 
-  if (!sum(is.na(df4plot_long$Failed)) == nrow(df4plot_long)) {
-    BarplotMeans <- BarplotMeans + geom_point(aes(x = Method, y = Failed), pch = 4)
+  if (!all(is.na(df$dfBars$Failed))) {
+    plot <- plot + geom_point(aes(x = Method, y = Failed), pch = 4)
   }
-  return(BarplotMeans)
+
+  plot
 }
 
-# Function to create a bare zDelta PDE plot
+#' Create PDE Plot for zDelta Values
+#'
+#' @param dfParetoAll Data frame containing PDE data
+#' @return ggplot object
+#' @importFrom ggplot2 ggplot aes geom_line theme_light theme element_rect labs scale_color_manual
+#' @export
 create_z_delta_PDE_plot <- function(dfParetoAll) {
-  PDERawzDeltas <- ggplot() +
-    geom_line(data = dfParetoAll[dfParetoAll$Category %in% c("Multivariate", "Univariate"), ],
-              aes(x = x, y = PDE, color = Category)) +
+  ggplot() +
+    geom_line(
+      data = dfParetoAll[dfParetoAll$Category %in% c("Multivariate", "Univariate"), ],
+      aes(x = x, y = PDE, color = Category)
+    ) +
     theme_light() +
     theme(
       legend.position = "bottom",
       legend.direction = "horizontal",
-      legend.background = element_rect(colour = "transparent", fill = ggplot2::alpha("white", 0.4))
+      legend.background = element_rect(colour = "transparent", fill = alpha("white", 0.4))
     ) +
     labs(title = "PDE of raw zDelta values", x = "zDelta", y = "PDE") +
     scale_color_manual(values = myColorszDelta)
-
-  return(PDERawzDeltas)
 }
 
-# Main functions
-# Function to create a bar plot of mean zDelta values from iterations
-create_barplot_mean_z_deltas <- function(medianImputationzDeltaInsertedMissings, BestUniMultivariateMethodPerDataset, overallBestzDelta) {
-  rowmedianImputationzDeltaInsertedMissings <- apply(medianImputationzDeltaInsertedMissings, 1, function(x) stats::median(x, na.rm = TRUE))
+#' Create Bar Plot of Mean zDelta Values
+#'
+#' @param medianImputationzDeltaInsertedMissings Matrix of median imputation zDelta values
+#' @param BestUniMultivariateMethodPerDataset Best method name
+#' @param overallBestzDelta Logical; whether to use overall best zDelta
+#' @return ggplot object
+#' @importFrom stats median
+#' @export
+create_barplot_mean_z_deltas <- function(medianImputationzDeltaInsertedMissings,
+                                         BestUniMultivariateMethodPerDataset,
+                                         overallBestzDelta) {
+  rowmedians <- apply(medianImputationzDeltaInsertedMissings, 1, median, na.rm = TRUE)
 
-  BarplotMeanzDeltas <- create_barplot(
-    data = rowmedianImputationzDeltaInsertedMissings,
+  create_barplot(
+    data = rowmedians,
     BestUniMultivariateMethodPerDataset = BestUniMultivariateMethodPerDataset,
     title = "1 - zDelta",
     ylab = "1 - zDelta",
@@ -145,47 +189,54 @@ create_barplot_mean_z_deltas <- function(medianImputationzDeltaInsertedMissings,
     overallBestzDelta = overallBestzDelta
   ) +
     scale_y_continuous(trans = "log10")
-
-  return(BarplotMeanzDeltas)
 }
 
-# Function to create a sina plot of raw zDelta values
+#' Create Violin Plot of zDelta Values per Variable
+#'
+#' @param medianImputationzDeltaInsertedMissings Matrix of median imputation zDelta values
+#' @return ggplot object
+#' @importFrom reshape2 melt
+#' @importFrom ggplot2 ggplot aes geom_violin geom_jitter theme_light theme element_text element_rect labs guides scale_y_continuous
+#' @importFrom ggh4x facet_grid2
+#' @export
 create_z_deltas_per_var_plot <- function(medianImputationzDeltaInsertedMissings) {
-  rowmedianImputationzDeltaInsertedMissings <- apply(medianImputationzDeltaInsertedMissings, 1, function(x) stats::median(x, na.rm = TRUE))
+  rowmedians <- apply(medianImputationzDeltaInsertedMissings, 1, median, na.rm = TRUE)
 
-  df <- data.frame(suppressWarnings(reshape2::melt(rowmedianImputationzDeltaInsertedMissings)))
+  df <- data.frame(suppressWarnings(reshape2::melt(rowmedians)))
   df$Method <- gsub(" imputed|Imp", "", rownames(df))
   MethodsOrder <- df$Method[order(df$value)]
 
   zDeltaP <- data.frame(medianImputationzDeltaInsertedMissings)
-  zDeltaP$Method <- gsub(' imputed|Imp', '', rownames(zDeltaP))
+  zDeltaP$Method <- gsub(" imputed|Imp", "", rownames(zDeltaP))
   zDeltaP$Method <- factor(zDeltaP$Method, levels = MethodsOrder)
-
-  zDeltaP$calibratingMtd <- ifelse(zDeltaP$Method %in% calibrating_imputation_methods, "Calibrating methods", "Methods")
-  zDeltaP$calibratingMtd <- factor(zDeltaP$calibratingMtd, levels = c("Calibrating methods", "Methods"))
+  zDeltaP$calibratingMtd <- factor(
+    ifelse(zDeltaP$Method %in% calibrating_imputation_methods,
+           "Calibrating methods", "Methods"),
+    levels = c("Calibrating methods", "Methods")
+  )
 
   zDelta_long <- suppressWarnings(reshape2::melt(zDeltaP))
   zDelta_long$variable <- gsub("zDelta_", "", zDelta_long$variable)
-
   zDelta_long$Failed <- ifelse(is.na(zDelta_long$value), 0.01, NA)
 
-  zDeltaPerVarPlot <- ggplot(data = zDelta_long, aes(x = Method, y = value, color = variable)) +
+  plot <- ggplot(data = zDelta_long, aes(x = Method, y = value, color = variable)) +
     geom_violin() +
     geom_jitter(width = 0.05) +
     ggh4x::facet_grid2(. ~ calibratingMtd, scales = "free", space = "free_x", independent = "y") +
     theme_light() +
     theme(
       axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
-      legend.position = "top", legend.direction = "horizontal",
+      legend.position = "top",
+      legend.direction = "horizontal",
       legend.background = element_rect(fill = alpha("white", 0.5))
     ) +
     labs(title = "zDelta per variable", x = NULL, y = "Normalized error", color = "Variable") +
     guides(colour = guide_legend(nrow = 1)) +
     scale_y_continuous(trans = "log10")
 
-  if (!sum(is.na(zDelta_long$Failed)) == nrow(zDelta_long)) {
-    zDeltaPerVarPlot <- zDeltaPerVarPlot + geom_point(aes(x = Method, y = Failed), pch = 4, color = "black")
+  if (!all(is.na(zDelta_long$Failed))) {
+    plot <- plot + geom_point(aes(x = Method, y = Failed), pch = 4, color = "black")
   }
 
-  return(zDeltaPerVarPlot)
+  plot
 }

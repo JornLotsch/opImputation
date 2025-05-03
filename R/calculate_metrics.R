@@ -1,4 +1,15 @@
-# Function to calculate metrics for imputed data
+#' Calculate Metrics for Imputed Data
+#'
+#' @param OrigData Original data vector
+#' @param Missings_Which Logical vector indicating missing values
+#' @param ImputedData Vector of imputed values
+#' @param Metric One of "RMSEImputedUnivar", "MEImputedUnivar", "rBiasImputedUnivar", or "zDelta"
+#' @param OrigDataMiss Optional original data with missings (needed for zDelta)
+#' @param PValueThresholdForMetrics P-value threshold for significance tests
+#' @return Numeric value representing the calculated metric
+#' @importFrom stats median IQR wilcox.test
+#' @importFrom Rfit rfit
+#' @export
 calculate_metrics <- function(OrigData, Missings_Which, ImputedData, Metric, OrigDataMiss = NULL,
                               PValueThresholdForMetrics) {
   # Initialize the metric value
@@ -36,8 +47,8 @@ calculate_metrics <- function(OrigData, Missings_Which, ImputedData, Metric, Ori
                  St <- try(Rfit::rfit(Diffs ~ Means), TRUE)
                  if (!inherits(St, "try-error")) {
                    if (length(summary(St)$coefficients[2, ]) == 4 &&
-                       !is.na(summary(St)$coefficients[2, 4]) &&
-                       summary(St)$coefficients[2, "p.value"] < PValueThresholdForMetrics) {
+                     !is.na(summary(St)$coefficients[2, 4]) &&
+                     summary(St)$coefficients[2, "p.value"] < PValueThresholdForMetrics) {
                      ME <- abs(coef(St)[[2]])
                    }
                  }
