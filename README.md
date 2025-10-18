@@ -20,7 +20,8 @@ It is primarily developed for biomedical and clinical research but is broadly ap
 
 ## Installation
 ```r 
-if (!requireNamespace("devtools")) install.packages("devtools") devtools::install_github("JornLotsch/opImputation")
+if (!requireNamespace("devtools")) install.packages("devtools") 
+devtools::install_github("JornLotsch/opImputation")
 ``` 
 
 **Requirements:**  
@@ -120,7 +121,7 @@ These summaries enable transparent, reproducible, and data‑driven imputation s
 A: Bar graph of standardized mean ranks for all imputation methods, with cABC category coloring and an overlaid ABC curve.  
 B: Mean absolute standardized errors for different models using inserted diagnostic missing values.  
 C: Mean absolute standardized error per variable and model across all iterations.  
-Sets A, B, and C represent best, next-best, and discouraged models. See manuscript for further details.
+Sets A, B, and C represent best, next-best, and discouraged models. 
 
 ---
 
@@ -143,7 +144,7 @@ If you use **opImputation**, please cite:
 
 ## Authors and license
 
-- Jorn Lotsch (author, maintainer)  
+- Jorn Lotsch (author, creator, maintainer)  
 - Alfred Ultsch (author)  
 - License: GPL‑3
 
@@ -151,6 +152,9 @@ If you use **opImputation**, please cite:
 
 ## About this project
 
-**opImputation** provides a robust, reproducible, and extensible framework for dataset-specific comparison, selection, and benchmarking of missing value imputation strategies.  
-It enables transparent analysis, integration of new methods, and facilitates reliable, data-driven data preprocessing.
-```
+**opImputation** provides a robust, reproducible, and extensible framework for dataset-specific comparison, selection, and benchmarking of missing value imputation strategies. It enables transparent analysis, integration of new methods, and facilitates reliable, data-driven data preprocessing. 
+As part of its benchmarking and method selection process, opImputation utilizes computed ABC (cABC) analysis to objectively identify and categorize the most informative imputation methods or features based on their relevance to the specific dataset.
+For further details about the theory and application of ABC and cABC analysis, see:
+
+- Ultsch A, Lötsch J. [Computed ABC Analysis for Rational Selection of Most Informative Variables in Multivariate Data. *PLoS One*. 2015;10(6):e0129767.](https://doi.org/10.1371/journal.pone.0129767)
+- Lötsch J, Ultsch A. [Recursive computed ABC (cABC) analysis as a precise method for reducing machine learning based feature sets to their minimum informative size. *Sci Rep*. 2023;13(1):5470.](https://doi.org/10.1038/s41598-023-32396-9)
