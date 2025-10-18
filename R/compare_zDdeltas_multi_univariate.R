@@ -5,11 +5,19 @@
 #' @importFrom stats pchisq
 #' @export
 fisher_method <- function(p_values) {
+  # Remove NAs, clamp values, ensure numeric, fallback if empty
+  p_values <- as.numeric(na.omit(p_values))
   p_values <- pmax(pmin(p_values, 1), 0)
+  if (length(p_values) == 0) return(1)        # No data: non-significant
+  if (length(p_values) == 1) return(p_values) # Only one value
+
   chi_squared_statistic <- -2 * sum(log(p_values))
   degrees_of_freedom <- 2 * length(p_values)
   combined_p_value <- 1 - pchisq(chi_squared_statistic, df = degrees_of_freedom)
-  return(combined_p_value)
+  # Guarantee not NA
+  if (is.na(combined_p_value) || !is.finite(combined_p_value))
+    return(1)
+  combined_p_value
 }
 
 #' Retrieve Z-Delta Values for Best Methods per Category

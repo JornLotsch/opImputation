@@ -85,7 +85,9 @@ utils::globalVariables(c(
   "xloc", "x", "y",
   # Plot aesthetics and labels
   "BestUnivariate", "Imputation", "Multivariate",
-  "PDE", "label", "color", "poisoned"
+  "PDE", "label", "color", "poisoned",
+  # imputeData foreach
+  "i"
 ))
 
 #' Color Schemes for Plotting

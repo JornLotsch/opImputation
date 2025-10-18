@@ -29,8 +29,9 @@ compare_imputation_methods(Data, ImputationMethods = all_imputation_methods,
   \item{Data}{Numeric matrix or data frame to be analyzed. All columns must be numeric.}
   \item{ImputationMethods}{Character vector of imputation method names to be tested. Use \code{all_imputation_methods} to see available methods.}
   \item{ImputationRepetitions}{Integer. Number of times to repeat each imputation method (>= 1).}
-  \item{Seed}{Integer. Seed for reproducible results. If NULL, current seed is used.}
-  \item{nIter}{Integer. Number of iterations for missing value insertion (>= 1).}
+  \item{Seed}{Integer. Seed for reproducible results.
+     \strong{For fast and reproducible results, always explicitly set Seed (e.g. \code{Seed = 42}).}
+  If NULL, attempts slow recovery from current seed state.}  \item{nIter}{Integer. Number of iterations for missing value insertion (>= 1).}
   \item{nProc}{Integer. Number of CPU cores for parallel processing (>= 1).}
   \item{probMissing}{Numeric between 0 and 1. Probability of inserting diagnostic missing values.}
   \item{PValueThresholdForMetrics}{Numeric between 0 and 1. Threshold p-value for imputation bias tests.}
@@ -52,10 +53,10 @@ Returns a list containing:
   \item{Fig_compare_imputation_methods}{ggplot object showing diagnostic summary plot.}
 }
 \references{
- Lotsch, J., Ultsch, A. (2024):
- How to impute if you must: A data science method for selecting the
- missing value imputation strategy for cross-sectional biomedical numerical data.
- (paper submitted)
+	Lotsch J, Ultsch A. (2025). 
+	A modelagnostic framework for datasetspecific selection of missing value imputation methods in painrelated numerical data.
+	Can J Pain (in minor revision)
+
 }
 \author{
 Jorn Lotsch
@@ -63,12 +64,15 @@ Jorn Lotsch
 \note{
 The function requires at least two non-calibrating imputation methods for comparison.
 Parallel processing can significantly improve performance on multi-core systems.
+Explicitly setting the `Seed` parameter is strongly recommended for both speed and reproducibility.
+If no seed is provided, the function attempts to recover the previous RNG state, which may be slow.
 }
 \examples{
-# Basic usage with iris dataset
+# Basic usage with iris dataset (always set Seed for speed and reproducibility)
 TestImputation <- compare_imputation_methods(
     Data = iris[,1:4],
     ImputationMethods = c("rf_missForest", "median", "plus"),
+    Seed = 42,
     nIter = 5
 )
 

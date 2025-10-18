@@ -31,10 +31,9 @@
 #' }
 #'
 #' @references
-#' Lotsch, J., Ultsch, A. (2024):
-#' How to impute if you must: A data science method for selecting the
-#' missing value imputation strategy for cross-sectional biomedical numerical data.
-#' (paper submitted)
+#' Lotsch J, Ultsch A. (2025). 
+#' A modelagnostic framework for datasetspecific selection of missing value imputation methods in painrelated numerical data.
+#' Can J Pain (in minor revision)
 #'
 #' @examples
 #' \dontrun{
@@ -54,21 +53,27 @@
 #' @importFrom cowplot plot_grid
 #' @importFrom methods is
 #' @export
-compare_imputation_methods <- function(Data,
-                                       ImputationMethods = all_imputation_methods,
-                                       ImputationRepetitions = 20,
-                                       Seed,
-                                       nIter = 20,
-                                       nProc = getOption("mc.cores", 2L),
-                                       probMissing = 0.1,
-                                       PValueThresholdForMetrics = 0.1,
-                                       pfctMtdsInABC = FALSE,
-                                       mnarity = 0,
-                                       lowOnly = FALSE,
-                                       mnarshape = 1,
-                                       test_only_variables_with_missings = FALSE,
-                                       PlotIt = TRUE,
-                                       overallBestzDelta = FALSE) {
+compare_imputation_methods <- function(
+  Data,
+  ImputationMethods = all_imputation_methods,
+  ImputationRepetitions = 20,
+  Seed,
+  nIter = 20,
+  nProc = getOption("mc.cores", 2L),
+  probMissing = 0.1,
+  PValueThresholdForMetrics = 0.1,
+  pfctMtdsInABC = FALSE,
+  mnarity = 0,
+  lowOnly = FALSE,
+  mnarshape = 1,
+  test_only_variables_with_missings = FALSE,
+  PlotIt = TRUE,
+  overallBestzDelta = FALSE
+) {
+
+  # Helpers for non-NA output
+  safe_gsub <- function(x) ifelse(is.na(x), "", gsub(" imputed|Imp", "", x))
+  safe_string <- function(x) if (is.null(x) || is.na(x) || length(x) == 0) "" else as.character(x)
 
   # Input validation
   if (!is.numeric(as.matrix(na.omit(Data)))) {
@@ -84,7 +89,7 @@ compare_imputation_methods <- function(Data,
 
   # Handle seed
   if (missing(Seed)) {
-    seed <- as.integer(get_seed()[1])
+    seed <- as.integer(get_seed())
   } else {
     seed <- Seed
   }
@@ -112,17 +117,27 @@ compare_imputation_methods <- function(Data,
     nIter = nIter
   )
 
-  # Extract best methods
-  BestMethodPerDataset <- gsub(" imputed|Imp", "", MethodsResults$BestPerDatasetRanksums_insertedMissings)
-  BestUnivariateMethodPerDataset <- gsub(" imputed|Imp", "", MethodsResults$BestUnivariatePerDatasetRanksums_insertedMissings)
-  BestMultivariateMethodPerDataset <- gsub(" imputed|Imp", "", MethodsResults$BestMultivariatePerDatasetRanksums_insertedMissings)
-  BestUniMultivariateMethodPerDataset <- gsub(" imputed|Imp", "", MethodsResults$BestUniMultivariatePerDatasetRanksums_insertedMissings)
-  BestPoisonedMethodPerDataset <- gsub(" imputed|Imp", "", MethodsResults$BestPoisonedPerDatasetRanksums_insertedMissings)
+  # Extract best methods with NA protection everywhere
+  get_best_method <- function(x) {
+    val <- safe_gsub(x)
+    ifelse(is.na(val) | val == "" | is.null(val), "", val)
+  }
+
+  BestMethodPerDataset <-
+    get_best_method(MethodsResults$BestPerDatasetRanksums_insertedMissings)
+  BestUnivariateMethodPerDataset <-
+    get_best_method(MethodsResults$BestUnivariatePerDatasetRanksums_insertedMissings)
+  BestMultivariateMethodPerDataset <-
+    get_best_method(MethodsResults$BestMultivariatePerDatasetRanksums_insertedMissings)
+  BestUniMultivariateMethodPerDataset <-
+    get_best_method(MethodsResults$BestUniMultivariatePerDatasetRanksums_insertedMissings)
+  BestPoisonedMethodPerDataset <-
+    get_best_method(MethodsResults$BestPoisonedPerDatasetRanksums_insertedMissings)
 
   # Get zDelta values
   zDeltas <- retrieve_z_deltas(RepeatedSampleImputations = RepeatedSampleImputations)
 
-  # Create plots
+  # Create plots (unchanged)
   pzDeltasPlotAvgerage <- create_barplot_mean_z_deltas(
     medianImputationzDeltaInsertedMissings = zDeltas$medianImputationzDeltaInsertedMissings,
     BestUniMultivariateMethodPerDataset = BestUniMultivariateMethodPerDataset,
@@ -186,12 +201,16 @@ compare_imputation_methods <- function(Data,
     print(Fig_compare_imputation_methods)
   }
 
-  # Return results
+  # Return results (ensured no NA; empty string if nothing found)
   list(
     RepeatedSampleImputations = RepeatedSampleImputations,
     zDeltas = zDeltas,
     MethodsResults = MethodsResults,
     BestMethodPerDataset = BestMethodPerDataset,
+    BestUnivariateMethodPerDataset = BestUnivariateMethodPerDataset,
+    BestMultivariateMethodPerDataset = BestMultivariateMethodPerDataset,
+    BestUniMultivariateMethodPerDataset = BestUniMultivariateMethodPerDataset,
+    BestPoisonedMethodPerDataset = BestPoisonedMethodPerDataset,
     Fig_zDeltaDistributions_bestMethods = Fig_zDeltaDistributions_bestMethods,
     Fig_compare_imputation_methods = Fig_compare_imputation_methods
   )
