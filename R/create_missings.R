@@ -55,7 +55,7 @@ create_missings <- function(x,
   # Data preparation
   xm <- as.matrix(x)
   if (is.null(seed)) {
-    seed <- get_seed()[1]
+    seed <- get_seed()
   }
   list_of_seeds <- seq_len(ncol(xm)) + seed - 1
 

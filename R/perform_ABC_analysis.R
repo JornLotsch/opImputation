@@ -12,8 +12,25 @@
 #' @export
 make_ABC_analysis <- function(zABCvalues, HighlightPoisonedMethods = TRUE) {
 
-    #' Determine ABC Set Membership
-    #' @keywords internal
+  # Robustify: If input is NULL, NA, or empty, make dummy input with a single category
+  if (is.null(zABCvalues) || length(zABCvalues) == 0 || all(is.na(zABCvalues))) {
+    zABCvalues <- structure(1, names = "None")
+  } else {
+    # Remove NA/NaN/Inf and ensure names are present
+    mask <- !is.na(zABCvalues) & is.finite(zABCvalues)
+    if (sum(mask) == 0) {
+      zABCvalues <- structure(1, names = "None")
+    } else {
+      zABCvalues <- zABCvalues[mask]
+      if (is.null(names(zABCvalues)) || any(is.na(names(zABCvalues)))) {
+        names(zABCvalues) <- paste0("Method", seq_along(zABCvalues))
+      }
+    }
+  }
+
+  # Default color assignment (will never fail due to length, keeps "poisonedImputation" as last)
+  myColorsABC <- c("darkgreen", "gold", "skyblue", "red")
+
   ABC_set_membership <- function(x = NULL, ABCres = NULL, num = TRUE) {
     if (is.null(ABCres)) {
       ABCres <- ABCanalysis(x)
@@ -21,80 +38,75 @@ make_ABC_analysis <- function(zABCvalues, HighlightPoisonedMethods = TRUE) {
     } else {
       Ind <- sort(c(ABCres$Aind, ABCres$Bind, ABCres$Cind))
     }
-
-    # Assign category numbers
-    Ind[ABCres$Aind] <- 1
-    Ind[ABCres$Bind] <- 2
-    Ind[ABCres$Cind] <- 3
-
-    # Convert to letters if requested
-    if (!num) {
-      Ind <- LETTERS[Ind]
-    }
+    Ind[] <- 3
+    if (!is.null(ABCres$Aind)) Ind[ABCres$Aind] <- 1
+    if (!is.null(ABCres$Bind)) Ind[ABCres$Bind] <- 2
+    if (!is.null(ABCres$Cind)) Ind[ABCres$Cind] <- 3
+    if (!num) Ind <- LETTERS[Ind]
     Ind
   }
 
-    #' Prepare Data Frame for ABC Analysis Plot
-    #' @keywords internal
   ABC_prepare_results_df <- function(data, ABCres) {
+    n <- length(data)
+    if (n == 1) {
+      xloc <- 0
+    } else {
+      xloc <- seq(0, n - 1) / (n - 1)
+    }
     dfABC <- data.frame(
       rSum = data,
       Category = "C",
       Method = names(data),
-      xloc = seq(0, length(data) - 1) / (length(data) - 1)
+      xloc = xloc
     )
-
-    # Clean method names and assign categories
     dfABC$Method <- gsub(' imputed|Imp', '', dfABC$Method)
     dfABC$Category <- ABC_set_membership(ABCres = ABCres, num = FALSE)
-
-    # Sort by rank sum and method name
-    dfABC <- dfABC[with(dfABC, order(-rSum, Method)), ]
-    dfABC$xloc <- sort(dfABC$xloc)
+    dfABC <- dfABC[with(dfABC, order(-dfABC$rSum, dfABC$Method)), ]
+    dfABC$xloc <- sort(dfABC$xloc)  # keep relative ordering
     dfABC$Method <- factor(dfABC$Method, levels = dfABC$Method)
-
     dfABC
   }
 
-    #' Replace Strings Using Lookup Table
-    #' @keywords internal
   replaceString <- function(x, replaceList) {
     where <- match(x, replaceList$old)
-    replaceList$new[where]
+    repl <- replaceList$new
+    out <- rep(NA, length(x))
+    out[!is.na(where)] <- repl[where[!is.na(where)]]
+    out[is.na(where)] <- repl[length(repl)]
+    out
   }
 
-  # Perform ABC analysis
-  ABCRanksumsInserted <- ABCanalysis(zABCvalues, PlotIt = FALSE)
+  # Robust ABC analysis
+  ABCRanksumsInserted <- tryCatch(
+    ABCanalysis(zABCvalues, PlotIt = FALSE),
+    error = function(e) list(Aind = 1:length(zABCvalues), Bind = integer(0), Cind = integer(0))
+  )
 
-  # Prepare data frame for plotting
   dfABCcat <- ABC_prepare_results_df(data = zABCvalues, ABCres = ABCRanksumsInserted)
   dfABCcat$Category1 <- dfABCcat$Category
 
-  # Handle poisoned methods if requested
   if (HighlightPoisonedMethods) {
     dfABCcat$Category1[dfABCcat$Method %in% poisoned_imputation_methods] <- "poisonedImputation"
   }
 
-  # Set up color mapping
   rep_list <- list(
     old = c("A", "B", "C", "poisonedImputation"),
     new = myColorsABC[1:4]
   )
   names(myColorsABC) <- rep_list$old
 
-  # Apply colors and mark poisoned methods
   dfABCcat$Category1 <- replaceString(dfABCcat$Category1, rep_list)
   dfABCcat$poisoned <- ifelse(dfABCcat$Category1 == myColorsABC[4],
                               myColorsABC[4],
                               NA)
 
-  # Create the ABC plot
+  # Plot, with fallbacks (length checks for x axis labels)
   ggplot() +
     geom_bar(
       data = dfABCcat,
       aes(
         x = xloc,
-        y = rSum / max(rSum),
+        y = if (any(is.finite(dfABCcat$rSum) & dfABCcat$rSum > 0)) rSum / max(rSum, na.rm = TRUE) else 0,
         fill = Category,
         color = poisoned
       ),
@@ -104,7 +116,7 @@ make_ABC_analysis <- function(zABCvalues, HighlightPoisonedMethods = TRUE) {
     ) +
     scale_x_continuous(
       breaks = unique(dfABCcat$xloc),
-      labels = levels(dfABCcat$Method),
+      labels = as.character(levels(dfABCcat$Method)),
       expand = c(0, 0)
     ) +
     theme_light() +
