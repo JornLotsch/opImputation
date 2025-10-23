@@ -32,8 +32,8 @@ devtools::install_github("JornLotsch/opImputation")
 | **Imports** | parallel, Rfit, methods, stats, caret, ABCanalysis, ggplot2, future.apply, progressr, missForest, utils, mice, miceRanger, multiUS, Amelia, mi, reshape2, DataVisualizations, cowplot, twosamples, ggh4x, ggrepel, tools, Rcpp (≥ 1.0.0) |
 | **LinkingTo** | Rcpp |
 | **License** | GPL‑3 |
-| **Authors** | Jörn Lotsch ([ORCID 0000‑0002‑5818‑6958]), Alfred Ultsch ([ORCID 0000‑0002‑7845‑3283]) |
-| **Maintainer** | Jörn Lotsch <j.lotsch@em.uni‑frankfurt.de> |
+| **Authors** | Jörn Lötsch, Alfred Ultsch |
+| **Maintainer** | Jörn Lötsch |
 | **Repository** | [https://github.com/JornLotsch/opImputation](https://github.com/JornLotsch/opImputation) |
 | **Date** | 2025‑05‑03 |
 | **NeedsCompilation** | yes |
