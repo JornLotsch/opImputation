@@ -3,3 +3,4 @@
 .RData
 .Ruserdata
 *.code-workspace
+*.o

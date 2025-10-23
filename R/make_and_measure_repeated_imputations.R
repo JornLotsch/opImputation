@@ -1,257 +1,268 @@
-#' Make and Measure Repeated Imputations
+#' Insert Diagnostic Missings and Perform Repeated Imputations
 #'
 #' @description
-#' Performs repeated imputations on data with artificially inserted missing values and
-#' measures the quality of these imputations using various metrics.
+#' Creates diagnostic missing values in data and performs imputation using multiple
+#' methods across multiple iterations. Calculates quality metrics for each imputation.
+#' Uses parallel processing via future.apply with progress reporting via progressr.
 #'
-#' @param Data Data frame to be imputed
-#' @param seeds Vector of random seeds for reproducibility
-#' @param probMissing Probability of missing values to be inserted
-#' @param nProc Number of processors for parallel computation
-#' @param ImputationMethods Vector of imputation method names
-#' @param ImputationRepetitions Number of times to repeat each imputation
-#' @param PValueThresholdForMetrics P-value threshold for statistical tests
-#' @param mnarity MNAR intensity parameter
-#' @param lowOnly Logical; whether to only create missings in low values
-#' @param mnarshape Shape parameter for MNAR mechanism
-#' @param test_only_variables_with_missings Logical; whether to test only variables with missing values
+#' @param data Data frame or matrix with numeric data (may contain initial missing values)
+#' @param seeds_list Integer vector of seeds for repeated iterations
+#' @param percent_missing Numeric. Proportion of values to set as diagnostic missings (0-1)
+#' @param fixed_seed_for_inserted_missings Logical. If TRUE, use same seed for all iterations.
+#'   Default is FALSE.
+#' @param imputation_methods Character vector of imputation method names to test
+#' @param imputation_repetitions Integer. Number of repetitions for repeated methods
+#' @param n_proc Integer. Number of CPU cores for parallel processing via future
+#' @param mnar_ity Numeric. Degree of MNAR missingness (0-1). 0 = MCAR, 1 = pure MNAR.
+#'   Default is 0.
+#' @param mnar_shape Numeric. Shape parameter for MNAR mechanism. Default is 1.
+#' @param low_only Logical. If TRUE, only insert missings in lower values. Default is FALSE.
+#' @param max_attempts Integer. Maximum attempts to create valid missing pattern. Default is 1000.
 #'
-#' @return List of imputation results containing metrics and imputed datasets
-#' @importFrom stats na.omit
-#' @importFrom pbmcapply pbmclapply
-#' @importFrom doParallel registerDoParallel stopImplicitCluster
-#' @importFrom foreach foreach %dopar%
-#' @export
-make_and_measure_repeated_imputations <- function(Data, seeds, probMissing, nProc,
-                                                  ImputationMethods, ImputationRepetitions,
-                                                  PValueThresholdForMetrics = PValueThresholdForMetrics,
-                                                  mnarity = mnarity, lowOnly = lowOnly,
-                                                  mnarshape = mnarshape,
-                                                  test_only_variables_with_missings = test_only_variables_with_missings) {
+#' @return List of imputation results, one element per seed, each containing:
+#'   \item{data_with_inserted_missings_which}{Indices of diagnostic missing positions}
+#'   \item{imputation_rmse}{RMSE metrics for each method and variable}
+#'   \item{imputation_me}{Mean error metrics for each method and variable}
+#'   \item{imputation_correlation}{Correlation metrics for each method and variable}
+#'   \item{imputation_zdelta}{Z-delta metrics for each method and variable}
+#'
+#' @details
+#' This function is the core engine for repeated imputation analysis. For each seed:
+#' \enumerate{
+#'   \item Creates diagnostic missings using specified MNAR parameters
+#'   \item Applies all selected imputation methods
+#'   \item Calculates multiple quality metrics (RMSE, ME, Correlation, zDelta)
+#'   \item Returns comprehensive results for downstream analysis
+#' }
+#'
+#' The function uses future.apply for cross-platform parallel processing with
+#' progress reporting via progressr. Progress updates are displayed in the console
+#' showing completion status across all iterations.
+#'
+#' The MNAR mechanism allows testing methods under realistic missing data scenarios:
+#' \itemize{
+#'   \item \code{mnar_ity = 0}: Missing Completely At Random (MCAR)
+#'   \item \code{mnar_ity > 0}: Missing Not At Random (MNAR) with specified degree
+#'   \item \code{low_only = TRUE}: Missings preferentially in lower values
+#'   \item \code{mnar_shape}: Controls shape of missingness probability distribution
+#' }
+#'
+#' @keywords internal
+make_and_measure_repeated_imputations <- function(data,
+                                                  seeds_list,
+                                                  percent_missing,
+                                                  fixed_seed_for_inserted_missings = FALSE,
+                                                  imputation_methods,
+                                                  imputation_repetitions,
+                                                  n_proc,
+                                                  mnar_ity = 0,
+                                                  mnar_shape = 1,
+                                                  low_only = FALSE,
+                                                  max_attempts = 1000) {
+  # Set up progress handler for console display
+  handlers("txtprogressbar")
 
-    #' @keywords internal
-  imputeData <- function(dfMtx, dfMtxorig, ImputationMethods, ImputationRepetitions, seed) {
-    lapply(ImputationMethods, function(method) {
-      dfXmatriximputed <- cbind.data.frame(
-        Data = paste0(method, " imputed"),
-        makeBadImputations(dfMtx)
-      )
-      dfXmatriximputed_list <- data.frame(
-        imputeMissings(
-          x = dfMtx,
-          method = method,
-          ImputationRepetitions = ImputationRepetitions,
-          seed = seed,
-          x_orig = dfMtxorig
-        )
-      )
+  # Use cross-platform parallel backend via future
+  plan(multisession, workers = n_proc)
 
-      if (identical(dim(dfXmatriximputed_list), dim(dfMtx))) {
-        dfXmatriximputed <- cbind.data.frame(
-          Data = paste0(method, " imputed"),
-          dfXmatriximputed_list
-        )
-      }
+  results <- NULL
 
-      return(dfXmatriximputed)
-    })
-  }
+  # Wrap computation in with_progress to enable progress reporting
+  with_progress({
+    # Create a progressor for tracking progress across all seeds
+    p <- progressor(along = seeds_list)
 
-    #' @keywords internal
-  makeMetricsMatrix <- function(OrigData, Missings_Which, ImputedData, Metric,
-                                OrigDataMiss = NULL, PValueThresholdForMetrics) {
-    data.frame(do.call(
-      cbind,
-      lapply(seq_along(Missings_Which), function(i) {
-        by(ImputedData, list(ImputedData$Data), function(y) {
-          OrigDataMiss_i <- if (!is.null(OrigDataMiss)) OrigDataMiss[, i]
-          calculate_metrics(
-            OrigData = OrigData[, i],
-            Missings_Which = Missings_Which[[i]],
-            ImputedData = within(y, rm(Data))[, i],
-            Metric = Metric,
-            OrigDataMiss = OrigDataMiss_i,
-            PValueThresholdForMetrics = PValueThresholdForMetrics
-          )
-        })
-      })
-    ))
-  }
-
-    #' @keywords internal
-  performImputation <- function(seed, Data, probMissing, ImputationMethods,
-                                ImputationRepetitions, PValueThresholdForMetrics,
-                                mnarity, lowOnly, mnarshape) {
-    # Initialize data matrices
-    dfXmatrix <- Data
-    dfXmatrixInitialMissings_Which <- lapply(
-      seq_along(Data),
-      function(i) which(is.na(Data[, i]))
-    )
-
-    # Create artificial missings
-    dfXmatrixInsertedMissings_WhichAndData <- create_missings(
-      x = dfXmatrix,
-      Prob = probMissing,
-      seed = seed,
-      mnarity = 0,
-      lowOnly = FALSE,
-      mnarshape = 1
-    )
-
-    # Set names and identify complete variables
-    names(dfXmatrixInitialMissings_Which) <- names(Data)
-    names(dfXmatrixInsertedMissings_WhichAndData$toDelete) <- names(Data)
-    complete_variables <- names(Data)[
-      which(apply(Data, 2, function(x) sum(is.na(x))) == 0)
-    ]
-
-    # Handle complete variables if necessary
-    if (test_only_variables_with_missings) {
-      dfXmatrixInsertedMissings_WhichAndData$toDelete[complete_variables] <-
-        dfXmatrixInitialMissings_Which[complete_variables]
-      dfXmatrixInsertedMissings_WhichAndData$missData[complete_variables] <-
-        Data[complete_variables]
-    }
-
-    # Ensure not all values in a row are missing
-    iNA <- 1
-    repeat {
-      MaxNAs <- max(apply(
-        dfXmatrixInsertedMissings_WhichAndData$missData,
-        1,
-        function(x) sum(is.na(x))
-      ))
-      if (MaxNAs < ncol(dfXmatrixInsertedMissings_WhichAndData$missData) |
-        iNA == 1000) break
-      dfXmatrixInsertedMissings_WhichAndData <- create_missings(
-        x = dfXmatrix,
-        Prob = probMissing,
-        seed = tail(seeds, 1) + iNA,
-        mnarity = mnarity,
-        lowOnly = lowOnly,
-        mnarshape = mnarshape
-      )
-      iNA <- iNA + 1
-    }
-
-    # Extract missings information
-    dfXmatrixInsertedMissings <- dfXmatrixInsertedMissings_WhichAndData$missData
-    dfXmatrixInsertedMissings_Which <- lapply(
-      seq_along(dfXmatrixInsertedMissings_WhichAndData$toDelete),
-      function(i) setdiff(
-        dfXmatrixInsertedMissings_WhichAndData$toDelete[[i]],
-        dfXmatrixInitialMissings_Which[[i]]
-      )
-    )
-
-    # Perform imputations
-    ImputedDataAll <- imputeData(
-      dfMtx = dfXmatrixInsertedMissings,
-      dfMtxorig = dfXmatrix,
-      ImputationMethods = ImputationMethods,
-      ImputationRepetitions = ImputationRepetitions,
-      seed = seed
-    )
-    names(ImputedDataAll) <- ImputationMethods
-
-    # Combine results
-    dfImputedDataAll <- data.frame(do.call(rbind, ImputedDataAll))
-    dfXmatrixall <- rbind.data.frame(
-      cbind.data.frame(Data = "All data", dfXmatrix),
-      cbind.data.frame(Data = "Missings", dfXmatrixInsertedMissings),
-      dfImputedDataAll
-    )
-
-    # Calculate all metrics
-    metrics_list <- list(
-      ImputationRMSEInsertedMissings = list(
-        metric = "RMSEImputedUnivar",
-        prefix = "RMSE_"
-      ),
-      ImputationMEInsertedMissings = list(
-        metric = "MEImputedUnivar",
-        prefix = "ME_"
-      ),
-      ImputationrBiasInsertedMissings = list(
-        metric = "rBiasImputedUnivar",
-        prefix = "rBias_"
-      ),
-      ImputationzDeltaInsertedMissings = list(
-        metric = "zDelta",
-        prefix = "zDelta_",
-        orig_data_miss = dfXmatrixInsertedMissings
-      )
-    )
-
-    result <- lapply(names(metrics_list), function(metric_name) {
-      metric_info <- metrics_list[[metric_name]]
-      metric_matrix <- makeMetricsMatrix(
-        OrigData = dfXmatrix,
-        Missings_Which = dfXmatrixInsertedMissings_Which,
-        ImputedData = dfImputedDataAll,
-        Metric = metric_info$metric,
-        PValueThresholdForMetrics = PValueThresholdForMetrics,
-        OrigDataMiss = metric_info$orig_data_miss
-      )
-      names(metric_matrix) <- paste0(metric_info$prefix, names(dfXmatrix))
-      metric_matrix
-    })
-    names(result) <- names(metrics_list)
-
-    # Add matrices and return
-    c(
-      list(
-        dfXmatrixall = dfXmatrixall,
-        dfXmatrixInsertedMissings_Which = dfXmatrixInsertedMissings_Which
-      ),
-      result
-    )
-  }
-
-  # Execute parallel processing based on OS
-  rImputations <- switch(
-    Sys.info()[["sysname"]],
-    Windows = {
-      requireNamespace("foreach")
-      doParallel::registerDoParallel(nProc)
-      on.exit(doParallel::stopImplicitCluster())
-
-      i <- integer()
-      foreach::foreach(i = seq(seeds)) %dopar% {
-        performImputation(
-          seed = seeds[i],
-          Data = Data,
-          probMissing = probMissing,
-          ImputationMethods = ImputationMethods,
-          ImputationRepetitions = ImputationRepetitions,
-          PValueThresholdForMetrics = PValueThresholdForMetrics,
-          mnarity = mnarity,
-          lowOnly = lowOnly,
-          mnarshape = mnarshape
-        )
-      }
-    },
-  {
-    pbmcapply::pbmclapply(
-      seeds,
+    results <- future_lapply(
+      seeds_list,
       function(seed) {
-        performImputation(
-          seed = seed,
-          Data = Data,
-          probMissing = probMissing,
-          ImputationMethods = ImputationMethods,
-          ImputationRepetitions = ImputationRepetitions,
-          PValueThresholdForMetrics = PValueThresholdForMetrics,
-          mnarity = mnarity,
-          lowOnly = lowOnly,
-          mnarshape = mnarshape
-        )
-      },
-      mc.cores = nProc
-    )
-  }
-  )
+        # Capture all console output (cat, print statements) and suppress messages/warnings
+        result <- utils::capture.output({
+          suppressMessages(suppressWarnings({
 
-  return(rImputations)
+            data_initial_missings <- data
+
+            seed_missings <- if (fixed_seed_for_inserted_missings) {
+              seeds_list[1]
+            } else {
+              seed
+            }
+
+            diagnostic_missings_result <- create_diagnostic_missings(
+              x = data_initial_missings,
+              Prob = percent_missing,
+              mnarity = mnar_ity,
+              mnarshape = mnar_shape,
+              lowOnly = low_only,
+              seed = seed_missings,
+              maxAttempts = max_attempts
+            )
+
+            data_with_inserted_missings <- diagnostic_missings_result$missData
+            data_with_inserted_missings_which <- diagnostic_missings_result$toDelete
+
+            imputed_data_all <- impute_selected_methods(
+              data_with_missings = data_with_inserted_missings,
+              data_original = data_initial_missings,
+              methods = imputation_methods,
+              imputation_repetitions = imputation_repetitions,
+              seed = seed
+            )
+
+            names(imputed_data_all) <- imputation_methods
+            imputed_data_combined <- data.frame(do.call(rbind, imputed_data_all))
+
+            imputation_rmse <- make_metrics_matrix(
+              orig_data = data_initial_missings,
+              data_with_missings = data_with_inserted_missings_which,
+              imputed_data = imputed_data_combined,
+              metric = "RMSEImputedUnivar",
+              result = "ME"
+            )
+            names(imputation_rmse) <- paste0("RMSE_", names(data_initial_missings))
+
+            imputation_me <- make_metrics_matrix(
+              orig_data = data_initial_missings,
+              data_with_missings = data_with_inserted_missings_which,
+              imputed_data = imputed_data_combined,
+              metric = "MEImputedUnivar",
+              result = "ME"
+            )
+            names(imputation_me) <- paste0("ME_", names(data_initial_missings))
+
+            imputation_correlation <- make_metrics_matrix(
+              orig_data = data_initial_missings,
+              data_with_missings = data_with_inserted_missings_which,
+              imputed_data = imputed_data_combined,
+              metric = "CorrImputedUnivar",
+              result = "ME"
+            )
+            names(imputation_correlation) <- paste0("CorrOrigImputed_", names(data_initial_missings))
+
+            imputation_zdelta <- make_metrics_matrix(
+              orig_data = data_initial_missings,
+              data_with_missings = data_with_inserted_missings_which,
+              imputed_data = imputed_data_combined,
+              orig_data_miss = data_with_inserted_missings,
+              metric = "ZDelta",
+              result = "ME"
+            )
+            names(imputation_zdelta) <- paste0("ZDelta_", names(data_initial_missings))
+
+            # Store result before progress update
+            final_result <- list(
+              data_with_inserted_missings_which = data_with_inserted_missings_which,
+              imputation_rmse = imputation_rmse,
+              imputation_me = imputation_me,
+              imputation_correlation = imputation_correlation,
+              imputation_zdelta = imputation_zdelta
+            )
+
+            # Signal progress after work is complete
+            p()
+
+            # Return the result
+            final_result
+          }))
+        }, type = "output")
+
+        # Return the actual result (last element before capture.output converted it)
+        # Since capture.output returns a character vector, we need the result from inside
+        # We'll use a different approach: assign result before capture
+
+        # Actually, capture.output with type="output" captures console output but we need
+        # to return the actual value. Let's restructure:
+
+        invisible(utils::capture.output({
+          result_data <- suppressMessages(suppressWarnings({
+
+            data_initial_missings <- data
+
+            seed_missings <- if (fixed_seed_for_inserted_missings) {
+              seeds_list[1]
+            } else {
+              seed
+            }
+
+            diagnostic_missings_result <- create_diagnostic_missings(
+              x = data_initial_missings,
+              Prob = percent_missing,
+              mnarity = mnar_ity,
+              mnarshape = mnar_shape,
+              lowOnly = low_only,
+              seed = seed_missings,
+              maxAttempts = max_attempts
+            )
+
+            data_with_inserted_missings <- diagnostic_missings_result$missData
+            data_with_inserted_missings_which <- diagnostic_missings_result$toDelete
+
+            imputed_data_all <- impute_selected_methods(
+              data_with_missings = data_with_inserted_missings,
+              data_original = data_initial_missings,
+              methods = imputation_methods,
+              imputation_repetitions = imputation_repetitions,
+              seed = seed
+            )
+
+            names(imputed_data_all) <- imputation_methods
+            imputed_data_combined <- data.frame(do.call(rbind, imputed_data_all))
+
+            imputation_rmse <- make_metrics_matrix(
+              orig_data = data_initial_missings,
+              data_with_missings = data_with_inserted_missings_which,
+              imputed_data = imputed_data_combined,
+              metric = "RMSEImputedUnivar",
+              result = "ME"
+            )
+            names(imputation_rmse) <- paste0("RMSE_", names(data_initial_missings))
+
+            imputation_me <- make_metrics_matrix(
+              orig_data = data_initial_missings,
+              data_with_missings = data_with_inserted_missings_which,
+              imputed_data = imputed_data_combined,
+              metric = "MEImputedUnivar",
+              result = "ME"
+            )
+            names(imputation_me) <- paste0("ME_", names(data_initial_missings))
+
+            imputation_correlation <- make_metrics_matrix(
+              orig_data = data_initial_missings,
+              data_with_missings = data_with_inserted_missings_which,
+              imputed_data = imputed_data_combined,
+              metric = "CorrImputedUnivar",
+              result = "ME"
+            )
+            names(imputation_correlation) <- paste0("CorrOrigImputed_", names(data_initial_missings))
+
+            imputation_zdelta <- make_metrics_matrix(
+              orig_data = data_initial_missings,
+              data_with_missings = data_with_inserted_missings_which,
+              imputed_data = imputed_data_combined,
+              orig_data_miss = data_with_inserted_missings,
+              metric = "ZDelta",
+              result = "ME"
+            )
+            names(imputation_zdelta) <- paste0("ZDelta_", names(data_initial_missings))
+
+            list(
+              data_with_inserted_missings_which = data_with_inserted_missings_which,
+              imputation_rmse = imputation_rmse,
+              imputation_me = imputation_me,
+              imputation_correlation = imputation_correlation,
+              imputation_zdelta = imputation_zdelta
+            )
+          }))
+        }, type = "output"))
+
+        # Signal progress after work is complete
+        p()
+
+        # Return the result
+        result_data
+      },
+      future.seed = TRUE
+    )
+  })
+
+  results
 }

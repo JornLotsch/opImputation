@@ -72,36 +72,3 @@ all_imputation_methods <- c(
   calibrating_imputation_methods,
   multivariate_imputation_methods
 )
-
-#' @title Variables used in plotting functions
-#' @description Suppress R CMD check notes for variables used in ggplot2 expressions
-#' @keywords internal
-utils::globalVariables(c(
-  # Category and grouping variables
-  "Category", "Method", "Methods",
-  # Analysis variables
-  "Failed", "rSum", "value", "variable",
-  # Plot coordinates
-  "xloc", "x", "y",
-  # Plot aesthetics and labels
-  "BestUnivariate", "Imputation", "Multivariate",
-  "PDE", "label", "color", "poisoned",
-  # imputeData foreach
-  "i"
-))
-
-#' Color Schemes for Plotting
-#'
-#' Pre-defined color palettes used in visualization functions
-#'
-#' @details
-#' * myColorszDelta: Colors for z-score delta plots (4 colors)
-#' * myColorsABC: Colors for ABC analysis plots (4 colors)
-#'
-#' @export
-#' @rdname color_schemes
-myColorszDelta <- c("#0072B2", "#009E73", "#D55E00", "#F0E442")
-
-#' @rdname color_schemes
-#' @export
-myColorsABC <- c("#009E73", "#56B4E9", "#E69F00", "red")
