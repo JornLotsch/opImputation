@@ -72,3 +72,33 @@ all_imputation_methods <- c(
   calibrating_imputation_methods,
   multivariate_imputation_methods
 )
+
+# Colors
+myColorszDelta <- c("#0072B2", "#009E73", "#D55E00", "#F0E442")
+myColorsABC <- c("#009E73", "#56B4E9", "#E69F00", "red")
+
+# Suppress R CMD check notes for variables used in non-standard evaluation (NSE)
+# These are used in ggplot2, dplyr, and data.table operations
+utils::globalVariables(c(
+  # Plotting variables (ggplot2 aesthetics and data.table operations)
+  "Category", "Failed", "Method", "color", "rSum", "value", "variable",
+  "xloc", "x", "y", "BestUnivariate", "Imputation", "Multivariate",
+  "PDE", "label", "Methods",
+
+  # ABC analysis variables
+  "plot_position", "abc_score", "abc_category", "poisoned_highlight",
+
+  # Metrics configuration variables (if these are options/parameters)
+  "UseNonparaMetric", "UseNormalizedMetrics", "UseRobustRanking",
+  "PValueThresholdForMetrics", "UseBAvariant",
+
+  # Color scheme
+  "myColorszDelta",
+  "myColorsABC",
+
+  # Future/parallel processing
+  "plan", "multisession",
+
+  # Get seed if not set as parameter
+  "get_seed"
+))

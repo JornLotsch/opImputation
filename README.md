@@ -29,7 +29,7 @@ devtools::install_github("JornLotsch/opImputation")
 | **Title** | Optimal Selection of Imputation Methods for Bio‑Medical Data |
 | **Version** | 0.4 |
 | **Depends** | R (≥ 3.5.0) |
-| **Imports** | parallel, Rfit, methods, stats, caret, ABCanalysis, ggplot2, future.apply, progressr, missForest, utils, mice, miceRanger, multiUS, Amelia, mi, reshape2, DataVisualizations, cowplot, twosamples, ggh4x, ggrepel, tools, Rcpp (≥ 1.0.0) |
+| **Imports** | parallel, Rfit, methods, stats, caret, ABCanalysis, ggplot2, future.apply, progressr, missForest, utils, mice, miceRanger, multiUS, Amelia, mi, reshape2, DataVisualizations, abind, cowplot, twosamples, ggh4x, ggrepel, tools, Rcpp (≥ 1.0.0) |
 | **LinkingTo** | Rcpp |
 | **License** | GPL‑3 |
 | **Authors** | Jörn Lötsch, Alfred Ultsch |
@@ -82,6 +82,7 @@ print(results$method_used_for_imputation)
 ## Main functions
 
 ### compare_imputation_methods
+#### Call
 
 | Argument | Description |
 |-----------|-------------|
@@ -102,21 +103,28 @@ print(results$method_used_for_imputation)
 | `overall_best_z_delta` | Logical. Compare to global best or category best method (default = FALSE). |
 | `produce_final_imputations` | Logical. If `TRUE`, generates final imputed dataset using the best‑ranked valid method (default = TRUE). |
 
-**Returns:**  
-- `repeated_sample_imputations` — list of all iteration results  
-- `z_deltas` — standardized z‑delta metrics (raw values, medians, and row medians)  
-- `methods_results` — ABC analysis metrics and method rankings  
-- `best_method_per_dataset` — name of the overall best method  
-- `best_univariate_method`, `best_multivariate_method`, `best_uni_multivariate_method`, `best_poisoned_method` — category bests  
-- `df_abc_results` — results of ABC analysis (category and score)  
-- `fig_z_delta_distributions_best_methods` — comparison of z‑delta distributions  
-- `fig_comparison_summary` — combined summary figure (ABC + z‑delta plots)  
-- `imputed_data` — final imputed dataset (if `produce_final_imputations = TRUE`)  
-- `method_used_for_imputation` — name of the actual method used  
+#### Returns
+
+| Return Element | Description |
+|-----------------|-------------|
+| `all_imputation_runs` | List containing all imputation results generated across repeated simulation runs and missing‑data patterns. |
+| `zdelta_metrics` | Standardized Δz (z‑delta) error metrics, including raw values, medians, and variable‑wise summaries quantifying deviations between original and imputed data. |
+| `method_performance_summary` | Comprehensive performance summary of all imputation methods, including ranking metrics and Activity‑Based Classification (ABC) results. |
+| `best_overall_method` | Name of the best‑performing imputation method for the analyzed dataset. |
+| `best_univariate_method` | Name of the top‑performing univariate (single‑variable) imputation method. |
+| `best_multivariate_method` | Name of the top‑performing multivariate (multi‑variable) imputation method. |
+| `best_combined_method` | Name of the leading combined uni/multivariate imputation method. |
+| `best_stressed_method` | Name of the top‑performing stress‑test (formerly “poisoned”) method. |
+| `abc_results_table` | Data frame containing the ABC (Activity‑Based Classification) analysis results, including method categories and performance scores. |
+| `fig_zdelta_distributions` | Figure displaying the distribution of standardized Δz values for the best‑performing methods. |
+| `fig_summary_comparison` | Combined figure integrating ABC classification and summary Δz plots for comparative visualization. |
+| `final_imputed_data` | Final dataset with all missing values filled in using the best‑performing method (if `produce_final_imputations = TRUE`). |
+| `final_imputation_method` | Name of the imputation algorithm automatically selected and applied to create the final complete dataset. |
 
 ---
 
 ### impute_missings
+#### Call
 
 | Argument | Description |
 |-----------|-------------|
@@ -126,7 +134,8 @@ print(results$method_used_for_imputation)
 | `seed` | Random seed for reproducibility (recommended). |
 | `x_orig` | Original dataset required for “poisoned” or “calibrating” methods. |
 
-**Returns:**  
+
+#### Returns  
 A numeric data frame of the same dimensions and column names, with all missing values imputed.  
 
 ---

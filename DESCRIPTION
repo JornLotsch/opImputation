@@ -6,7 +6,7 @@ Description: A model-agnostic framework for selecting dataset-specific imputatio
 Depends: R (>= 3.5.0)
 Imports: parallel, Rfit, methods, stats, caret, ABCanalysis, ggplot2, future.apply, progressr,
         missForest, utils, mice, miceRanger, multiUS, Amelia, mi, reshape2, DataVisualizations,
-        cowplot, twosamples, ggh4x, ggrepel, tools, Rcpp (>= 1.0.0)
+        abind, cowplot, twosamples, ggh4x, ggrepel, tools, Rcpp (>= 1.0.0)
 LinkingTo: Rcpp
 LazyData: true
 Suggests:
@@ -20,3 +20,4 @@ Maintainer: Jorn Lotsch <j.lotsch@em.uni-frankfurt.de>
 NeedsCompilation: yes
 Date: 2025-05-03
 Config/testthat/edition: 3
+RoxygenNote: 7.3.3

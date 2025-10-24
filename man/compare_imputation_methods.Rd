@@ -87,23 +87,44 @@ compare_imputation_methods(
 
 \value{
 Returns a list containing:
-  \item{repeated_sample_imputations}{List of all imputation results from each iteration}
-  \item{z_deltas}{List with zDelta metrics including raw values, medians, and row medians}
-  \item{methods_results}{Results from best method analysis including ABC values and rankings}
-  \item{best_method_per_dataset}{Character. Name of overall best performing method}
-  \item{best_univariate_method}{Character. Name of best univariate method}
-  \item{best_multivariate_method}{Character. Name of best multivariate method}
-  \item{best_uni_multivariate_method}{Character. Name of best uni/multivariate method}
-  \item{best_poisoned_method}{Character. Name of best poisoned method}
-  \item{df_abc_results}{Data frame with ABC analysis categorization results}
-  \item{fig_z_delta_distributions_best_methods}{ggplot object. PDE and QQ comparison plots (if applicable)}
-  \item{fig_comparison_summary}{ggplot object. Combined figure with ABC analysis and zDelta plots}
-  \item{imputed_data}{Data frame with imputed values (only if \code{produce_final_imputations = TRUE}).
-    Contains the original data with all missing values filled in using the best-performing method.
-    NULL if imputation was disabled or if all methods failed to produce a complete dataset.}
-  \item{method_used_for_imputation}{Character. Name of the method used to produce \code{imputed_data}.
-    NULL if imputation was disabled or if all methods failed. Provides transparency about which
-    method was actually used for the final imputation.}
+  \item{all_imputation_runs}{List containing all imputation results generated
+     across repeated simulation runs and missing‑data patterns.}
+
+  \item{zdelta_metrics}{Standardized z‑delta error metrics, including raw values,
+     medians, and variable‑wise summaries quantifying deviations between original and imputed data.}
+
+  \item{method_performance_summary}{Comprehensive performance summary of all imputation methods,
+     including ranking metrics and Activity‑Based Classification (ABC) results.}
+
+  \item{best_overall_method}{Character. Name of the best‑performing imputation method
+     for the analyzed dataset.}
+
+  \item{best_univariate_method}{Character. Name of the top‑performing univariate (single‑variable)
+     imputation method.}
+
+  \item{best_multivariate_method}{Character. Name of the top‑performing multivariate (multi‑variable)
+     imputation method.}
+
+  \item{best_combined_method}{Character. Name of the leading combined uni/multivariate imputation method.}
+
+  \item{best_stressed_method}{Character. Name of the top‑performing stress‑test (formerly “poisoned”) method.}
+
+  \item{abc_results_table}{Data frame containing the ABC (Activity‑Based Classification) analysis results,
+     including method categories and performance scores.}
+
+  \item{fig_zdelta_distributions}{\code{ggplot} object displaying the distribution of
+     standardized z‑delta values for the best‑performing methods.}
+
+  \item{fig_summary_comparison}{\code{ggplot} object providing a combined summary figure integrating ABC
+     classification and z‑delta plots for comparative visualization.}
+
+  \item{final_imputed_data}{Data frame containing the final dataset with all missing values filled in using
+     the best‑performing method (only if \code{produce_final_imputations = TRUE}).
+     Returns \code{NULL} if no complete dataset could be produced or if imputation was disabled.}
+
+  \item{final_imputation_method}{Character. Name of the imputation algorithm automatically
+    selected and applied to create the final complete dataset.
+    Returns \code{NULL} if imputation was disabled or failed.}
 }
 
 \details{

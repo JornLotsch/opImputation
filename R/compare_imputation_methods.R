@@ -459,19 +459,20 @@ compare_imputation_methods <- function(
 
   return(
     list(
-      repeated_sample_imputations = repeated_sample_imputations,
-      z_deltas = z_deltas,
-      methods_results = methods_results,
-      best_method_per_dataset = best_method_per_dataset,
+      all_imputation_runs = repeated_sample_imputations,
+      zdelta_metrics = z_deltas,
+      method_performance_summary = methods_results,
+      best_overall_method = best_method_per_dataset,
       best_univariate_method = best_univariate_method,
       best_multivariate_method = best_multivariate_method,
-      best_uni_multivariate_method = best_uni_multivariate_method,
-      best_poisoned_method = best_poisoned_method,
-      df_abc_results = res_abc$df_abc_results[,1:3],
-      fig_z_delta_distributions_best_methods = fig_z_delta_distributions_best_methods,
-      fig_comparison_summary = fig_comparison_summary,
-      imputed_data = imputed_data,
-      method_used_for_imputation = method_used_for_imputation
+      best_combined_method = best_uni_multivariate_method,
+      best_stressed_method = best_poisoned_method,
+      abc_results_table = res_abc$df_abc_results[, 1:3],
+      fig_zdelta_distributions = fig_z_delta_distributions_best_methods,
+      fig_summary_comparison = fig_comparison_summary,
+      final_imputed_data = imputed_data,
+      final_imputation_method = method_used_for_imputation
     )
   )
+
 }
