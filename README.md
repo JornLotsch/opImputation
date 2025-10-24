@@ -22,7 +22,7 @@ It is developed for biomedical and clinical research but is broadly applicable t
 if (!requireNamespace("devtools")) install.packages("devtools")
 devtools::install_github("JornLotsch/opImputation")
 
-# From CRAN (when available, upload still pending)
+# From CRAN (when available, uploaded to CRAN on October 24, 2025. Release pending incoming checks)
 install.packages("opImputation")
 ```
 
