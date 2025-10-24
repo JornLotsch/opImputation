@@ -540,7 +540,7 @@ impute_missings <- function(x, method = "rf_missForest", ImputationRepetitions =
 
   names(ImputedData) <- names(x)
 
-  return(ImputedData)
+  return(as.data.frame(ImputedData))
 }
 
 # ===========================

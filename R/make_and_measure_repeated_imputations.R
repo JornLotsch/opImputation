@@ -63,7 +63,7 @@ make_and_measure_repeated_imputations <- function(data,
   handlers("txtprogressbar")
 
   # Use cross-platform parallel backend via future
-  plan(multisession, workers = n_proc)
+  future::plan(multisession, workers = n_proc)
 
   results <- NULL
 

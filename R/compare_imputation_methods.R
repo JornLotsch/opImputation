@@ -189,7 +189,7 @@ compare_imputation_methods <- function(
   }
 
   # Set the seed
-  if (missing(seed)) seed <- as.integer(get_seed())
+  if (missing(seed)) seed <- round(runif(1)*100)
   
   # Define the list of seeds
   seeds_list <- 1:n_iterations + seed - 1

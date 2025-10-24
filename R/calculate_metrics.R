@@ -39,19 +39,25 @@ NULL
 #'   \item ZDelta - Standardized absolute difference
 #' }
 #'
-#' The function uses global variables for configuration:
+#' The function uses configuration parameters:
 #' \itemize{
-#'   \item UseNonparaMetric - Use median instead of mean
-#'   \item UseNormalizedMetrics - Normalize by IQR
-#'   \item UseRobustRanking - Apply significance testing
-#'   \item PValueThresholdForMetrics - P-value threshold
-#'   \item UseBAvariant - Use Bland-Altman variant for correlation
+#'   \item use_nonpara_metric - Use median instead of mean
+#'   \item use_normalized_metrics - Normalize by IQR
+#'   \item use_robust_ranking - Apply significance testing
+#'   \item p_value_threshold_for_metrics - P-value threshold
+#'   \item use_ba_variant - Use Bland-Altman variant for correlation
 #' }
 #'
 #' @keywords internal
-calculate_metrics <- function(orig_data, data_with_missings, imputed_data, metric,
-                              orig_data_miss = NULL) {
-
+calculate_metrics <- function(
+  orig_data, data_with_missings, imputed_data, metric,
+  orig_data_miss = NULL,
+  use_nonpara_metric = TRUE,
+  use_normalized_metrics = FALSE,
+  use_robust_ranking = TRUE,
+  p_value_threshold_for_metrics = 0.1,
+  use_ba_variant = TRUE
+) {
   ME <- NA
   pval <- NA
 
@@ -67,17 +73,17 @@ calculate_metrics <- function(orig_data, data_with_missings, imputed_data, metri
         metric,
 
         RMSEImputedUnivar = {
-          if (UseNonparaMetric == FALSE) {
+          if (use_nonpara_metric == FALSE) {
             ME <- sqrt(mean((diffs)^2, na.rm = TRUE))
           } else {
             ME <- sqrt(median((diffs)^2, na.rm = TRUE))
           }
-          if (UseNormalizedMetrics == TRUE) {
+          if (use_normalized_metrics == TRUE) {
             ME <- ME / (max(1, IQR(diffs)^2) * 1.4816)
           }
-          if (UseRobustRanking == TRUE) {
+          if (use_robust_ranking == TRUE) {
             st <- wilcox.test((diffs)^2)
-            if (st$p.value >= PValueThresholdForMetrics) {
+            if (st$p.value >= p_value_threshold_for_metrics) {
               ME <- 0
             }
             pval <- st$p.value
@@ -85,17 +91,17 @@ calculate_metrics <- function(orig_data, data_with_missings, imputed_data, metri
         },
 
         MEImputedUnivar = {
-          if (UseNonparaMetric == FALSE) {
+          if (use_nonpara_metric == FALSE) {
             ME <- abs(mean(diffs, na.rm = TRUE))
           } else {
             ME <- abs(median(diffs, na.rm = TRUE))
           }
-          if (UseNormalizedMetrics == TRUE) {
+          if (use_normalized_metrics == TRUE) {
             ME <- ME / (max(1, IQR(diffs)) * 1.4816)
           }
-          if (UseRobustRanking == TRUE) {
+          if (use_robust_ranking == TRUE) {
             st <- wilcox.test((diffs))
-            if (st$p.value >= PValueThresholdForMetrics) {
+            if (st$p.value >= p_value_threshold_for_metrics) {
               ME <- 0
             }
             pval <- st$p.value
@@ -103,12 +109,12 @@ calculate_metrics <- function(orig_data, data_with_missings, imputed_data, metri
         },
 
         CorrImputedUnivar = {
-          if (UseNonparaMetric == FALSE) {
-            if (UseBAvariant == FALSE) {
+          if (use_nonpara_metric == FALSE) {
+            if (use_ba_variant == FALSE) {
               st <- cor.test(orig, imputed, na.rm = TRUE, method = "pearson")
               ME <- st$estimate
-              if (UseRobustRanking == TRUE) {
-                if (st$p.value >= PValueThresholdForMetrics) {
+              if (use_robust_ranking == TRUE) {
+                if (st$p.value >= p_value_threshold_for_metrics) {
                   ME <- 0
                 }
                 pval <- st$p.value
@@ -121,7 +127,7 @@ calculate_metrics <- function(orig_data, data_with_missings, imputed_data, metri
                   if (!inherits(st, "try-error")) {
                     if (length(summary(st)$coefficients[2, ] == 4) &&
                       !is.na(summary(st)$coefficients[2, 4]) &&
-                      summary(st)$coefficients[2, "p.value"] < PValueThresholdForMetrics) {
+                      summary(st)$coefficients[2, "p.value"] < p_value_threshold_for_metrics) {
                       ME <- abs(coef(st)[[2]])
                     }
                   }
@@ -129,11 +135,11 @@ calculate_metrics <- function(orig_data, data_with_missings, imputed_data, metri
               }
             }
           } else {
-            if (UseBAvariant == FALSE) {
+            if (use_ba_variant == FALSE) {
               st <- cor.test(orig, imputed, na.rm = TRUE, method = "spearman")
               ME <- st$estimate
-              if (UseRobustRanking == TRUE) {
-                if (st$p.value >= PValueThresholdForMetrics) {
+              if (use_robust_ranking == TRUE) {
+                if (st$p.value >= p_value_threshold_for_metrics) {
                   ME <- 0
                 }
                 pval <- st$p.value
@@ -142,9 +148,9 @@ calculate_metrics <- function(orig_data, data_with_missings, imputed_data, metri
               st <- try(Rfit::rfit(diffs ~ means), TRUE)
               if (!inherits(st, "try-error")) {
                 ME <- abs(coef(st)[[2]])
-                if (UseRobustRanking == TRUE) {
+                if (use_robust_ranking == TRUE) {
                   if (length(summary(st)$coefficients[2, ] == 4) & !is.na(summary(st)$coefficients[2, 4])) {
-                    if (summary(st)$coefficients[2, "p.value"] >= PValueThresholdForMetrics) {
+                    if (summary(st)$coefficients[2, "p.value"] >= p_value_threshold_for_metrics) {
                       ME <- 0
                     }
                     pval <- summary(st)$coefficients[2, "p.value"]
@@ -160,7 +166,7 @@ calculate_metrics <- function(orig_data, data_with_missings, imputed_data, metri
         },
 
         NMD = {
-          if (UseNonparaMetric == FALSE) {
+          if (use_nonpara_metric == FALSE) {
             MD <- abs(mean(diffs, na.rm = TRUE))
             ME <- MD / (max(1, IQR(diffs)) * 1.4816)
           } else {
@@ -170,7 +176,7 @@ calculate_metrics <- function(orig_data, data_with_missings, imputed_data, metri
         },
 
         NRMSE = {
-          if (UseNonparaMetric == FALSE) {
+          if (use_nonpara_metric == FALSE) {
             MD <- sqrt(mean((diffs)^2, na.rm = TRUE))
           } else {
             MD <- sqrt(median((diffs)^2, na.rm = TRUE))
@@ -179,7 +185,7 @@ calculate_metrics <- function(orig_data, data_with_missings, imputed_data, metri
         },
 
         ZDelta = {
-          if (UseNonparaMetric == FALSE) {
+          if (use_nonpara_metric == FALSE) {
             m <- mean(orig_data_miss, na.rm = TRUE)
             s <- max(1, sd(orig_data_miss, na.rm = TRUE))
             z_orig <- (orig - m) / s
@@ -201,6 +207,7 @@ calculate_metrics <- function(orig_data, data_with_missings, imputed_data, metri
 
   return(list(ME = ME, pval = pval))
 }
+
 
 # ===========================
 # Metrics Matrix Creation

@@ -32,7 +32,7 @@ impute_missings(
     Ignored for non-repeated methods.}
 
   \item{seed}{Integer. Random seed for reproducibility. If missing, reads current
-    system seed, which can be very slow. Setting the parameter is recommended. 
+    system seed. Setting the parameter is recommended for better reproducibility.
     Must be the same as set in compare_imputation_methods for reprodicible results.}
 
   \item{x_orig}{Data frame or matrix. Original complete data required only for
@@ -153,75 +153,23 @@ Jorn Lotsch, Alfred Ultsch
 }
 
 \examples{
-\dontrun{
-# Create example data with missing values
-data_with_na <- data.frame(
-  x = c(1, 2, NA, 4, 5),
-  y = c(NA, 2, 3, 4, 5),
-  z = c(1, NA, 3, NA, 5)
-)
+# Load example data
+data_iris <- iris[,1:4]
+
+# Add some misisngs
+set.seed(42)
+for(i in 1:4) data_iris[sample(1:nrow(data_iris), 0.05*nrow(data_iris)), i] <- NA
 
 # Simple univariate imputation with median
-imputed_median <- impute_missings(
-  data_with_na,
-  method = "median"
-)
-
-# Multivariate imputation with random forest
-imputed_rf <- impute_missings(
-  data_with_na,
-  method = "rf_missForest",
-  seed = 123
-)
-
-# Repeated imputation for more stable results
-imputed_repeated <- impute_missings(
-  data_with_na,
-  method = "rf_mice_repeated",
-  ImputationRepetitions = 20,
-  seed = 123
-)
-
-# k-Nearest neighbors imputation
-imputed_knn <- impute_missings(
-  data_with_na,
-  method = "knn5",
-  seed = 123
-)
-
-# Predictive mean matching
-imputed_pmm <- impute_missings(
-  data_with_na,
-  method = "pmm",
-  seed = 123
-)
-
-# Example with real data
-data(iris)
-iris_numeric <- iris[, 1:4]
-
-# Introduce some missing values
-set.seed(42)
-missing_indices <- sample(length(as.matrix(iris_numeric)), 20)
-iris_numeric[missing_indices] <- NA
-
-# Impute using different methods
-iris_imputed_rf <- impute_missings(
-  iris_numeric,
-  method = "rf_missForest",
+data_iris_imputed_median <- impute_missings(
+  data_iris,
+  method = "median",
   seed = 42
 )
 
-iris_imputed_knn <- impute_missings(
-  iris_numeric,
-  method = "knn5",
-  seed = 42
-)
+# Show data
+head(data_iris_imputed_median)
 
-# Compare results
-summary(iris_imputed_rf)
-summary(iris_imputed_knn)
-}
 }
 
 \seealso{

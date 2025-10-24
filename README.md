@@ -17,10 +17,15 @@ It is developed for biomedical and clinical research but is broadly applicable t
 ---
 
 ## Installation
-```
+```r
+# From GitHub
 if (!requireNamespace("devtools")) install.packages("devtools")
 devtools::install_github("JornLotsch/opImputation")
+
+# From CRAN (when available, upload still pending)
+install.packages("opImputation")
 ```
+
 
 **Package metadata:**  
 | Field | Value |
@@ -29,51 +34,38 @@ devtools::install_github("JornLotsch/opImputation")
 | **Title** | Optimal Selection of Imputation Methods for Bio‑Medical Data |
 | **Version** | 0.4 |
 | **Depends** | R (≥ 3.5.0) |
-| **Imports** | parallel, Rfit, methods, stats, caret, ABCanalysis, ggplot2, future.apply, progressr, missForest, utils, mice, miceRanger, multiUS, Amelia, mi, reshape2, DataVisualizations, abind, cowplot, twosamples, ggh4x, ggrepel, tools, Rcpp (≥ 1.0.0) |
-| **LinkingTo** | Rcpp |
+| **Imports** | parallel, Rfit, methods, stats, caret, ABCanalysis, ggplot2, future, future.apply, progressr, missForest, utils, mice, miceRanger, multiUS, Amelia, mi, reshape2, DataVisualizations, abind, cowplot, twosamples, ggh4x, ggrepel, tools |
 | **License** | GPL‑3 |
 | **Authors** | Jörn Lötsch, Alfred Ultsch |
 | **Maintainer** | Jörn Lötsch |
 | **Repository** | [https://github.com/JornLotsch/opImputation](https://github.com/JornLotsch/opImputation) |
 | **Date** | 2025‑05‑03 |
-| **NeedsCompilation** | yes |
 
 ---
 
 ## Usage
 
 ### Basic example
-```
+```r
 library(opImputation)
 
-# Load example dataset (numeric columns only)
-data <- iris[, 1:4]
+# Load example data
+data_iris <- iris[,1:4]
 
-# Introduce 5% random missing values, avoiding empty rows
+# Add some misisngs
 set.seed(42)
-n_total <- prod(dim(data))
-n_missing <- round(0.05 * n_total)
-repeat {
-  tmp <- data
-  pos <- sample(n_total, n_missing)
-  tmp[pos] <- NA
-  if (all(rowSums(is.na(tmp)) < ncol(tmp))) break
-}
-data <- tmp
+for(i in 1:4) data_iris[sample(1:nrow(data_iris), 0.05*nrow(data_iris)), i] <- NA
 
-# Step 1: Compare imputation methods
+# Basic comparison with a subset of methods
 results <- compare_imputation_methods(
-  data = data,
-  imputation_methods = c("rf_mice", "median", "knn5"),
-  imputation_repetitions = 20,
+  data = data_iris,
+  imputation_methods = c("mean", "median", "knn5", "rf_missForest"),
   n_iterations = 10,
-  percent_missing = 0.05,
-  seed = 123,
-  n_proc = 2,
-  plot_results = TRUE
+  imputation_repetitions = 10,
+  seed = 42
 )
 
-# Step 2: Retrieve automatically generated final imputation
+# Retrieve automatically generated final imputation
 imputed_data <- results$imputed_data
 print(results$method_used_for_imputation)
 ```
@@ -232,9 +224,5 @@ If you use **opImputation**, please cite:
 ## About this project
 
 **opImputation** provides an automated, transparent, and reproducible framework for dataset‑specific benchmarking and optimal selection of missing‑value imputation methods.  
-The framework incorporates *Activity‑Based Classification (ABC)* and *computed ABC (cABC)* analyses to identify statistically top‑performing algorithms and to optionally generate a fully imputed dataset automatically.  
-
-For theoretical background, see:  
-- Ultsch A, Lötsch J. *Computed ABC Analysis for Rational Selection of Most Informative Variables in Multivariate Data.* *PLoS One.* 2015; 10(6): e0129767.  
-- Lötsch J, Ultsch A. *Recursive computed ABC (cABC) Analysis for Reducing Machine‑Learning Feature Sets to Their Minimum Informative Size.* *Sci Rep.* 2023; 13(1): 5470.
+The framework incorporates *computed ABC (cABC)* analyses to identify statistically top‑performing algorithms and to optionally generate a fully imputed dataset automatically. For theoretical background, see: Ultsch A, Lötsch J. Computed ABC Analysis for Rational Selection of Most Informative Variables in Multivariate Data,  *PLoS One.* 2015; 10(6): e0129767 and  Lötsch J Ultsch A. Recursive computed ABC (cABC) Analysis for Reducing Machine‑Learning Feature Sets to Their Minimum Informative Size. *Sci Rep.* 2023; 13(1): 5470.
 ```

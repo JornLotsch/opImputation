@@ -56,7 +56,7 @@ compare_imputation_methods(
     in each iteration (0 to 1). Default is 0.1 (10\%).}
 
   \item{seed}{Integer. Random seed for reproducibility. If missing, reads current
-    system seed, which can be very slow. Setting the parameter is recommended.}
+    system seed. Setting the parameter is recommended for better reproducibility.}
 
   \item{mnar_shape}{Numeric. Shape parameter for MNAR (Missing Not At Random)
     mechanism. Default is 1 (MCAR - Missing Completely At Random).}
@@ -187,66 +187,25 @@ and allows users to understand the quality of the chosen imputation method.
 }
 
 \examples{
-\dontrun{
 # Load example data
-data(PainThresholds)
+data_iris <- iris[,1:4]
+
+# Add some misisngs
+set.seed(42)
+for(i in 1:4) data_iris[sample(1:nrow(data_iris), 0.05*nrow(data_iris)), i] <- NA
 
 # Basic comparison with a subset of methods
 results <- compare_imputation_methods(
-  data = PainThresholds,
-  imputation_methods = c("mean", "median", "knn5", "rf_mice"),
+  data = data_iris,
+  imputation_methods = c("mean", "median", "knn5", "rf_missForest"),
   n_iterations = 10,
   imputation_repetitions = 10,
-  seed = 123
-)
-
-# View best method
-print(results$best_method_per_dataset)
-
-# View summary figure
-print(results$fig_comparison_summary)
-
-# Access the imputed data
-head(results$imputed_data)
-
-# See which method was used
-print(results$method_used_for_imputation)
-
-# Advanced usage with MNAR mechanism
-results_mnar <- compare_imputation_methods(
-  data = PainThresholds,
-  imputation_methods = c("mean", "knn5", "rf_mice"),
-  mnar_ity = 0.5,
-  low_only = TRUE,
-  n_iterations = 10,
   seed = 42
 )
 
-# Compare best methods across categories
-print(results_mnar$best_univariate_method)
-print(results_mnar$best_multivariate_method)
+# Cleanup to avoid open sockets during R CMD check
+future::plan(future::sequential)
 
-# View ABC analysis results
-print(results_mnar$df_abc_results)
-
-# Use the imputed data for further analysis
-imputed_dataset <- results_mnar$imputed_data
-if (!is.null(imputed_dataset)) {
-  # Proceed with analysis on complete data
-  cor_matrix <- cor(imputed_dataset)
-  print(cor_matrix)
-}
-
-# Disable final imputation if only comparison is needed
-results_comparison_only <- compare_imputation_methods(
-  data = PainThresholds,
-  imputation_methods = c("mean", "median", "knn5"),
-  n_iterations = 5,
-  produce_final_imputations = FALSE,
-  seed = 123
-)
-# results_comparison_only$imputed_data will be NULL
-}
 }
 
 \seealso{

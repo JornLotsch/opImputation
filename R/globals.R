@@ -89,15 +89,18 @@ utils::globalVariables(c(
   "plot_position", "abc_score", "abc_category", "poisoned_highlight",
 
   # Metrics configuration variables (if these are options/parameters)
-  "UseNonparaMetric", "UseNormalizedMetrics", "UseRobustRanking",
-  "PValueThresholdForMetrics", "UseBAvariant",
+  # Used during method development, actually not needed as the library 
+  # uses the paramters in the published version. Kept in the code for 
+  # possible use in future versions as addtional options
+  "use_nonpara_metric", "use_normalized_metrics", "use_robust_ranking",
+  "p_value_threshold_for_metrics", "use_ba_variant",
 
   # Color scheme
   "myColorszDelta",
   "myColorsABC",
 
   # Future/parallel processing
-  "plan", "multisession",
+  "multisession",
 
   # Get seed if not set as parameter
   "get_seed"
