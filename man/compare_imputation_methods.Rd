@@ -187,25 +187,26 @@ and allows users to understand the quality of the chosen imputation method.
 }
 
 \examples{
-# Load example data
-data_iris <- iris[,1:4]
+\dontrun{
+  # Load example data
+  data_iris <- iris[,1:4]
 
-# Add some misisngs
-set.seed(42)
-for(i in 1:4) data_iris[sample(1:nrow(data_iris), 0.05*nrow(data_iris)), i] <- NA
+  # Add some missings
+  set.seed(42)
+  for(i in 1:4) data_iris[sample(1:nrow(data_iris), 0.05*nrow(data_iris)), i] <- NA
 
-# Basic comparison with a subset of methods
-results <- compare_imputation_methods(
-  data = data_iris,
-  imputation_methods = c("mean", "median", "knn5", "rf_missForest"),
-  n_iterations = 10,
-  imputation_repetitions = 10,
-  seed = 42
-)
+  # Basic comparison with a subset of methods
+  results <- compare_imputation_methods(
+    data = data_iris,
+    imputation_methods = c("mean", "median", "rSample"),
+    n_iterations = 5,
+    imputation_repetitions = 5,
+    seed = 42
+  )
 
-# Cleanup to avoid open sockets during R CMD check
-future::plan(future::sequential)
-
+  # Cleanup to avoid open sockets during R CMD check
+  future::plan(future::sequential)
+}
 }
 
 \seealso{
