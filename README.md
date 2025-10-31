@@ -28,18 +28,19 @@ install.packages("opImputation")
 
 
 **Package metadata:**  
-| Field | Value |
-|-------|--------|
-| **Type** | R Package |
-| **Title** | Optimal Selection of Imputation Methods for Bio‑Medical Data |
-| **Version** | 0.4 |
-| **Depends** | R (≥ 3.5.0) |
-| **Imports** | parallel, Rfit, methods, stats, caret, ABCanalysis, ggplot2, future, future.apply, progressr, missForest, utils, mice, miceRanger, multiUS, Amelia, mi, reshape2, DataVisualizations, abind, cowplot, twosamples, ggh4x, ggrepel, tools |
-| **License** | GPL‑3 |
-| **Authors** | Jörn Lötsch, Alfred Ultsch |
-| **Maintainer** | Jörn Lötsch |
-| **Repository** | [https://github.com/JornLotsch/opImputation](https://github.com/JornLotsch/opImputation) |
-| **Date** | 2025‑05‑03 |
+
+
+| Type                    | R Package                                                                                                                                                                                                                               |
+|-------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Title**               | Optimal Selection of Imputation Methods for Bio‑Medical Data                                                                                                                                                                            |
+| **Version**             | 0.4                                                                                                                                                                                                                                     |
+| **Depends**             | R (≥ 3.5.0)                                                                                                                                                                                                                             |
+| **Imports**             | parallel, Rfit, methods, stats, caret, ABCanalysis, ggplot2, future, future.apply, progressr, missForest, utils, mice, miceRanger, multiUS, Amelia, mi, reshape2, DataVisualizations, abind, cowplot, twosamples, ggh4x, ggrepel, tools |
+| **License**             | GPL‑3                                                                                                                                                                                                                                   |
+| **Authors**             | Jörn Lötsch, Alfred Ultsch                                                                                                                                                                                                              |
+| **Creator, Maintainer** | Jörn Lötsch                                                                                                                                                                                                                             |
+| **Repository**          | [https://github.com/JornLotsch/opImputation](https://github.com/JornLotsch/opImputation)                                                                                                                                                |
+| **Date**                | 2025‑05‑03                                                                                                                                                                                                                              |
 
 ---
 
@@ -76,41 +77,42 @@ print(results$method_used_for_imputation)
 ### compare_imputation_methods
 #### Call
 
-| Argument | Description |
-|-----------|-------------|
-| `data` | Numeric data frame or matrix. May contain existing missing values. |
-| `imputation_methods` | Character vector of imputation method names to compare. Default: `all_imputation_methods`. Must include at least two non‑calibrating methods. |
-| `imputation_repetitions` | Integer. Number of repeated imputations for each method and iteration (default = 20). |
-| `perfect_methods_in_ABC` | Logical. If `TRUE`, calibration methods are included in the final categorization of methods (default value = FALSE). For testing purposes only; do not set to TRUE in real test environments.|
-| `n_iterations` | Number of missing data patterns to test (default = 20). |
-| `n_proc` | Number of CPU cores for parallel processing (default: `getOption("mc.cores", 2L)`). |
-| `percent_missing` | Numeric. Proportion of data to randomly set missing (0‑1; default = 0.1). |
-| `seed` | Integer. Random seed for reproducibility (recommended). |
-| `mnar_shape` | Shape parameter for the *Missing Not At Random* (MNAR) mechanism (default = 1). |
-| `mnar_ity` | Degree of MNAR dependency (0–1; default = 0 → MCAR). |
-| `low_only` | Logical. If `TRUE`, insert missings only in lower‑valued observations. |
-| `fixed_seed_for_inserted_missings` | Logical. Repeat identical random pattern across iterations. |
-| `max_attempts` | Maximum attempts to avoid creating empty rows (default = 1000). |
-| `plot_results` | Logical. If `TRUE`, create summary plots (default = TRUE). |
-| `overall_best_z_delta` | Logical. Compare to global best or category best method (default = FALSE). |
-| `produce_final_imputations` | Logical. If `TRUE`, generates final imputed dataset using the best‑ranked valid method (default = TRUE). |
+| Argument                           | Description                                                                                                                                                                                   |
+|------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `data`                             | Numeric data frame or matrix. May contain existing missing values.                                                                                                                            |
+| `imputation_methods`               | Character vector of imputation method names to compare. Default: `all_imputation_methods`. Must include at least two non‑calibrating methods.                                                 |
+| `imputation_repetitions`           | Integer. Number of repeated imputations for each method and iteration (default = 20).                                                                                                         |
+| `perfect_methods_in_ABC`           | Logical. If `TRUE`, calibration methods are included in the final categorization of methods (default value = FALSE). For testing purposes only; do not set to TRUE in real test environments. |
+| `n_iterations`                     | Number of missing data patterns to test (default = 20).                                                                                                                                       |
+| `n_proc`                           | Number of CPU cores for parallel processing (default: `getOption("mc.cores",2L)`).                                                                                                            |
+| `percent_missing`                  | Numeric. Proportion of data to randomly set missing (0‑1; default = 0.1).                                                                                                                     |
+| `seed`                             | Integer. Random seed for reproducibility (recommended).                                                                                                                                       |
+| `mnar_shape`                       | Shape parameter for the *Missing Not At Random* (MNAR) mechanism (default = 1).                                                                                                               |
+| `mnar_ity`                         | Degree of MNAR dependency (0–1; default = 0 → MCAR).                                                                                                                                          |
+| `low_only`                         | Logical. If `TRUE`, insert missings only in lower‑valued observations.                                                                                                                        |
+| `fixed_seed_for_inserted_missings` | Logical. Repeat identical random pattern across iterations.                                                                                                                                   |
+| `max_attempts`                     | Maximum attempts to avoid creating empty rows (default = 1000).                                                                                                                               |
+| `overall_best_z_delta`             | Logical. Compare to global best or category best method (default = FALSE).                                                                                                                    |
+| `produce_final_imputations`        | Logical. If `TRUE`, generates final imputed dataset using the best‑ranked valid method (default = TRUE).                                                                                      |
+| `plot_results`                     | Logical. If `TRUE`, create summary plots (default = TRUE).                                                                                                                                    |
+| `verbose`                          | Logical. If `TRUE`, print best method information and turn on messaging (default = TRUE).                                                                                                                                    |
 
 #### Returns
 
 | Return Element | Description |
 |-----------------|-------------|
 | `all_imputation_runs` | List containing all imputation results generated across repeated simulation runs and missing‑data patterns. |
-| `zdelta_metrics` | Standardized Δz (z‑delta) error metrics, including raw values, medians, and variable‑wise summaries quantifying deviations between original and imputed data. |
-| `method_performance_summary` | Comprehensive performance summary of all imputation methods, including ranking metrics and Activity‑Based Classification (ABC) results. |
+| `zdelta_metrics` | Standardized Δz (z‑delta) error metrics, including raw values, medians, and variable‑wise summaries quantifying deviations between original and imputed data. |
+| `method_performance_summary` | Comprehensive performance summary of all imputation methods, including ranking metrics and Activity‑Based Classification (ABC) results. |
 | `best_overall_method` | Name of the best‑performing imputation method for the analyzed dataset. |
 | `best_univariate_method` | Name of the top‑performing univariate (single‑variable) imputation method. |
 | `best_multivariate_method` | Name of the top‑performing multivariate (multi‑variable) imputation method. |
-| `best_combined_method` | Name of the leading combined uni/multivariate imputation method. |
-| `best_stressed_method` | Name of the top‑performing stress‑test (formerly “poisoned”) method. |
-| `abc_results_table` | Data frame containing the ABC (Activity‑Based Classification) analysis results, including method categories and performance scores. |
-| `fig_zdelta_distributions` | Figure displaying the distribution of standardized Δz values for the best‑performing methods. |
-| `fig_summary_comparison` | Combined figure integrating ABC classification and summary Δz plots for comparative visualization. |
-| `final_imputed_data` | Final dataset with all missing values filled in using the best‑performing method (if `produce_final_imputations = TRUE`). |
+| `best_uni_or_multivariate_method` | Name of the leading combined uni/multivariate imputation method. |
+| `best_poisoned_method` | Name of the top‑performing stress‑test method. |
+| `abc_results_table` | Data frame containing the ABC (Activity‑Based Classification) analysis results, including method categories and performance scores. |
+| `fig_zdelta_distributions` | Figure displaying the distribution of standardized Δz values for the best‑performing methods. |
+| `fig_summary_comparison` | Combined figure integrating ABC classification and summary Δz plots for comparative visualization. |
+| `final_imputed_data` | Final dataset with all missing values filled in using the best‑performing method (if `produce_final_imputations = TRUE`). |
 | `final_imputation_method` | Name of the imputation algorithm automatically selected and applied to create the final complete dataset. |
 
 ---
@@ -121,8 +123,8 @@ print(results$method_used_for_imputation)
 | Argument | Description |
 |-----------|-------------|
 | `x` | Numeric data frame or matrix with missing values. |
-| `method` | Imputation method name (default = `"rf_missForest"`). |
-| `ImputationRepetitions` | Number of repetitions for methods ending with `_repeated` (default = 10). |
+| `method` | Imputation method name (default = `"rf_missForest"`). |
+| `ImputationRepetitions` | Number of repetitions for methods ending with `_repeated` (default = 10). |
 | `seed` | Random seed for reproducibility (recommended). |
 | `x_orig` | Original dataset required for “poisoned” or “calibrating” methods. |
 
@@ -134,7 +136,7 @@ A numeric data frame of the same dimensions and column names, with all missing v
 
 ## Output and diagnostics
 
-Performance evaluation is based on the standardized **Δz (z‑delta)** metric—  
+Performance evaluation is based on the standardized **Δz (z‑delta)** metric—  
 a robust measure of the absolute deviation between true and imputed values.  
 **ABC (Activity‑Based Classification)** categorizes imputation methods by their relative performance,  
 highlighting “A‑class” models as top performers.
@@ -173,8 +175,8 @@ Example output table from `res_abc$df_abc_results[,1:3]`(generic dataset):
 | 0.0000 | C | rSample |
 
 **Legend:**  
-- `abc_score`: zDelta values. Quantitative measure of imputation performance (higher = better).  
-- `abc_category`: ABC‑derived ranking class (“A” = top, “B” = medium, “C” = low).  
+- `abc_score`: zDelta values. Quantitative measure of imputation performance (higher = better).  
+- `abc_category`: ABC‑derived ranking class (“A” = top, “B” = medium, “C” = low).  
 - `method`: Name of the evaluated imputation algorithm.  
 “A‑class” methods (top seven in this example) represent the highest‑performing algorithms for the tested dataset.  
 Lower tiers correspond to progressively weaker or calibration‑only approaches.
@@ -188,7 +190,7 @@ Lower tiers correspond to progressively weaker or calibration‑only approaches.
 
 <img src="./Iris_TestOutput_annotated.svg" width="750">
 
-A: Standardized mean ranks for all imputation methods with ABC category coloring.  
+A: Standardized mean ranks for all imputation methods with ABC category coloring.  
 B: Mean standardized Δz deviations for diagnostic missings.  
 C: Variable‑level Δz distributions across methods.  
 
@@ -207,22 +209,27 @@ C: Variable‑level Δz distributions across methods.
 
 If you use **opImputation**, please cite:
 
-> Lötsch J, Ultsch A. (2025).  
-> *A model‑agnostic framework for dataset‑specific selection of missing value imputation methods in pain‑related numerical data.*  
-> *Can J Pain* (in minor revision)
+> Lötsch J, Ultsch A. (2025).  
+> *A model‑agnostic framework for dataset‑specific selection of missing value imputation methods in pain‑related numerical data.*  
+> *Can J Pain* (in minor revision)
 
 ---
 
 ## Authors and license
 
-- **Jörn Lötsch** (author, creator, maintainer)  
-- **Alfred Ultsch** (author)  
-- License: GPL‑3  
+- **Jörn Lötsch** (author, creator, maintainer)  
+- **Alfred Ultsch** (author)  
+- License: GPL‑3  
 
 ---
 
 ## About this project
 
-**opImputation** provides an automated, transparent, and reproducible framework for dataset‑specific benchmarking and optimal selection of missing‑value imputation methods.  
-The framework incorporates *computed ABC (cABC)* analyses to identify statistically top‑performing algorithms and to optionally generate a fully imputed dataset automatically. For theoretical background, see: Ultsch A, Lötsch J. Computed ABC Analysis for Rational Selection of Most Informative Variables in Multivariate Data,  *PLoS One.* 2015; 10(6): e0129767 and  Lötsch J Ultsch A. Recursive computed ABC (cABC) Analysis for Reducing Machine‑Learning Feature Sets to Their Minimum Informative Size. *Sci Rep.* 2023; 13(1): 5470.
-```
+`opImputation` is an R-based framework for automated, transparent, and reproducible selection of suitable missing‑value imputation methods for a given dataset. It provides a model‑agnostic approach that evaluates multiple candidate algorithms directly on the dataset to identify the most appropriate technique for that specific data structure, missingness pattern, and variable type.
+
+The framework includes commonly used imputation families such as statistical, regression‑based, ensemble, tree‑based, and multiple‑imputation approaches. Its modular structure enables easy extension with additional or emerging methods, including deep‑learning‑based algorithms, ensuring long‑term flexibility across research domains.
+
+Quantitative evaluation of candidate methods is based on *computed ABC (cABC)* analysis, which identifies statistically top‑performing algorithms through standardized performance metrics. For details on the theoretical background of cABC analysis, see:
+Ultsch A, Lötsch J. *PLoS One.* 2015; 10(6): e0129767.  
+Lötsch J, Ultsch A. *Sci Rep.* 2023; 13(1): 5470.
+

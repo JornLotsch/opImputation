@@ -4,19 +4,16 @@
 #' @keywords internal
 NULL
 
-#' Imputation Method Groups
-#'
-#' Lists of different imputation method types used throughout the package
-#'
-#' @details
-#' The methods are categorized into four main groups:
-#' * univariate_imputation_methods: Basic statistical methods
-#' * poisoned_imputation_methods: Methods for validation testing
-#' * calibrating_imputation_methods: Methods with different noise levels
-#' * multivariate_imputation_methods: Complex methods using multiple variables
-#'
-#' @export
-#' @rdname imputation_methods
+# Imputation Method Groups
+#
+# Lists of different imputation method types used throughout the package
+#
+# The methods are categorized into four main groups:
+# * univariate_imputation_methods: Basic statistical methods
+# * poisoned_imputation_methods: Methods for validation testing
+# * calibrating_imputation_methods: Methods with different noise levels
+# * multivariate_imputation_methods: Complex methods using multiple variables
+
 univariate_imputation_methods <- c(
   "median",
   "mean",
@@ -24,16 +21,12 @@ univariate_imputation_methods <- c(
   "rSample"
 )
 
-#' @rdname imputation_methods
-#' @export
 poisoned_imputation_methods <- c(
   "plus",
   "plusminus",
   "factor"
 )
 
-#' @rdname imputation_methods
-#' @export
 calibrating_imputation_methods <- c(
   "tinyNoise_0.000001", "tinyNoise_0.00001",
   "tinyNoise_0.0001", "tinyNoise_0.001", "tinyNoise_0.01",
@@ -41,8 +34,6 @@ calibrating_imputation_methods <- c(
   "tinyNoise_0.5", "tinyNoise_1"
 )
 
-#' @rdname imputation_methods
-#' @export
 multivariate_imputation_methods <- c(
   # Bagging methods
   "bag", "bag_repeated",
@@ -63,9 +54,7 @@ multivariate_imputation_methods <- c(
   "miImp"
 )
 
-#' Complete list of all imputation methods
-#' @rdname imputation_methods
-#' @export
+# Complete list of all imputation methods
 all_imputation_methods <- c(
   univariate_imputation_methods,
   poisoned_imputation_methods,
@@ -89,9 +78,9 @@ utils::globalVariables(c(
   "plot_position", "abc_score", "abc_category", "poisoned_highlight",
 
   # Metrics configuration variables (if these are options/parameters)
-  # Used during method development, actually not needed as the library 
-  # uses the paramters in the published version. Kept in the code for 
-  # possible use in future versions as addtional options
+  # Used during method development, actually not needed as the library
+  # uses the parameters in the published version. Kept in the code for
+  # possible use in future versions as additional options
   "use_nonpara_metric", "use_normalized_metrics", "use_robust_ranking",
   "p_value_threshold_for_metrics", "use_ba_variant",
 
@@ -103,5 +92,12 @@ utils::globalVariables(c(
   "multisession",
 
   # Get seed if not set as parameter
-  "get_seed"
+  "get_seed",
+
+  # Method group variables (internal package variables)
+  "univariate_imputation_methods",
+  "poisoned_imputation_methods",
+  "calibrating_imputation_methods",
+  "multivariate_imputation_methods",
+  "all_imputation_methods"
 ))

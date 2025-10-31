@@ -173,89 +173,100 @@ impute_missings <- function(x, method = "rf_missForest", ImputationRepetitions =
   switch(
     method,
 
-    # ===========================
-    # Univariate Methods
-    # ===========================
+  # ===========================
+  # Univariate Methods
+  # ===========================
 
     median = ImputedData <- apply(x, 2, impute_median),
     mean = ImputedData <- apply(x, 2, impute_mean),
     mode = ImputedData <- apply(x, 2, impute_mode),
     rSample = ImputedData <- apply(x, 2, impute_random),
 
-    # ===========================
-    # Bagging Methods
-    # ===========================
+  # ===========================
+  # Bagging Methods
+  # ===========================
 
     bag = {
-      set.seed(seed)
+    set.seed(seed)
+    Impu <- try(caret::preProcess(x, method = "bagImpute"), TRUE)
+    if (!inherits(Impu, "try-error")) {
+      ImputedData <- predict(Impu, x)
+    }
+  },
+    bag_repeated = {
+    iImputedData <- lapply(list.of.seeds, function(s) {
+      set.seed(s)
       Impu <- try(caret::preProcess(x, method = "bagImpute"), TRUE)
       if (!inherits(Impu, "try-error")) {
         ImputedData <- predict(Impu, x)
       }
-    },
-    bag_repeated = {
-      iImputedData <- lapply(list.of.seeds, function(s) {
-        set.seed(s)
-        Impu <- try(caret::preProcess(x, method = "bagImpute"), TRUE)
-        if (!inherits(Impu, "try-error")) {
-          ImputedData <- predict(Impu, x)
-        }
-        return(ImputedData = ImputedData)
-      })
-      ImputedData <- try(median_imputations(iImputedData), TRUE)
-      if (inherits(ImputedData, "try-error")) {
-        ImputedData <- make_bad_imputations(x)
-      }
-    },
+      return(ImputedData = ImputedData)
+    })
+    ImputedData <- try(median_imputations(iImputedData), TRUE)
+    if (inherits(ImputedData, "try-error")) {
+      ImputedData <- make_bad_imputations(x)
+    }
+  },
 
-    # ===========================
-    # Random Forest Methods
-    # ===========================
+  # ===========================
+  # Random Forest Methods
+  # ===========================
 
     rf_mice = {
-      set.seed(seed)
+    set.seed(seed)
+    Impu <- try(mice::mice(x, method = "rf", print = FALSE), TRUE)
+    if (!inherits(Impu, "try-error")) {
+      ImputedData <- mice::complete(Impu)
+    }
+  },
+    rf_mice_repeated = {
+    iImputedData <- lapply(list.of.seeds, function(s) {
+      set.seed(s)
       Impu <- try(mice::mice(x, method = "rf", print = FALSE), TRUE)
       if (!inherits(Impu, "try-error")) {
         ImputedData <- mice::complete(Impu)
       }
-    },
-    rf_mice_repeated = {
-      iImputedData <- lapply(list.of.seeds, function(s) {
-        set.seed(s)
-        Impu <- try(mice::mice(x, method = "rf", print = FALSE), TRUE)
-        if (!inherits(Impu, "try-error")) {
-          ImputedData <- mice::complete(Impu)
-        }
-        return(ImputedData = ImputedData)
-      })
-      ImputedData <- try(median_imputations(iImputedData), TRUE)
-      if (inherits(ImputedData, "try-error")) {
-        ImputedData <- make_bad_imputations(x)
-      }
-    },
+      return(ImputedData = ImputedData)
+    })
+    ImputedData <- try(median_imputations(iImputedData), TRUE)
+    if (inherits(ImputedData, "try-error")) {
+      ImputedData <- make_bad_imputations(x)
+    }
+  },
     rf_missForest = {
-      set.seed(seed)
+    set.seed(seed)
+    Impu <- try(missForest::missForest(x), TRUE)
+    if (!inherits(Impu, "try-error")) {
+      ImputedData <- Impu$ximp
+    }
+  },
+    rf_missForest_repeated = {
+    iImputedData <- lapply(list.of.seeds, function(s) {
+      set.seed(s)
       Impu <- try(missForest::missForest(x), TRUE)
       if (!inherits(Impu, "try-error")) {
         ImputedData <- Impu$ximp
       }
-    },
-    rf_missForest_repeated = {
-      iImputedData <- lapply(list.of.seeds, function(s) {
-        set.seed(s)
-        Impu <- try(missForest::missForest(x), TRUE)
-        if (!inherits(Impu, "try-error")) {
-          ImputedData <- Impu$ximp
-        }
-        return(ImputedData = ImputedData)
-      })
-      ImputedData <- try(median_imputations(iImputedData), TRUE)
-      if (inherits(ImputedData, "try-error")) {
-        ImputedData <- make_bad_imputations(x)
-      }
-    },
+      return(ImputedData = ImputedData)
+    })
+    ImputedData <- try(median_imputations(iImputedData), TRUE)
+    if (inherits(ImputedData, "try-error")) {
+      ImputedData <- make_bad_imputations(x)
+    }
+  },
     miceRanger = {
-      set.seed(seed)
+    set.seed(seed)
+    miceObj <- try(miceRanger::miceRanger(x, 1, 1, returnModels = TRUE, verbose = FALSE), TRUE)
+    if (!inherits(miceObj, "try-error")) {
+      Impu <- try(miceRanger::impute(x, miceObj), TRUE)
+      if (!inherits(Impu, "try-error")) {
+        ImputedData <- data.frame(Impu$imputedData[[1]])
+      }
+    }
+  },
+    miceRanger_repeated = {
+    iImputedData <- lapply(list.of.seeds, function(s) {
+      set.seed(s)
       miceObj <- try(miceRanger::miceRanger(x, 1, 1, returnModels = TRUE, verbose = FALSE), TRUE)
       if (!inherits(miceObj, "try-error")) {
         Impu <- try(miceRanger::impute(x, miceObj), TRUE)
@@ -263,271 +274,260 @@ impute_missings <- function(x, method = "rf_missForest", ImputationRepetitions =
           ImputedData <- data.frame(Impu$imputedData[[1]])
         }
       }
-    },
-    miceRanger_repeated = {
-      iImputedData <- lapply(list.of.seeds, function(s) {
-        set.seed(s)
-        miceObj <- try(miceRanger::miceRanger(x, 1, 1, returnModels = TRUE, verbose = FALSE), TRUE)
-        if (!inherits(miceObj, "try-error")) {
-          Impu <- try(miceRanger::impute(x, miceObj), TRUE)
-          if (!inherits(Impu, "try-error")) {
-            ImputedData <- data.frame(Impu$imputedData[[1]])
-          }
-        }
-        return(ImputedData = ImputedData)
-      })
-      ImputedData <- try(median_imputations(iImputedData), TRUE)
-      if (inherits(ImputedData, "try-error")) {
-        ImputedData <- make_bad_imputations(x)
-      }
-    },
+      return(ImputedData = ImputedData)
+    })
+    ImputedData <- try(median_imputations(iImputedData), TRUE)
+    if (inherits(ImputedData, "try-error")) {
+      ImputedData <- make_bad_imputations(x)
+    }
+  },
 
-    # ===========================
-    # CART Methods
-    # ===========================
+  # ===========================
+  # CART Methods
+  # ===========================
 
     cart = {
-      set.seed(seed)
+    set.seed(seed)
+    Impu <- try(mice::mice(x, method = "cart", print = FALSE), TRUE)
+    if (!inherits(Impu, "try-error")) {
+      ImputedData <- mice::complete(Impu)
+    }
+  },
+    cart_repeated = {
+    iImputedData <- lapply(list.of.seeds, function(s) {
+      set.seed(s)
       Impu <- try(mice::mice(x, method = "cart", print = FALSE), TRUE)
       if (!inherits(Impu, "try-error")) {
         ImputedData <- mice::complete(Impu)
       }
-    },
-    cart_repeated = {
-      iImputedData <- lapply(list.of.seeds, function(s) {
-        set.seed(s)
-        Impu <- try(mice::mice(x, method = "cart", print = FALSE), TRUE)
-        if (!inherits(Impu, "try-error")) {
-          ImputedData <- mice::complete(Impu)
-        }
-        return(ImputedData = ImputedData)
-      })
-      ImputedData <- try(median_imputations(iImputedData), TRUE)
-      if (inherits(ImputedData, "try-error")) {
-        ImputedData <- make_bad_imputations(x)
-      }
-    },
+      return(ImputedData = ImputedData)
+    })
+    ImputedData <- try(median_imputations(iImputedData), TRUE)
+    if (inherits(ImputedData, "try-error")) {
+      ImputedData <- make_bad_imputations(x)
+    }
+  },
 
-    # ===========================
-    # Linear Methods
-    # ===========================
+  # ===========================
+  # Linear Methods
+  # ===========================
 
     linear = {
-      set.seed(seed)
-      Impu <- try(mice::mice(x, method = "lasso.norm", print = FALSE), TRUE)
-      if (!inherits(Impu, "try-error")) {
-        ImputedData <- mice::complete(Impu)
-      }
-    },
+    set.seed(seed)
+    Impu <- try(mice::mice(x, method = "lasso.norm", print = FALSE), TRUE)
+    if (!inherits(Impu, "try-error")) {
+      ImputedData <- mice::complete(Impu)
+    }
+  },
 
-    # ===========================
-    # PMM Methods
-    # ===========================
+  # ===========================
+  # PMM Methods
+  # ===========================
 
     pmm = {
-      set.seed(seed)
+    set.seed(seed)
+    Impu <- try(mice::mice(x, method = "pmm", print = FALSE), TRUE)
+    if (!inherits(Impu, "try-error")) {
+      ImputedData <- mice::complete(Impu)
+    }
+  },
+    pmm_repeated = {
+    iImputedData <- lapply(list.of.seeds, function(s) {
+      set.seed(s)
       Impu <- try(mice::mice(x, method = "pmm", print = FALSE), TRUE)
       if (!inherits(Impu, "try-error")) {
         ImputedData <- mice::complete(Impu)
       }
-    },
-    pmm_repeated = {
-      iImputedData <- lapply(list.of.seeds, function(s) {
-        set.seed(s)
-        Impu <- try(mice::mice(x, method = "pmm", print = FALSE), TRUE)
-        if (!inherits(Impu, "try-error")) {
-          ImputedData <- mice::complete(Impu)
-        }
-        return(ImputedData = ImputedData)
-      })
+      return(ImputedData = ImputedData)
+    })
+    ImputedData <- try(median_imputations(iImputedData), TRUE)
+    if (inherits(ImputedData, "try-error")) {
+      ImputedData <- make_bad_imputations(x)
+    }
+  },
+
+  # ===========================
+  # KNN Methods
+  # ===========================
+
+    knn3 = {
+    Impu <- try(multiUS::KNNimp(x, k = 3), TRUE)
+    if (!inherits(Impu, "try-error")) {
+      ImputedData <- Impu
+    }
+  },
+    knn5 = {
+    Impu <- try(multiUS::KNNimp(x, k = 5), TRUE)
+    if (!inherits(Impu, "try-error")) {
+      ImputedData <- Impu
+    }
+  },
+    knn7 = {
+    Impu <- try(multiUS::KNNimp(x, k = 7), TRUE)
+    if (!inherits(Impu, "try-error")) {
+      ImputedData <- Impu
+    }
+  },
+    knn9 = {
+    Impu <- try(multiUS::KNNimp(x, k = 9), TRUE)
+    if (!inherits(Impu, "try-error")) {
+      ImputedData <- Impu
+    }
+  },
+    knn10 = {
+    Impu <- try(multiUS::KNNimp(x, k = 10), TRUE)
+    if (!inherits(Impu, "try-error")) {
+      ImputedData <- Impu
+    }
+  },
+
+  # ===========================
+  # Multiple Imputation Methods
+  # ===========================
+
+    ameliaImp = {
+    set.seed(seed)
+    Impu <- try(eval_with_timeout(Amelia::amelia.default(x, m = 1), timeout = 30), TRUE)
+    if (!inherits(Impu, "try-error") && !is.null(Impu)) {
+      ImputedData <- Impu$imputations[[1]]
+    }
+  },
+    ameliaImp_repeated = {
+    set.seed(seed)
+    Impu <- try(eval_with_timeout(Amelia::amelia.default(x, m = ImputationRepetitions),
+                                    timeout = 30), TRUE)
+    if (!inherits(Impu, "try-error") && !is.null(Impu)) {
+      iImputedData <- Impu$imputations
       ImputedData <- try(median_imputations(iImputedData), TRUE)
       if (inherits(ImputedData, "try-error")) {
         ImputedData <- make_bad_imputations(x)
       }
-    },
-
-    # ===========================
-    # KNN Methods
-    # ===========================
-
-    knn3 = {
-      Impu <- try(multiUS::KNNimp(x, k = 3), TRUE)
-      if (!inherits(Impu, "try-error")) {
-        ImputedData <- Impu
-      }
-    },
-    knn5 = {
-      Impu <- try(multiUS::KNNimp(x, k = 5), TRUE)
-      if (!inherits(Impu, "try-error")) {
-        ImputedData <- Impu
-      }
-    },
-    knn7 = {
-      Impu <- try(multiUS::KNNimp(x, k = 7), TRUE)
-      if (!inherits(Impu, "try-error")) {
-        ImputedData <- Impu
-      }
-    },
-    knn9 = {
-      Impu <- try(multiUS::KNNimp(x, k = 9), TRUE)
-      if (!inherits(Impu, "try-error")) {
-        ImputedData <- Impu
-      }
-    },
-    knn10 = {
-      Impu <- try(multiUS::KNNimp(x, k = 10), TRUE)
-      if (!inherits(Impu, "try-error")) {
-        ImputedData <- Impu
-      }
-    },
-
-    # ===========================
-    # Multiple Imputation Methods
-    # ===========================
-
-    ameliaImp = {
-      set.seed(seed)
-      Impu <- try(eval_with_timeout(Amelia::amelia.default(x, m = 1), timeout = 30), TRUE)
-      if (!inherits(Impu, "try-error") && !is.null(Impu)) {
-        ImputedData <- Impu$imputations[[1]]
-      }
-    },
-    ameliaImp_repeated = {
-      set.seed(seed)
-      Impu <- try(eval_with_timeout(Amelia::amelia.default(x, m = ImputationRepetitions),
-                                    timeout = 30), TRUE)
-      if (!inherits(Impu, "try-error") && !is.null(Impu)) {
-        iImputedData <- Impu$imputations
-        ImputedData <- try(median_imputations(iImputedData), TRUE)
-        if (inherits(ImputedData, "try-error")) {
-          ImputedData <- make_bad_imputations(x)
-        }
-      }
-    },
+    }
+  },
     miImp = {
-      set.seed(seed)
-      Impu <- try(mi::mi(x, verbose = FALSE, parallel = FALSE), TRUE)
-      if (!inherits(Impu, "try-error")) {
-        iImputedData <- mi::complete(Impu)
-        iImputedDataI <- lapply(iImputedData, function(y) y[, names(x)])
-        ImputedData <- try(median_imputations(iImputedDataI), TRUE)
-        if (inherits(ImputedData, "try-error")) {
-          ImputedData <- make_bad_imputations(x)
-        }
-      }
-    },
-
-    # ===========================
-    # Poisoned Imputation Methods
-    # ===========================
-
-    plusminus = {
-      if (is.null(x_orig)) {
-        warning("x_orig required for plusminus method")
-      } else {
-        fac <- seq_len(nrow(x_orig))
-        ImputedData <- apply(x_orig, 2, function(x) x + (-1)^fac * 0.11 * median_not_zero(x))
-      }
-    },
-    plus = {
-      if (is.null(x_orig)) {
-        warning("x_orig required for plus method")
-      } else {
-        ImputedData <- apply(x_orig, 2, function(x) x + 1 * 0.1 * median_not_zero(x))
-      }
-    },
-    factor = {
-      if (is.null(x_orig)) {
-        warning("x_orig required for factor method")
-      } else {
-        ImputedData <- apply(x_orig, 2, function(x) x * (1 + 0.03 * median_not_zero(x)))
-      }
-    },
-
-    # ===========================
-    # Calibrating Methods (Tiny Noise)
-    # ===========================
-
-    tinyNoise_0.000001 = {
-      if (is.null(x_orig)) {
-        warning("x_orig required for tinyNoise methods")
-      } else {
-        set.seed(seed)
-        ImputedData <- apply(x_orig, 2, function(x) jitter(x, amount = .000001 * median_not_zero(x)))
-      }
-    },
-    tinyNoise_0.00001 = {
-      if (is.null(x_orig)) {
-        warning("x_orig required for tinyNoise methods")
-      } else {
-        set.seed(seed)
-        ImputedData <- apply(x_orig, 2, function(x) jitter(x, amount = .00001 * median_not_zero(x)))
-      }
-    },
-    tinyNoise_0.0001 = {
-      if (is.null(x_orig)) {
-        warning("x_orig required for tinyNoise methods")
-      } else {
-        set.seed(seed)
-        ImputedData <- apply(x_orig, 2, function(x) jitter(x, amount = .0001 * median_not_zero(x)))
-      }
-    },
-    tinyNoise_0.001 = {
-      if (is.null(x_orig)) {
-        warning("x_orig required for tinyNoise methods")
-      } else {
-        set.seed(seed)
-        ImputedData <- apply(x_orig, 2, function(x) jitter(x, amount = .001 * median_not_zero(x)))
-      }
-    },
-    tinyNoise_0.01 = {
-      if (is.null(x_orig)) {
-        warning("x_orig required for tinyNoise methods")
-      } else {
-        set.seed(seed)
-        ImputedData <- apply(x_orig, 2, function(x) jitter(x, amount = .01 * median_not_zero(x)))
-      }
-    },
-    tinyNoise_0.05 = {
-      if (is.null(x_orig)) {
-        warning("x_orig required for tinyNoise methods")
-      } else {
-        set.seed(seed)
-        ImputedData <- apply(x_orig, 2, function(x) jitter(x, amount = .05 * median_not_zero(x)))
-      }
-    },
-    tinyNoise_0.1 = {
-      if (is.null(x_orig)) {
-        warning("x_orig required for tinyNoise methods")
-      } else {
-        set.seed(seed)
-        ImputedData <- apply(x_orig, 2, function(x) jitter(x, amount = .1 * median_not_zero(x)))
-      }
-    },
-    tinyNoise_0.2 = {
-      if (is.null(x_orig)) {
-        warning("x_orig required for tinyNoise methods")
-      } else {
-        set.seed(seed)
-        ImputedData <- apply(x_orig, 2, function(x) jitter(x, amount = .2 * median_not_zero(x)))
-      }
-    },
-    tinyNoise_0.5 = {
-      if (is.null(x_orig)) {
-        warning("x_orig required for tinyNoise methods")
-      } else {
-        set.seed(seed)
-        ImputedData <- apply(x_orig, 2, function(x) jitter(x, amount = .5 * median_not_zero(x)))
-      }
-    },
-    tinyNoise_1 = {
-      if (is.null(x_orig)) {
-        warning("x_orig required for tinyNoise methods")
-      } else {
-        set.seed(seed)
-        ImputedData <- apply(x_orig, 2, function(x) jitter(x, amount = 1 * median_not_zero(x)))
+    set.seed(seed)
+    Impu <- try(mi::mi(x, verbose = FALSE, parallel = FALSE), TRUE)
+    if (!inherits(Impu, "try-error")) {
+      iImputedData <- mi::complete(Impu)
+      iImputedDataI <- lapply(iImputedData, function(y) y[, names(x)])
+      ImputedData <- try(median_imputations(iImputedDataI), TRUE)
+      if (inherits(ImputedData, "try-error")) {
+        ImputedData <- make_bad_imputations(x)
       }
     }
+  },
+
+  # ===========================
+  # Poisoned Imputation Methods
+  # ===========================
+
+    plusminus = {
+    if (is.null(x_orig)) {
+      warning("x_orig required for plusminus method")
+    } else {
+      fac <- seq_len(nrow(x_orig))
+      ImputedData <- apply(x_orig, 2, function(x) x + (-1) ^ fac * 0.11 * median_not_zero(x))
+    }
+  },
+    plus = {
+    if (is.null(x_orig)) {
+      warning("x_orig required for plus method")
+    } else {
+      ImputedData <- apply(x_orig, 2, function(x) x + 1 * 0.1 * median_not_zero(x))
+    }
+  },
+    factor = {
+    if (is.null(x_orig)) {
+      warning("x_orig required for factor method")
+    } else {
+      ImputedData <- apply(x_orig, 2, function(x) x * (1 + 0.03 * median_not_zero(x)))
+    }
+  },
+
+  # ===========================
+  # Calibrating Methods (Tiny Noise)
+  # ===========================
+
+    tinyNoise_0.000001 = {
+    if (is.null(x_orig)) {
+      warning("x_orig required for tinyNoise methods")
+    } else {
+      set.seed(seed)
+      ImputedData <- apply(x_orig, 2, function(x) jitter(x, amount = .000001 * median_not_zero(x)))
+    }
+  },
+    tinyNoise_0.00001 = {
+    if (is.null(x_orig)) {
+      warning("x_orig required for tinyNoise methods")
+    } else {
+      set.seed(seed)
+      ImputedData <- apply(x_orig, 2, function(x) jitter(x, amount = .00001 * median_not_zero(x)))
+    }
+  },
+    tinyNoise_0.0001 = {
+    if (is.null(x_orig)) {
+      warning("x_orig required for tinyNoise methods")
+    } else {
+      set.seed(seed)
+      ImputedData <- apply(x_orig, 2, function(x) jitter(x, amount = .0001 * median_not_zero(x)))
+    }
+  },
+    tinyNoise_0.001 = {
+    if (is.null(x_orig)) {
+      warning("x_orig required for tinyNoise methods")
+    } else {
+      set.seed(seed)
+      ImputedData <- apply(x_orig, 2, function(x) jitter(x, amount = .001 * median_not_zero(x)))
+    }
+  },
+    tinyNoise_0.01 = {
+    if (is.null(x_orig)) {
+      warning("x_orig required for tinyNoise methods")
+    } else {
+      set.seed(seed)
+      ImputedData <- apply(x_orig, 2, function(x) jitter(x, amount = .01 * median_not_zero(x)))
+    }
+  },
+    tinyNoise_0.05 = {
+    if (is.null(x_orig)) {
+      warning("x_orig required for tinyNoise methods")
+    } else {
+      set.seed(seed)
+      ImputedData <- apply(x_orig, 2, function(x) jitter(x, amount = .05 * median_not_zero(x)))
+    }
+  },
+    tinyNoise_0.1 = {
+    if (is.null(x_orig)) {
+      warning("x_orig required for tinyNoise methods")
+    } else {
+      set.seed(seed)
+      ImputedData <- apply(x_orig, 2, function(x) jitter(x, amount = .1 * median_not_zero(x)))
+    }
+  },
+    tinyNoise_0.2 = {
+    if (is.null(x_orig)) {
+      warning("x_orig required for tinyNoise methods")
+    } else {
+      set.seed(seed)
+      ImputedData <- apply(x_orig, 2, function(x) jitter(x, amount = .2 * median_not_zero(x)))
+    }
+  },
+    tinyNoise_0.5 = {
+    if (is.null(x_orig)) {
+      warning("x_orig required for tinyNoise methods")
+    } else {
+      set.seed(seed)
+      ImputedData <- apply(x_orig, 2, function(x) jitter(x, amount = .5 * median_not_zero(x)))
+    }
+  },
+    tinyNoise_1 = {
+    if (is.null(x_orig)) {
+      warning("x_orig required for tinyNoise methods")
+    } else {
+      set.seed(seed)
+      ImputedData <- apply(x_orig, 2, function(x) jitter(x, amount = 1 * median_not_zero(x)))
+    }
+  }
   )
 
   # Final error intercepting for non-poisoned methods
@@ -564,7 +564,7 @@ impute_missings <- function(x, method = "rf_missForest", ImputationRepetitions =
 #'
 #' @keywords internal
 impute_selected_methods <- function(data_with_missings, data_original, methods,
-                               imputation_repetitions, seed) {
+                                    imputation_repetitions, seed) {
 
   lapply(methods, function(method) {
     # Start with bad imputations (all NA)

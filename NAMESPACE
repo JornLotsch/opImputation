@@ -1,5 +1,6 @@
 export(compare_imputation_methods)
 export(impute_missings)
+export(create_diagnostic_missings)
 import(parallel)
 import(future.apply)
 import(future)

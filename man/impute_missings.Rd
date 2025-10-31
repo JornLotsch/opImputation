@@ -173,16 +173,7 @@ head(data_iris_imputed_median)
 }
 
 \seealso{
-\code{\link{compare_imputation_methods}} for systematic comparison of multiple
-imputation methods
-
-\code{\link{univariate_imputation_methods}},
-\code{\link{multivariate_imputation_methods}},
-\code{\link{poisoned_imputation_methods}},
-\code{\link{calibrating_imputation_methods}} for lists of available methods
-in each category
-
-\code{\link{all_imputation_methods}} for complete list of all available methods
+\code{\link{compare_imputation_methods}}
 }
 
 \keyword{imputation}

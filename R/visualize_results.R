@@ -264,7 +264,7 @@ create_barplot <- function(data, BestUniMultivariateMethodPerDataset,
 #' @keywords internal
 create_z_delta_PDE_plot <- function(dfParetoAll) {
   PDERawzDeltas <- ggplot() +
-    geom_line(data = dfParetoAll[dfParetoAll$Category %in% c("Multivariate", "Univariate"), ],
+    geom_line(data = dfParetoAll[dfParetoAll$Category %in% c("Multivariate", "Univariate"),],
               aes(x = x, y = PDE, color = Category)) +
     theme_light() +
     theme(
@@ -416,7 +416,7 @@ ABC_prepare_results_df <- function(data, ABCres) {
   df_abc$method <- gsub(' imputed|Imp', '', df_abc$method)
 
   df_abc$abc_category <- ABC_set_membership(ABCres = ABCres, num = FALSE)
-  df_abc <- df_abc[with(df_abc, order(-abc_score, method)), ]
+  df_abc <- df_abc[with(df_abc, order(-abc_score, method)),]
   df_abc$plot_position <- sort(df_abc$plot_position)
   df_abc$method <- factor(df_abc$method, levels = df_abc$method)
 
@@ -583,14 +583,14 @@ retrieve_z_deltas_for_best_method_per_category <- function(zDeltas,
                                                            BestMultivariateMethodPerDataset, BestPoisonedMethodPerDataset) {
   # Extract zDeltas for the best methods
   multivarzDeltas <- unlist(lapply(zDeltas$ImputationzDeltaInsertedMissings, function(x)
-    x[gsub(" imputed|Imp", "", rownames(x)) %in% BestMultivariateMethodPerDataset, ]))
+    x[gsub(" imputed|Imp", "", rownames(x)) %in% BestMultivariateMethodPerDataset,]))
   univarzDeltas <- unlist(lapply(zDeltas$ImputationzDeltaInsertedMissings, function(x)
-    x[gsub(" imputed|Imp", "", rownames(x)) %in% BestUnivariateMethodPerDataset, ]))
+    x[gsub(" imputed|Imp", "", rownames(x)) %in% BestUnivariateMethodPerDataset,]))
 
   # Extract zDeltas for the best poisoned method, if applicable
   if (BestMethodPerDataset %in% poisoned_imputation_methods) {
     poisonedzDeltas <- unlist(lapply(zDeltas$ImputationzDeltaInsertedMissings, function(x)
-      x[gsub(" imputed|Imp", "", rownames(x)) %in% BestPoisonedMethodPerDataset, ]))
+      x[gsub(" imputed|Imp", "", rownames(x)) %in% BestPoisonedMethodPerDataset,]))
   } else {
     poisonedzDeltas <- NULL
   }
@@ -678,7 +678,7 @@ create_z_deltas_multivar_univar_PDE_plot <- function(zDeltas,
                  label = "A poisoned method is best!")
     )
     PDERawzDeltasBest <- PDERawzDeltasBest +
-      geom_line(data = dfParetoAll[dfParetoAll$Category %in% c("Calibrating", "Poisoned"), ],
+      geom_line(data = dfParetoAll[dfParetoAll$Category %in% c("Calibrating", "Poisoned"),],
                 aes(x = x,
                     y = PDE / max(dfParetoAll$PDE[dfParetoAll$Category %in% c("Calibrating", "Poisoned")]) *
                       max(dfParetoAll$PDE[dfParetoAll$Category %in% c("Multivariate", "Univariate")]), color = Category)) +

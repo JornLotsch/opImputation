@@ -13,14 +13,15 @@
 #'   methods. See \code{\link{imputation_methods}} for available options.
 #' @param imputation_repetitions Integer. Number of times each imputation method
 #'   is repeated for each iteration. Default is 20.
+#' @param perfect_methods_in_ABC Logical. Whether to include perfect imputation methods in
+#'   comparative selections. Default is FALSE.
 #' @param n_iterations Integer. Number of different missing data patterns to test.
 #'   Default is 20.
 #' @param n_proc Integer. Number of processor cores to use for parallel processing.
 #'   Default is \code{getOption("mc.cores", 2L)}.
 #' @param percent_missing Numeric. Proportion of values to randomly set as missing
 #'   in each iteration (0 to 1). Default is 0.1 (10\%).
-#' @param seed Integer. Random seed for reproducibility. If missing, uses current
-#'   system seed.
+#' @param seed Integer. Random seed for reproducibility. Default is 42.
 #' @param mnar_shape Numeric. Shape parameter for MNAR (Missing Not At Random)
 #'   mechanism. Default is 1 (MCAR - Missing Completely At Random).
 #' @param mnar_ity Numeric. Degree of missingness mechanism (0-1). Default is 0
@@ -31,23 +32,29 @@
 #'   inserting missings across all iterations. Default is FALSE.
 #' @param max_attempts Integer. Maximum attempts to create valid missing pattern.
 #'   Default is 1000.
-#' @param plot_results Logical. If TRUE, print summary plots and best method
-#'   information. Default is TRUE.
 #' @param overall_best_z_delta Logical. If TRUE, compare all methods against the
 #'   overall best; if FALSE, compare against best within category. Default is FALSE.
+#' @param produce_final_imputations Logical. If TRUE, produce final imputed dataset
+#'   using the best-performing univariate or multivariate method from the ABC
+#'   analysis. Default is TRUE.
+#' @param plot_results Logical. If TRUE, show summary plots. Default is TRUE.
+#' @param verbose Logical. If TRUE, print best method information and turn on
+#'   messaging. Default is TRUE.
 #'
 #' @return List containing:
-#'   \item{repeated_sample_imputations}{List of all imputation results from each iteration}
-#'   \item{z_deltas}{List with zDelta metrics including raw values, medians, and row medians}
-#'   \item{methods_results}{Results from best method analysis including ABC values and rankings}
-#'   \item{best_method_per_dataset}{Character. Name of overall best performing method}
+#'   \item{all_imputation_runs}{List of all imputation results from each iteration}
+#'   \item{zdelta_metrics}{List with zDelta metrics including raw values, medians, and row medians}
+#'   \item{method_performance_summary}{Results from best method analysis including ABC values and rankings}
+#'   \item{best_overall_method}{Character. Name of overall best performing method}
 #'   \item{best_univariate_method}{Character. Name of best univariate method}
 #'   \item{best_multivariate_method}{Character. Name of best multivariate method}
-#'   \item{best_uni_multivariate_method}{Character. Name of best uni/multivariate method}
+#'   \item{best_uni_or_multivariate_method}{Character. Name of best uni/multivariate method}
 #'   \item{best_poisoned_method}{Character. Name of best poisoned method}
-#'   \item{df_abc_results}{Data frame with ABC analysis categorization results}
-#'   \item{fig_z_delta_distributions_best_methods}{ggplot object. PDE and QQ comparison plots (if applicable)}
-#'   \item{fig_comparison_summary}{ggplot object. Combined figure with ABC analysis and zDelta plots}
+#'   \item{abc_results_table}{Data frame with ABC analysis categorization results}
+#'   \item{fig_zdelta_distributions}{ggplot object. PDE and QQ comparison plots (if applicable)}
+#'   \item{fig_summary_comparison}{ggplot object. Combined figure with ABC analysis and zDelta plots}
+#'   \item{final_imputed_data}{Data frame containing the final imputed dataset (if produce_final_imputations = TRUE)}
+#'   \item{final_imputation_method}{Character. Name of the method used for final imputation}
 #'
 #' @details
 #' This function implements a model-agnostic framework for dataset-specific
@@ -92,10 +99,10 @@
 #' )
 #'
 #' # View best method
-#' print(results$best_method_per_dataset)
+#' print(results$best_overall_method)
 #'
 #' # View summary figure
-#' print(results$fig_comparison_summary)
+#' print(results$fig_summary_comparison)
 #'
 #' # Test with MNAR mechanism
 #' results_mnar <- compare_imputation_methods(
@@ -114,22 +121,23 @@
 #'
 #' @export
 compare_imputation_methods <- function(
-  data,
-  imputation_methods = all_imputation_methods,
-  imputation_repetitions = 20,
-  perfect_methods_in_ABC = FALSE,
-  n_iterations = 20,
-  n_proc = getOption("mc.cores", 2L),
-  percent_missing = 0.1,
-  seed = 42,
-  mnar_shape = 1,
-  mnar_ity = 0,
-  low_only = FALSE,
-  fixed_seed_for_inserted_missings = FALSE,
-  max_attempts = 1000,
-  plot_results = TRUE,
-  overall_best_z_delta = FALSE,
-  produce_final_imputations = TRUE) {
+    data,
+    imputation_methods = all_imputation_methods,
+    imputation_repetitions = 20,
+    perfect_methods_in_ABC = FALSE,
+    n_iterations = 20,
+    n_proc = getOption("mc.cores", 2L),
+    percent_missing = 0.1,
+    seed = 42,
+    mnar_shape = 1,
+    mnar_ity = 0,
+    low_only = FALSE,
+    fixed_seed_for_inserted_missings = FALSE,
+    max_attempts = 1000,
+    overall_best_z_delta = FALSE,
+    produce_final_imputations = TRUE,
+    plot_results = TRUE,
+    verbose = TRUE) {
 
   # ===========================
   # Input Validation
@@ -189,8 +197,8 @@ compare_imputation_methods <- function(
   }
 
   # Set the seed
-  if (missing(seed)) seed <- round(runif(1)*100)
-  
+  if (missing(seed)) seed <- round(runif(1) * 100)
+
   # Define the list of seeds
   seeds_list <- 1:n_iterations + seed - 1
 
@@ -222,24 +230,35 @@ compare_imputation_methods <- function(
   )
 
   # Extract the best methods (remove " imputed" and "Imp" suffixes)
+  pattern_cleanup <- " imputed|Imp"
+
   best_method_per_dataset <- gsub(
-    " imputed|Imp", "",
+    pattern_cleanup,
+    "",
     methods_results$best_per_dataset_ranksums_inserted_missings
   )
+
   best_univariate_method <- gsub(
-    " imputed|Imp", "",
+    pattern_cleanup,
+    "",
     methods_results$best_univariate_per_dataset_ranksums_inserted_missings
   )
+
   best_multivariate_method <- gsub(
-    " imputed|Imp", "",
+    pattern_cleanup,
+    "",
     methods_results$best_multivariate_per_dataset_ranksums_inserted_missings
   )
+
   best_uni_multivariate_method <- gsub(
-    " imputed|Imp", "",
+    pattern_cleanup,
+    "",
     methods_results$best_uni_multivariate_per_dataset_ranksums_inserted_missings
   )
+
   best_poisoned_method <- gsub(
-    " imputed|Imp", "",
+    pattern_cleanup,
+    "",
     methods_results$best_poisoned_per_dataset_ranksums_inserted_missings
   )
 
@@ -255,21 +274,26 @@ compare_imputation_methods <- function(
   # Create Visualizations
   # ===========================
 
-  # Bar plot of mean zDelta values
-  p_z_deltas_plot_average <- suppressWarnings(
-    create_barplot_mean_z_deltas(
-      medianImputationzDeltaInsertedMissings = z_deltas$medianImputationzDeltaInsertedMissings,
-      BestUniMultivariateMethodPerDataset = best_uni_multivariate_method,
-      overallBestzDelta = overall_best_z_delta
+  if (plot_results) {
+    # Bar plot of mean zDelta values
+    p_z_deltas_plot_average <- suppressWarnings(
+      create_barplot_mean_z_deltas(
+        medianImputationzDeltaInsertedMissings = z_deltas$medianImputationzDeltaInsertedMissings,
+        BestUniMultivariateMethodPerDataset = best_uni_multivariate_method,
+        overallBestzDelta = overall_best_z_delta
+      )
     )
-  )
 
-  # Violin plot of zDelta per variable
-  p_z_deltas_per_var <- suppressWarnings(
-    create_z_deltas_per_var_plot(
-      medianImputationzDeltaInsertedMissings = z_deltas$medianImputationzDeltaInsertedMissings
+    # Violin plot of zDelta per variable
+    p_z_deltas_per_var <- suppressWarnings(
+      create_z_deltas_per_var_plot(
+        medianImputationzDeltaInsertedMissings = z_deltas$medianImputationzDeltaInsertedMissings
+      )
     )
-  )
+  } else {
+    p_z_deltas_plot_average <- NULL
+    p_z_deltas_per_var <- NULL
+  }
 
   # ABC analysis plot
   res_abc <- suppressWarnings(
@@ -279,70 +303,81 @@ compare_imputation_methods <- function(
   )
   p_abc <- res_abc$ABCplot
 
-  # Only create comparison plots if both univariate and multivariate methods are present
-  fig_z_delta_distributions_best_methods <- NULL
-  if (sum(imputation_methods %in% univariate_imputation_methods) > 0 &&
-    sum(imputation_methods %in% multivariate_imputation_methods) > 0) {
+  if (plot_results) {
 
-    p_z_deltas_multivar_univar_pde <- suppressWarnings(
-      create_z_deltas_multivar_univar_PDE_plot(
-        zDeltas = z_deltas,
-        BestMethodPerDataset = best_method_per_dataset,
-        BestUnivariateMethodPerDataset = best_univariate_method,
-        BestMultivariateMethodPerDataset = best_multivariate_method,
-        BestPoisonedMethodPerDataset = best_poisoned_method
+    # Only create comparison plots if both univariate and multivariate methods are present
+    fig_z_delta_distributions_best_methods <- NULL
+    if (sum(imputation_methods %in% univariate_imputation_methods) > 0 &&
+        sum(imputation_methods %in% multivariate_imputation_methods) > 0) {
+
+      p_z_deltas_multivar_univar_pde <- suppressWarnings(
+        create_z_deltas_multivar_univar_PDE_plot(
+          zDeltas = z_deltas,
+          BestMethodPerDataset = best_method_per_dataset,
+          BestUnivariateMethodPerDataset = best_univariate_method,
+          BestMultivariateMethodPerDataset = best_multivariate_method,
+          BestPoisonedMethodPerDataset = best_poisoned_method
+        )
       )
-    )
 
-    p_z_deltas_multivar_univar_qq <- suppressWarnings(
-      create_d_deltas_multivar_univar_QQ_plot(
-        zDeltas = z_deltas,
-        BestMethodPerDataset = best_method_per_dataset,
-        BestUnivariateMethodPerDataset = best_univariate_method,
-        BestMultivariateMethodPerDataset = best_multivariate_method,
-        BestPoisonedMethodPerDataset = best_poisoned_method
+      p_z_deltas_multivar_univar_qq <- suppressWarnings(
+        create_d_deltas_multivar_univar_QQ_plot(
+          zDeltas = z_deltas,
+          BestMethodPerDataset = best_method_per_dataset,
+          BestUnivariateMethodPerDataset = best_univariate_method,
+          BestMultivariateMethodPerDataset = best_multivariate_method,
+          BestPoisonedMethodPerDataset = best_poisoned_method
+        )
       )
-    )
 
-    fig_z_delta_distributions_best_methods <- suppressWarnings(
+      fig_z_delta_distributions_best_methods <- suppressWarnings(
+        cowplot::plot_grid(
+          p_z_deltas_multivar_univar_pde,
+          p_z_deltas_multivar_univar_qq,
+          labels = LETTERS[1:2],
+          nrow = 1,
+          align = "h",
+          axis = "tb"
+        )
+      )
+    }
+
+    # ===========================
+    # Create Summary Figure
+    # ===========================
+
+    fig_comparison_summary <- suppressWarnings(
       cowplot::plot_grid(
-        p_z_deltas_multivar_univar_pde,
-        p_z_deltas_multivar_univar_qq,
-        labels = LETTERS[1:2],
-        nrow = 1,
-        align = "h",
-        axis = "tb"
+        p_abc,
+        p_z_deltas_plot_average,
+        p_z_deltas_per_var,
+        labels = LETTERS[1:3],
+        ncol = 1
       )
     )
+
+  } else {
+    p_z_deltas_multivar_univar_pde <- NULL
+    p_z_deltas_multivar_univar_qq <- NULL
+    fig_comparison_summary <- NULL
+    fig_z_delta_distributions_best_methods <- NULL
   }
-
-  # ===========================
-  # Create Summary Figure
-  # ===========================
-
-  fig_comparison_summary <- suppressWarnings(
-    cowplot::plot_grid(
-      p_abc,
-      p_z_deltas_plot_average,
-      p_z_deltas_per_var,
-      labels = LETTERS[1:3],
-      ncol = 1
-    )
-  )
 
   # ===========================
   # Print Results (if requested)
   # ===========================
 
-  if (plot_results) {
-    suppressWarnings(print("Best method per dataset:"))
-    suppressWarnings(print(best_method_per_dataset))
-    suppressWarnings(print("Best univariate or multivariate method per dataset:"))
-    suppressWarnings(print(best_uni_multivariate_method))
-    suppressWarnings(print(fig_comparison_summary))
+  if (verbose) {
+    message("Best method per dataset:")
+    message(best_method_per_dataset)
+    message("Best univariate or multivariate method per dataset:")
+    message(best_uni_multivariate_method)
+    message(fig_comparison_summary)
+  }
 
+  if (plot_results) {
     if (!is.null(fig_z_delta_distributions_best_methods)) {
-      suppressWarnings(print(fig_z_delta_distributions_best_methods))
+      suppressWarnings(message(fig_z_delta_distributions_best_methods))
     }
   }
 
@@ -361,7 +396,7 @@ compare_imputation_methods <- function(
     valid_methods <- c(univariate_imputation_methods, multivariate_imputation_methods)
 
     # Filter to only valid methods
-    df_abc_valid <- df_abc[df_abc$method %in% valid_methods, ]
+    df_abc_valid <- df_abc[df_abc$method %in% valid_methods,]
 
     # Try each method from top to bottom
     if (nrow(df_abc_valid) > 0) {
@@ -399,20 +434,21 @@ compare_imputation_methods <- function(
               "unknown"
             }
 
-            # Print informative message
-            cat("\n")
-            cat("=============================================================\n")
-            cat("Final imputation completed successfully\n")
-            cat("=============================================================\n")
-            cat("Method used:     ", method_used_for_imputation, "\n")
-            cat("Method type:     ", method_type, "\n")
-            cat("ABC category:    ", abc_category, "\n")
-            cat("ABC score:       ", formatC(abc_score, format = "f", digits = 2), "\n")
-            cat("Ranking:         Best performing method (rank ", i, " of ",
-                nrow(df_abc_valid), " valid methods)\n")
-            cat("=============================================================\n")
-            cat("\n")
-
+            if (verbose) {
+              # Print informative message
+              message("\n")
+              message("=============================================================\n")
+              message("Final imputation completed successfully\n")
+              message("=============================================================\n")
+              message("Method used:     ", method_used_for_imputation, "\n")
+              message("Method type:     ", method_type, "\n")
+              message("ABC category:    ", abc_category, "\n")
+              message("ABC score:       ", formatC(abc_score, format = "f", digits = 2), "\n")
+              message("Ranking:         Best performing method (rank ", i, " of ",
+                      nrow(df_abc_valid), " valid methods)\n")
+              message("=============================================================\n")
+              message("\n")
+            }
             break
           }
         }
@@ -420,36 +456,36 @@ compare_imputation_methods <- function(
 
       # If no method succeeded, provide a warning
       if (is.null(imputed_data)) {
-        cat("\n")
-        cat("=============================================================\n")
-        cat("WARNING: Final imputation failed\n")
-        cat("=============================================================\n")
-        cat("Could not produce complete imputation with any ranked method.\n")
-        cat("All tested methods either failed or left missing values.\n")
-        cat("Returning NULL for 'imputed_data'.\n")
-        cat("=============================================================\n")
-        cat("\n")
+        if (verbose) {
+          message("\n")
+          message("=============================================================\n")
+          message("WARNING: Final imputation failed\n")
+          message("=============================================================\n")
+          message("Could not produce complete imputation with any ranked method.\n")
+          message("All tested methods either failed or left missing values.\n")
+          message("Returning NULL for 'imputed_data'.\n")
+          message("=============================================================\n")
+          message("\n")
+
+          warning("No candidate method produced a complete imputation. Returned object includes NULL for 'imputed_data'.")
+        }
+      }
+    } else {
+      if (verbose) {
+        message("\n")
+        message("=============================================================\n")
+        message("WARNING: No valid methods found\n")
+        message("=============================================================\n")
+        message("No valid univariate or multivariate methods in ABC results.\n")
+        message("Returning NULL for 'imputed_data'.\n")
+        message("=============================================================\n")
+        message("\n")
 
         warning(
-          "compare_imputation_methods: Could not produce complete imputation with any of the ranked methods. ",
-          "All tested methods either failed or left missing values. ",
+          "compare_imputation_methods: No valid univariate or multivariate methods found in ABC results. ",
           "Returning NULL for 'imputed_data'."
         )
       }
-    } else {
-      cat("\n")
-      cat("=============================================================\n")
-      cat("WARNING: No valid methods found\n")
-      cat("=============================================================\n")
-      cat("No valid univariate or multivariate methods in ABC results.\n")
-      cat("Returning NULL for 'imputed_data'.\n")
-      cat("=============================================================\n")
-      cat("\n")
-
-      warning(
-        "compare_imputation_methods: No valid univariate or multivariate methods found in ABC results. ",
-        "Returning NULL for 'imputed_data'."
-      )
     }
   }
 
@@ -465,8 +501,8 @@ compare_imputation_methods <- function(
       best_overall_method = best_method_per_dataset,
       best_univariate_method = best_univariate_method,
       best_multivariate_method = best_multivariate_method,
-      best_combined_method = best_uni_multivariate_method,
-      best_stressed_method = best_poisoned_method,
+      best_uni_or_multivariate_method = best_uni_multivariate_method,
+      best_poisoned_method = best_poisoned_method,
       abc_results_table = res_abc$df_abc_results[, 1:3],
       fig_zdelta_distributions = fig_z_delta_distributions_best_methods,
       fig_summary_comparison = fig_comparison_summary,

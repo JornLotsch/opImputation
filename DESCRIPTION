@@ -2,7 +2,10 @@ Package: opImputation
 Type: Package
 Title: Optimal Selection of Imputation Methods for Pain-Related Numerical Data
 Version: 0.6
-Description: A model-agnostic framework for selecting dataset-specific imputation methods for missing values in numerical data related to pain. 
+Description: A model-agnostic framework for selecting dataset-specific imputation methods 
+        for missing values in numerical data related to pain. Lotsch J, Ultsch A (2025) 
+        "A model-agnostic framework for dataset-specific selection of missing value imputation 
+        methods in pain-related numerical data" Canadian Journal of Pain (in minor revision).
 Depends: R (>= 3.5.0)
 Imports: parallel, Rfit, methods, stats, caret, ABCanalysis, ggplot2, future, future.apply, progressr,
         missForest, utils, mice, miceRanger, multiUS, Amelia, mi, reshape2, DataVisualizations,
@@ -22,6 +25,4 @@ Authors@R: c(person(given = "Jorn",
                       family = "Ultsch",
                       role = "aut",
                       comment = c(ORCID = "0000-0002-7845-3283")))
-Date: 2025-10-24
-Config/testthat/edition: 3
-RoxygenNote: 7.3.3
+Date: 2025-10-31

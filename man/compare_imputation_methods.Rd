@@ -11,24 +11,25 @@ best-performing method.
 }
 
 \usage{
-compare_imputation_methods(
-  data,
-  imputation_methods = all_imputation_methods,
-  imputation_repetitions = 20,
-  perfect_methods_in_ABC = FALSE,
-  n_iterations = 20,
-  n_proc = getOption("mc.cores", 2L),
-  percent_missing = 0.1,
-  seed,
-  mnar_shape = 1,
-  mnar_ity = 0,
-  low_only = FALSE,
-  fixed_seed_for_inserted_missings = FALSE,
-  max_attempts = 1000,
-  plot_results = TRUE,
-  overall_best_z_delta = FALSE,
-  produce_final_imputations = TRUE
-)
+    compare_imputation_methods(
+      data,
+      imputation_methods = all_imputation_methods,
+      imputation_repetitions = 20,
+      perfect_methods_in_ABC = FALSE,
+      n_iterations = 20,
+      n_proc = getOption("mc.cores", 2L),
+      percent_missing = 0.1,
+      seed,
+      mnar_shape = 1,
+      mnar_ity = 0,
+      low_only = FALSE,
+      fixed_seed_for_inserted_missings = FALSE,
+      max_attempts = 1000,
+      overall_best_z_delta = FALSE,
+      produce_final_imputations = TRUE,
+      plot_results = TRUE,
+      verbose = TRUE
+    )
 }
 
 \arguments{
@@ -37,8 +38,20 @@ compare_imputation_methods(
 
   \item{imputation_methods}{Character vector of imputation method names to compare.
     Default is \code{all_imputation_methods}. Must include at least two non-calibrating
-    methods. See \code{\link{imputation_methods}} for available options. 
-    It is recommended that all imputation methods be used in a complete comparison.}
+    methods. Available options include:
+    \strong{Univariate methods:} \code{"median"}, \code{"mean"}, \code{"mode"}, \code{"rSample"};
+    \strong{Multivariate methods:} \code{"bag"}, \code{"bag_repeated"}, \code{"rf_mice"},
+    \code{"rf_mice_repeated"}, \code{"rf_missForest"}, \code{"rf_missForest_repeated"},
+    \code{"miceRanger"}, \code{"miceRanger_repeated"}, \code{"cart"}, \code{"cart_repeated"},
+    \code{"linear"}, \code{"pmm"}, \code{"pmm_repeated"}, \code{"knn3"}, \code{"knn5"},
+    \code{"knn7"}, \code{"knn9"}, \code{"knn10"}, \code{"ameliaImp"}, \code{"ameliaImp_repeated"},
+    \code{"miImp"};
+    \strong{Diagnostic methods:} \code{"plus"}, \code{"plusminus"}, \code{"factor"};
+    \strong{Calibrating methods:} \code{"tinyNoise_0.000001"}, \code{"tinyNoise_0.00001"},
+    \code{"tinyNoise_0.0001"}, \code{"tinyNoise_0.001"}, \code{"tinyNoise_0.01"},
+    \code{"tinyNoise_0.05"}, \code{"tinyNoise_0.1"}, \code{"tinyNoise_0.2"},
+    \code{"tinyNoise_0.5"}, \code{"tinyNoise_1"}.
+    It is recommended that all imputation methods be used in a complete comparison (Default).}
 
   \item{imputation_repetitions}{Integer. Number of times each imputation method
     is repeated for each iteration. Default is 20.}
@@ -70,11 +83,8 @@ compare_imputation_methods(
   \item{fixed_seed_for_inserted_missings}{Logical. If TRUE, use same seed for
     inserting missings across all iterations. Default is FALSE.}
 
-  \item{max_attempts}{Integer. Maximum attempts to create valid missing pattern 
+  \item{max_attempts}{Integer. Maximum attempts to create valid missing pattern
     without completely empty cases. Default is 1000.}
-
-  \item{plot_results}{Logical. If TRUE, print summary plots and best method
-    information. Default is TRUE.}
 
   \item{overall_best_z_delta}{Logical. If TRUE, compare all methods against the
     overall best; if FALSE, compare against best within category. Default is FALSE.}
@@ -83,43 +93,49 @@ compare_imputation_methods(
     using the best-performing univariate or multivariate method from the ABC
     analysis. The function will try methods in order of their ranking until one
     succeeds in producing a complete dataset with no missing values. Default is TRUE.}
+
+  \item{plot_results}{Logical. If TRUE, show summary plots. Default is TRUE.}
+
+  \item{verbose}{Logical. If TRUE, print best method
+    information and turn on messaging. Default is TRUE.}
+
 }
 
 \value{
 Returns a list containing:
   \item{all_imputation_runs}{List containing all imputation results generated
-     across repeated simulation runs and missing‑data patterns.}
+     across repeated simulation runs and missing-data patterns.}
 
-  \item{zdelta_metrics}{Standardized z‑delta error metrics, including raw values,
-     medians, and variable‑wise summaries quantifying deviations between original and imputed data.}
+  \item{zdelta_metrics}{Standardized z-delta error metrics, including raw values,
+     medians, and variable-wise summaries quantifying deviations between original and imputed data.}
 
   \item{method_performance_summary}{Comprehensive performance summary of all imputation methods,
-     including ranking metrics and Activity‑Based Classification (ABC) results.}
+     including ranking metrics and Activity-Based Classification (ABC) results.}
 
-  \item{best_overall_method}{Character. Name of the best‑performing imputation method
+  \item{best_overall_method}{Character. Name of the best-performing imputation method
      for the analyzed dataset.}
 
-  \item{best_univariate_method}{Character. Name of the top‑performing univariate (single‑variable)
+  \item{best_univariate_method}{Character. Name of the top-performing univariate (single-variable)
      imputation method.}
 
-  \item{best_multivariate_method}{Character. Name of the top‑performing multivariate (multi‑variable)
+  \item{best_multivariate_method}{Character. Name of the top-performing multivariate (multi-variable)
      imputation method.}
 
-  \item{best_combined_method}{Character. Name of the leading combined uni/multivariate imputation method.}
+  \item{best_uni_or_multivariate_method}{Character. Name of the leading combined uni/multivariate imputation method.}
 
-  \item{best_stressed_method}{Character. Name of the top‑performing stress‑test (formerly “poisoned”) method.}
+  \item{best_poisoned_method}{Character. Name of the top-performing stress-test (formerly "poisoned") method.}
 
-  \item{abc_results_table}{Data frame containing the ABC (Activity‑Based Classification) analysis results,
+  \item{abc_results_table}{Data frame containing the ABC (Activity-Based Classification) analysis results,
      including method categories and performance scores.}
 
   \item{fig_zdelta_distributions}{\code{ggplot} object displaying the distribution of
-     standardized z‑delta values for the best‑performing methods.}
+     standardized z-delta values for the best-performing methods.}
 
   \item{fig_summary_comparison}{\code{ggplot} object providing a combined summary figure integrating ABC
-     classification and z‑delta plots for comparative visualization.}
+     classification and z-delta plots for comparative visualization.}
 
   \item{final_imputed_data}{Data frame containing the final dataset with all missing values filled in using
-     the best‑performing method (only if \code{produce_final_imputations = TRUE}).
+     the best-performing method (only if \code{produce_final_imputations = TRUE}).
      Returns \code{NULL} if no complete dataset could be produced or if imputation was disabled.}
 
   \item{final_imputation_method}{Character. Name of the imputation algorithm automatically
@@ -187,31 +203,35 @@ and allows users to understand the quality of the chosen imputation method.
 }
 
 \examples{
-\dontrun{
-  # Load example data
-  data_iris <- iris[,1:4]
+ # \donttest{
+    # Load example data
+    data_iris <- iris[,1:4]
 
-  # Add some missings
-  set.seed(42)
-  for(i in 1:4) data_iris[sample(1:nrow(data_iris), 0.05*nrow(data_iris)), i] <- NA
+    # Add some missings
+    set.seed(42)
+    for(i in 1:4) data_iris[sample(1:nrow(data_iris), 0.05*nrow(data_iris)), i] <- NA
 
-  # Basic comparison with a subset of methods
-  results <- compare_imputation_methods(
-    data = data_iris,
-    imputation_methods = c("mean", "median", "rSample"),
-    n_iterations = 5,
-    imputation_repetitions = 5,
-    seed = 42
-  )
+    # Basic comparison with a subset of methods
+    results <- compare_imputation_methods(
+      data = data_iris,
+      imputation_methods = c("mean", "median", "rSample"),
+      n_iterations = 2,
+      imputation_repetitions = 2,
+      seed = 42,
+      produce_final_imputations = FALSE,
+      plot_results = FALSE,
+      verbose = FALSE
+    )
 
-  # Cleanup to avoid open sockets during R CMD check
-  future::plan(future::sequential)
-}
+    # Print results
+    # print(results)
+
+    # Cleanup to avoid open sockets during R CMD check
+    future::plan(future::sequential)
+ # }
 }
 
 \seealso{
-\code{\link{imputation_methods}} for available imputation methods
-
 \code{\link{impute_missings}} for single imputation operations
 
 \code{\link{create_diagnostic_missings}} for creating diagnostic missing values
