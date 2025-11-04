@@ -203,7 +203,6 @@ and allows users to understand the quality of the chosen imputation method.
 }
 
 \examples{
- # \donttest{
     # Load example data
     data_iris <- iris[,1:4]
 
@@ -217,7 +216,6 @@ and allows users to understand the quality of the chosen imputation method.
       imputation_methods = c("mean", "median", "rSample"),
       n_iterations = 2,
       imputation_repetitions = 2,
-      seed = 42,
       produce_final_imputations = FALSE,
       plot_results = FALSE,
       verbose = FALSE
@@ -228,7 +226,6 @@ and allows users to understand the quality of the chosen imputation method.
 
     # Cleanup to avoid open sockets during R CMD check
     future::plan(future::sequential)
- # }
 }
 
 \seealso{

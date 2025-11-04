@@ -163,8 +163,7 @@ for(i in 1:4) data_iris[sample(1:nrow(data_iris), 0.05*nrow(data_iris)), i] <- N
 # Simple univariate imputation with median
 data_iris_imputed_median <- impute_missings(
   data_iris,
-  method = "median",
-  seed = 42
+  method = "median"
 )
 
 # Show data

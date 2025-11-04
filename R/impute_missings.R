@@ -140,18 +140,23 @@ median_imputations <- function(x) {
 #' Repeated methods perform multiple imputations and return the median across all iterations.
 #'
 #' @examples
-#' \dontrun{
-#' # Simple univariate imputation
-#' data_with_na <- data.frame(x = c(1, 2, NA, 4), y = c(NA, 2, 3, 4))
-#' imputed <- impute_missings(data_with_na, method = "median")
+#' # Load example data
+#' data_iris <- iris[, 1:4]
 #'
-#' # Multivariate imputation with random forest
-#' imputed_rf <- impute_missings(data_with_na, method = "rf_missForest", seed = 123)
-#'
-#' # Repeated imputation for more stable results
-#' imputed_repeated <- impute_missings(data_with_na, method = "rf_mice_repeated",
-#'                                     ImputationRepetitions = 20, seed = 123)
+#' # Add some missings
+#' set.seed(42)
+#' for (i in 1:4) {
+#'   data_iris[sample(1:nrow(data_iris), 0.05 * nrow(data_iris)), i] <- NA
 #' }
+#'
+#' # Simple univariate imputation with median
+#' data_iris_imputed_median <- impute_missings(
+#'   data_iris,
+#'   method = "median"
+#' )
+#'
+#' # Show data
+#' head(data_iris_imputed_median)
 #'
 #' @seealso
 #' \code{\link{compare_imputation_methods}} for comparative analysis of methods
@@ -162,11 +167,12 @@ impute_missings <- function(x, method = "rf_missForest", ImputationRepetitions =
                             seed = NULL, x_orig = NULL) {
   x <- data.frame(x)
 
-  if (is.null(seed)) {
-    seed <- .Random.seed[1]
-  }
-  list.of.seeds <- seq_len(ncol(x)) + seed - 1
+    # Set the seed
+  if (missing(seed) | is.null(seed)) seed <- round(runif(1) * 100)
   set.seed(seed)
+
+  # Create list of seeds for repeated impuations
+  list.of.seeds <- seq_len(ncol(x)) + seed - 1
 
   ImputedData <- make_bad_imputations(x)
 

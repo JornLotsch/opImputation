@@ -25,19 +25,6 @@
 #' This function requires a Unix-like operating system that supports forking.
 #' It will not work on Windows.
 #'
-#' @examples
-#' \dontrun{
-#' # Example with quick computation
-#' result <- eval_with_timeout(sum(1:1000), timeout = 5)
-#'
-#' # Example with timeout
-#' result <- eval_with_timeout(
-#'   Sys.sleep(10),
-#'   timeout = 1,
-#'   on_timeout = "warning"
-#' )
-#' }
-#'
 #' @seealso [parallel::mcparallel()], [parallel::mccollect()]
 #' @keywords internal
 #' @export

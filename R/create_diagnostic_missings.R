@@ -33,13 +33,11 @@
 #' positions from the sampling pool that would create completely missing rows.
 #'
 #' @examples
-#' \dontrun{
 #' # Create 10% MCAR missings
 #' result <- create_diagnostic_missings(
 #'   x = iris[,1:4],
 #'   Prob = 0.1,
-#'   mnarity = 0,
-#'   seed = 42
+#'   mnarity = 0
 #' )
 #'
 #' # Create 20% missings with 50% MNAR targeting low values
@@ -47,15 +45,13 @@
 #'   x = iris[,1:4],
 #'   Prob = 0.2,
 #'   mnarity = 0.5,
-#'   lowOnly = TRUE,
-#'   seed = 42
+#'   lowOnly = TRUE
 #' )
-#' }
 #'
 #' @keywords datagen
 #' @export
 create_diagnostic_missings <- function(x, Prob = 0.1, mnarity = 0, mnarshape = 1,
-                                       lowOnly = FALSE, seed = 42, maxAttempts = 1000) {
+                                       lowOnly = FALSE, seed = NULL, maxAttempts = 1000) {
 
   # Validate inputs
   if (!is.data.frame(x) && !is.matrix(x)) {
@@ -73,6 +69,9 @@ create_diagnostic_missings <- function(x, Prob = 0.1, mnarity = 0, mnarshape = 1
   if (maxAttempts < 1) {
     stop("maxAttempts must be >= 1")
   }
+
+  # Set the seed
+  if (missing(seed) | is.null(seed)) seed <- round(runif(1) * 100)
 
   # Convert to matrix
   xm <- as.matrix(x)

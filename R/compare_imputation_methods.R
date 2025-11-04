@@ -85,34 +85,29 @@
 #' Can J Pain (in minor revision)
 #'
 #' @examples
-#' \dontrun{
-#' # Load example data
-#' data(PainThresholds)
+#'   # Load example data
+#'   data_iris <- iris[,1:4]
 #'
-#' # Compare a subset of methods
-#' results <- compare_imputation_methods(
-#'   data = PainThresholds,
-#'   imputation_methods = c("mean", "median", "knn5", "rf_mice"),
-#'   n_iterations = 10,
-#'   imputation_repetitions = 10,
-#'   seed = 123
-#' )
+#'   # Add some missings
+#'   set.seed(42)
+#'   for(i in 1:4) data_iris[sample(1:nrow(data_iris), 0.05*nrow(data_iris)), i] <- NA
 #'
-#' # View best method
-#' print(results$best_overall_method)
+#'   # Basic comparison with a subset of methods
+#'   results <- compare_imputation_methods(
+#'     data = data_iris,
+#'     imputation_methods = c("mean", "median", "rSample"),
+#'     n_iterations = 2,
+#'     imputation_repetitions = 2,
+#'     produce_final_imputations = FALSE,
+#'     plot_results = FALSE,
+#'     verbose = FALSE
+#'   )
 #'
-#' # View summary figure
-#' print(results$fig_summary_comparison)
+#'   # Print results
+#'   # print(results)
 #'
-#' # Test with MNAR mechanism
-#' results_mnar <- compare_imputation_methods(
-#'   data = PainThresholds,
-#'   imputation_methods = c("mean", "knn5", "rf_mice"),
-#'   mnar_ity = 0.5,
-#'   low_only = TRUE,
-#'   n_iterations = 10
-#' )
-#' }
+#'   # Cleanup to avoid open sockets during R CMD check
+#'   future::plan(future::sequential)
 #'
 #' @seealso
 #' \code{\link{imputation_methods}} for available imputation methods
@@ -128,7 +123,7 @@ compare_imputation_methods <- function(
     n_iterations = 20,
     n_proc = getOption("mc.cores", 2L),
     percent_missing = 0.1,
-    seed = 42,
+    seed = NULL,
     mnar_shape = 1,
     mnar_ity = 0,
     low_only = FALSE,
@@ -197,7 +192,7 @@ compare_imputation_methods <- function(
   }
 
   # Set the seed
-  if (missing(seed)) seed <- round(runif(1) * 100)
+  if (missing(seed) | is.null(seed)) seed <- round(runif(1) * 100)
 
   # Define the list of seeds
   seeds_list <- 1:n_iterations + seed - 1
