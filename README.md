@@ -22,7 +22,7 @@ It is developed for biomedical and clinical research but is broadly applicable t
 if (!requireNamespace("devtools")) install.packages("devtools")
 devtools::install_github("JornLotsch/opImputation")
 
-# From CRAN (when available, uploaded to CRAN on October 24, 2025. Release pending incoming checks)
+# From CRAN (preferred)
 install.packages("opImputation")
 ```
 
@@ -204,6 +204,12 @@ C: Variable‑level Δz distributions across methods.
 - Fully automated, reproducible imputation pipelines  
 
 ---
+## Availability 
+
+The **opImputation** package is available on [CRAN](https://CRAN.R-project.org/package=opImputation): https://cran.r-project.org/package=opImputation
+
+---
+
 
 ## Citation
 
